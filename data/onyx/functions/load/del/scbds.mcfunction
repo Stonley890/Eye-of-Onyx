@@ -19,5 +19,6 @@ scoreboard objectives remove -onyx.trigger
 
 	# Misc. Scoreboards
 scoreboard objectives remove onyx.health
+scoreboard objectives remove suso.str
 
 #endregion
