@@ -1,0 +1,25 @@
+{
+	"parent": "onyx:root",
+	"criteria": {
+		"player-triggers": {
+			"trigger": "minecraft:tick",
+			"conditions": {
+				"player": [
+					{
+						"condition": "minecraft:inverted",
+						"term": {
+							"condition": "entity_scores",
+							"entity": "this",
+							"scores": {
+								"-onyx.trigger": 0
+							}
+						}
+					}
+				]
+			}
+		}
+	},
+	"rewards": {
+		"function": "onyx:load/triggers"
+	}
+}

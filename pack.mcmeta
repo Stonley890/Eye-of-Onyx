@@ -1,0 +1,10 @@
+{
+    "pack": {
+        "pack_format": 10,
+        "description": {
+			"text": "Eye of Onyx: A tool to manage royalty somewhat better than the admins can.",
+			"color": "gold"
+		},
+		"credits": "BogTheMudWing, Godzilla1005, iHeron"
+    }
+}

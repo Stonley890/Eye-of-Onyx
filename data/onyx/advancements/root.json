@@ -1,0 +1,7 @@
+{
+	"criteria": {
+		"onyx-root": {
+			"trigger": "minecraft:tick"
+		}
+	}
+}
