@@ -38,6 +38,11 @@
       <version>1.19.3-R0.1-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
+    <dependency>
+      <groupId>com.github.SparklingComet</groupId>
+      <artifactId>java-mojang-api</artifactId>
+      <version>-SNAPSHOT</version>
+    </dependency>
   </dependencies>
 
   <build>
@@ -101,29 +106,34 @@
           <configuration>
             <!-- Prevent META-INF folder from being included. -->
             <filters>
-                <filter>
+              <filter>
                 <artifact>*:*</artifact>
                 <excludes>
-                    <exclude>META-INF/**</exclude>
+                  <exclude>META-INF/**</exclude>
                 </excludes>
-                </filter>
+              </filter>
             </filters>
           </configuration>
           <executions>
             <execution>
-              <!--Make the shading happen during maven package-->
+              <!--Make
+              the shading happen during maven package-->
               <phase>package</phase>
               <goals>
                 <goal>shade</goal>
               </goals>
               <configuration>
-                    <!--Prevent an unnecesairy step during the compilation-->
-                  <createDependencyReducedPom>false</createDependencyReducedPom>
-                  <!---Make the name be just the plugin name-->
-                  <finalName>${project.artifactId}</finalName>
-                  <!---Make the output directory be our test directory. ../ just means parent folder. In my case this is the relative path that points to my test server-->
-                  <!---<outputDirectory>../../Minecraft/DevelopmentServer/plugins</outputDirectory>-->
-                  <outputFile>${project.basedir}/target/${project.artifactId}.jar</outputFile>
+                <!--Prevent
+                an unnecesairy step during the compilation-->
+                <createDependencyReducedPom>false</createDependencyReducedPom>
+                <!---Make
+                the name be just the plugin name-->
+                <finalName>${project.artifactId}</finalName>
+                <!---Make
+                the output directory be our test directory. ../ just means parent folder. In my case
+                this is the relative path that points to my test server-->
+                <!---<outputDirectory>../../Minecraft/DevelopmentServer/plugins</outputDirectory>-->
+                <outputFile>${project.basedir}/target/EyeOfOnyx.jar</outputFile>
               </configuration>
             </execution>
           </executions>
