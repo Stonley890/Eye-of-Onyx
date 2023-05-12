@@ -1,5 +1,7 @@
 package io.github.stonley890;
 
+import java.util.logging.Level;
+
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -13,15 +15,15 @@ import io.github.stonley890.listeners.ListenJoin;
 
 public class Main extends JavaPlugin {
 
-    private static Main plugin;
+    public final String version = getDescription().getVersion();
 
-    public static String version;
+    static Main plugin;
 
     @Override
     public void onEnable() {
-        // Register variables
+
+        // Initialize variables
         plugin = this;
-        version = getDescription().getVersion();
 
         // Create config if needed
         getConfig().options().copyDefaults();
@@ -36,11 +38,10 @@ public class Main extends JavaPlugin {
         getCommand("eyeofonyx").setExecutor(new CmdEyeOfOnyx());
 
         // Initialize listeners
-        getServer().getPluginManager().registerEvents(new ListenJoin(), plugin);
+        getServer().getPluginManager().registerEvents(new ListenJoin(), this);
 
         // Start message
-        Bukkit.getLogger().info(
-                "Eye of Onyx " + version + ": A plugin that manages the royalty board on Wings of Fire: The New World");
+        Bukkit.getLogger().log(Level.INFO, "Eye of Onyx {0}: A plugin that manages the royalty board on Wings of Fire: The New World", version);
     }
 
     // Allow other classes to access plugin instance

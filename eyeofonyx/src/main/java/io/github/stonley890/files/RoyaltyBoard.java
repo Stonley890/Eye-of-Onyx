@@ -12,7 +12,7 @@ import io.github.stonley890.Main;
 public class RoyaltyBoard {
 
     private static File file;
-    private static FileConfiguration royaltyBoard;
+    private static FileConfiguration boardFile;
     private static Main plugin = Main.getPlugin();
 
     public static void setup() {
@@ -20,23 +20,27 @@ public class RoyaltyBoard {
         file = new File(plugin.getDataFolder(), "board.yml");
 
         if (!file.exists()) {
+
             try {
-                file.createNewFile();
+                if (!file.createNewFile()) {
+                    Bukkit.getLogger().severe("Error creating board.yml file.");
+                    
+                }
             } catch (IOException e) {
                 Bukkit.getLogger().severe("Error creating board.yml file:");
                 e.printStackTrace();
             }
         }
-        royaltyBoard = YamlConfiguration.loadConfiguration(file);
+        boardFile = YamlConfiguration.loadConfiguration(file);
     }
 
     public static FileConfiguration get() {
-        return royaltyBoard;
+        return boardFile;
     }
 
     public static void save() {
         try {
-            royaltyBoard.save(file);
+            boardFile.save(file);
         } catch (Exception e) {
             Bukkit.getLogger().severe("Error saving board.yml file:");
             e.printStackTrace();
@@ -44,6 +48,10 @@ public class RoyaltyBoard {
     }
 
     public static void reload() {
-        royaltyBoard = YamlConfiguration.loadConfiguration(file);
+        boardFile = YamlConfiguration.loadConfiguration(file);
+    }
+
+    private RoyaltyBoard() {
+        throw new IllegalStateException("Utility class");
     }
 }
