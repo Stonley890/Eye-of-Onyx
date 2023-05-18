@@ -10,24 +10,23 @@
   <version>1.0.0</version>
   <packaging>jar</packaging>
 
-  <name>eyeofonyx</name>
-  <!-- FIXME change it to the project's website -->
-  <!-- <url>http://www.example.com</url> -->
+  <name>Eye of Onyx</name>
+  <url>http://www.github.com/Stonley890/Eye-Of-Onyx</url>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.source>1.7</maven.compiler.source>
-    <maven.compiler.target>1.7</maven.compiler.target>
+    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
   </properties>
 
   <repositories>
     <repository>
-      <id>jitpack.io</id>
-      <url>https://jitpack.io</url>
-    </repository>
-    <repository>
       <id>spigot-repo</id>
       <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
+    </repository>
+    <repository>
+      <id>jitpack.io</id>
+      <url>https://jitpack.io</url>
     </repository>
   </repositories>
 
@@ -35,7 +34,7 @@
     <dependency>
       <groupId>org.spigotmc</groupId>
       <artifactId>spigot-api</artifactId>
-      <version>1.19.3-R0.1-SNAPSHOT</version>
+      <version>1.19.4-R0.1-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -54,86 +53,26 @@
         <filtering>true</filtering>
       </resource>
     </resources>
-    <pluginManagement><!-- lock down plugins versions to avoid using Maven defaults (may be moved to
-      parent pom) -->
+    <pluginManagement>
       <plugins>
-        <!-- clean lifecycle, see
-        https://maven.apache.org/ref/current/maven-core/lifecycles.html#clean_Lifecycle -->
-        <plugin>
-          <artifactId>maven-clean-plugin</artifactId>
-          <version>3.1.0</version>
-        </plugin>
-        <!-- default lifecycle, jar packaging: see
-        https://maven.apache.org/ref/current/maven-core/default-bindings.html#Plugin_bindings_for_jar_packaging -->
-        <plugin>
-          <artifactId>maven-resources-plugin</artifactId>
-          <version>3.0.2</version>
-        </plugin>
         <plugin>
           <artifactId>maven-compiler-plugin</artifactId>
           <version>3.8.0</version>
         </plugin>
         <plugin>
-          <artifactId>maven-surefire-plugin</artifactId>
-          <version>2.22.1</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-jar-plugin</artifactId>
-          <version>3.0.2</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-install-plugin</artifactId>
-          <version>2.5.2</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-deploy-plugin</artifactId>
-          <version>2.8.2</version>
-        </plugin>
-        <!-- site lifecycle, see
-        https://maven.apache.org/ref/current/maven-core/lifecycles.html#site_Lifecycle -->
-        <plugin>
-          <artifactId>maven-site-plugin</artifactId>
-          <version>3.7.1</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-project-info-reports-plugin</artifactId>
-          <version>3.0.0</version>
-        </plugin>
-        <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-shade-plugin</artifactId>
-          <version>3.3.0-SNAPSHOT</version>
-          <configuration>
-            <!-- Prevent META-INF folder from being included. -->
-            <filters>
-              <filter>
-                <artifact>*:*</artifact>
-                <excludes>
-                  <exclude>META-INF/**</exclude>
-                </excludes>
-              </filter>
-            </filters>
-          </configuration>
+          <version>3.4.1</version>
           <executions>
             <execution>
-              <!--Make
-              the shading happen during maven package-->
               <phase>package</phase>
               <goals>
                 <goal>shade</goal>
               </goals>
               <configuration>
-                <!--Prevent
-                an unnecesairy step during the compilation-->
                 <createDependencyReducedPom>false</createDependencyReducedPom>
-                <!---Make
-                the name be just the plugin name-->
-                <finalName>${project.artifactId}</finalName>
-                <!---Make
-                the output directory be our test directory. ../ just means parent folder. In my case
-                this is the relative path that points to my test server-->
-                <!---<outputDirectory>../../Minecraft/DevelopmentServer/plugins</outputDirectory>-->
-                <outputFile>${project.basedir}/target/EyeOfOnyx.jar</outputFile>
+                <finalName>Eye Of Onyx</finalName>
+                <outputFile>${project.basedir}/target</outputFile>
               </configuration>
             </execution>
           </executions>
@@ -141,4 +80,5 @@
       </plugins>
     </pluginManagement>
   </build>
+
 </project>

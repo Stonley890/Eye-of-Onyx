@@ -3,423 +3,419 @@
 hive:
 
   ruler:
-    uuid:
-    joined_time:
-    challenge:
-      last_challenge_time:
-      challenger:
+    uuid: none
+    title: none
+    name: user
+    joined_time: -1
+    last_challenge_time: -1
+    challenger: none
 
   heir_apparent:
-    uuid:
-    joined_time:
-    challenge:
-      last_challenge_time:
-      challenger:
-      challenging:
+    uuid: none
+    name: user
+    joined_time: -1
+    last_challenge_time: -1
+    challenger: none
+    challenging: none
 
   heir_presumptive:
-    uuid:
-    joined_time:
-    challenge:
-      last_challenge_time:
-      challenger:
-      challenging:
+    uuid: none
+    name: user
+    joined_time: -1
+    last_challenge_time: -1
+    challenger: none
+    challenging: none
 
   noble_apparent:
-    uuid:
-    joined_time:
-    challenge:
-      last_challenge_time:
-      challenger:
-      challenging:
+    uuid: none
+    name: user
+    joined_time: -1
+    last_challenge_time: -1
+    challenger: none
+    challenging: none
 
   noble_presumptive:
-    uuid:
-    joined_time:
-    challenge:
-      last_challenge_time:
-      challenger:
-      challenging:
+    uuid: none
+    name: user
+    joined_time: -1
+    last_challenge_time: -1
+    challenger: none
+    challenging: none
 
 ice:
 
   ruler:
-    uuid:
-    joined_time:
-    challenge:
-      last_challenge_time:
-      challenger:
+    uuid: none
+    title: none
+    name: user
+    joined_time: -1
+    last_challenge_time: -1
+    challenger: none
 
   heir_apparent:
-    uuid:
-    joined_time:
-    challenge:
-      last_challenge_time:
-      challenger:
-      challenging:
+    uuid: none
+    name: user
+    joined_time: -1
+    last_challenge_time: -1
+    challenger: none
+    challenging: none
 
   heir_presumptive:
-    uuid:
-    joined_time:
-    challenge:
-      last_challenge_time:
-      challenger:
-      challenging:
+    uuid: none
+    name: user
+    joined_time: -1
+    last_challenge_time: -1
+    challenger: none
+    challenging: none
 
   noble_apparent:
-    uuid:
-    joined_time:
-    challenge:
-      last_challenge_time:
-      challenger:
-      challenging:
+    uuid: none
+    name: user
+    joined_time: -1
+    last_challenge_time: -1
+    challenger: none
+    challenging: none
 
   noble_presumptive:
-    uuid:
-    joined_time:
-    challenge:
-      last_challenge_time:
-      challenger:
-      challenging:
+    uuid: none
+    name: user
+    joined_time: -1
+    last_challenge_time: -1
+    challenger: none
+    challenging: none
 
 leaf:
 
   ruler:
-    uuid:
-    joined_time:
-    challenge:
-      last_challenge_time:
-      challenger:
+    uuid: none
+    title: none
+    name: user
+    joined_time: -1
+    last_challenge_time: -1
+    challenger: none
 
   heir_apparent:
-    uuid:
-    joined_time:
-    challenge:
-      last_challenge_time:
-      challenger:
-      challenging:
+    uuid: none
+    name: user
+    joined_time: -1
+    last_challenge_time: -1
+    challenger: none
+    challenging: none
 
   heir_presumptive:
-    uuid:
-    joined_time:
-    challenge:
-      last_challenge_time:
-      challenger:
-      challenging:
+    uuid: none
+    name: user
+    joined_time: -1
+    last_challenge_time: -1
+    challenger: none
+    challenging: none
 
   noble_apparent:
-    uuid:
-    joined_time:
-    challenge:
-      last_challenge_time:
-      challenger:
-      challenging:
+    uuid: none
+    name: user
+    joined_time: -1
+    last_challenge_time: -1
+    challenger: none
+    challenging: none
 
   noble_presumptive:
-    uuid:
-    joined_time:
-    challenge:
-      last_challenge_time:
-      challenger:
-      challenging:
+    uuid: none
+    name: user
+    joined_time: -1
+    last_challenge_time: -1
+    challenger: none
+    challenging: none
 
 mud:
 
-  # Role
   ruler:
-    # Player UUID
-    uuid:
-    # Time joined (Unix Epoch)
-    joined_time:
-    # Challenge data
-    challenge:
-      # Time last challenged
-      # This is used to determine whether or not cooldown is active 
-      last_challenge_time:
-      # Player UUID of challenger if challenged
-      challenger:
-      # No challenger UUID because ruler
+    uuid: eedf3c55-2e73-4e73-99a7-81d953745f0a
+    title: King
+    name: Bog
+    joined_time: -1
+    last_challenge_time: -1
+    challenger: none
 
   heir_apparent:
-    # Player UUID
-    uuid:
-    joined_time:
-    # Challenge data
-    challenge:
-      # Time last challenged
-      # This is used to determine whether or not cooldown is active 
-      last_challenge_time:
-      # Player UUID of challenger if challenged
-      challenger:
-      # Player UUID of challenging if challenging
-      challenging:
+    uuid: none
+    name: user
+    joined_time: -1
+    last_challenge_time: -1
+    challenger: none
+    challenging: none
 
   heir_presumptive:
-    uuid:
-    joined_time:
-    challenge:
-      last_challenge_time:
-      challenger:
-      challenging:
+    uuid: none
+    name: user
+    joined_time: -1
+    last_challenge_time: -1
+    challenger: none
+    challenging: none
 
   noble_apparent:
-    uuid:
-    joined_time:
-    challenge:
-      last_challenge_time:
-      challenger:
-      challenging:
+    uuid: none
+    name: user
+    joined_time: -1
+    last_challenge_time: -1
+    challenger: none
+    challenging: none
 
   noble_presumptive:
-    uuid:
-    joined_time:
-    challenge:
-      last_challenge_time:
-      challenger:
-      challenging:
+    uuid: none
+    name: user
+    joined_time: -1
+    last_challenge_time: -1
+    challenger: none
+    challenging: none
 
 night:
 
   ruler:
-    uuid:
-    joined_time:
-    challenge:
-      last_challenge_time:
-      challenger:
+    uuid: none
+    title: none
+    name: user
+    joined_time: -1
+    last_challenge_time: -1
+    challenger: none
 
   heir_apparent:
-    uuid:
-    joined_time:
-    challenge:
-      last_challenge_time:
-      challenger:
-      challenging:
+    uuid: none
+    name: user
+    joined_time: -1
+    last_challenge_time: -1
+    challenger: none
+    challenging: none
 
   heir_presumptive:
-    uuid:
-    joined_time:
-    challenge:
-      last_challenge_time:
-      challenger:
-      challenging:
+    uuid: none
+    name: user
+    joined_time: -1
+    last_challenge_time: -1
+    challenger: none
+    challenging: none
 
   noble_apparent:
-    uuid:
-    joined_time:
-    challenge:
-      last_challenge_time:
-      challenger:
-      challenging:
+    uuid: none
+    name: user
+    joined_time: -1
+    last_challenge_time: -1
+    challenger: none
+    challenging: none
 
   noble_presumptive:
-    uuid:
-    joined_time:
-    challenge:
-      last_challenge_time:
-      challenger:
-      challenging:
+    uuid: none
+    name: user
+    joined_time: -1
+    last_challenge_time: -1
+    challenger: none
+    challenging: none
 
 rain:
 
   ruler:
-    uuid:
-    joined_time:
-    challenge:
-      last_challenge_time:
-      challenger:
+    uuid: none
+    title: none
+    name: user
+    joined_time: -1
+    last_challenge_time: -1
+    challenger: none
 
   heir_apparent:
-    uuid:
-    joined_time:
-    challenge:
-      last_challenge_time:
-      challenger:
-      challenging:
+    uuid: none
+    name: user
+    joined_time: -1
+    last_challenge_time: -1
+    challenger: none
+    challenging: none
 
   heir_presumptive:
-    uuid:
-    joined_time:
-    challenge:
-      last_challenge_time:
-      challenger:
-      challenging:
+    uuid: none
+    name: user
+    joined_time: -1
+    last_challenge_time: -1
+    challenger: none
+    challenging: none
 
   noble_apparent:
-    uuid:
-    joined_time:
-    challenge:
-      last_challenge_time:
-      challenger:
-      challenging:
+    uuid: none
+    name: user
+    joined_time: -1
+    last_challenge_time: -1
+    challenger: none
+    challenging: none
 
   noble_presumptive:
-    uuid:
-    joined_time:
-    challenge:
-      last_challenge_time:
-      challenger:
-      challenging:
+    uuid: none
+    name: user
+    joined_time: -1
+    last_challenge_time: -1
+    challenger: none
+    challenging: none
 
 sand:
 
   ruler:
-    uuid:
-    joined_time:
-    challenge:
-      last_challenge_time:
-      challenger:
+    uuid: none
+    title: none
+    name: user
+    joined_time: -1
+    last_challenge_time: -1
+    challenger: none
 
   heir_apparent:
-    uuid:
-    joined_time:
-    challenge:
-      last_challenge_time:
-      challenger:
-      challenging:
+    uuid: none
+    name: user
+    joined_time: -1
+    last_challenge_time: -1
+    challenger: none
+    challenging: none
 
   heir_presumptive:
-    uuid:
-    joined_time:
-    challenge:
-      last_challenge_time:
-      challenger:
-      challenging:
+    uuid: none
+    name: user
+    joined_time: -1
+    last_challenge_time: -1
+    challenger: none
+    challenging: none
 
   noble_apparent:
-    uuid:
-    joined_time:
-    challenge:
-      last_challenge_time:
-      challenger:
-      challenging:
+    uuid: none
+    name: user
+    joined_time: -1
+    last_challenge_time: -1
+    challenger: none
+    challenging: none
 
   noble_presumptive:
-    uuid:
-    joined_time:
-    challenge:
-      last_challenge_time:
-      challenger:
-      challenging:
+    uuid: none
+    name: user
+    joined_time: -1
+    last_challenge_time: -1
+    challenger: none
+    challenging: none
 
 sea:
 
   ruler:
-    uuid:
-    joined_time:
-    challenge:
-      last_challenge_time:
-      challenger:
+    uuid: none
+    title: none
+    name: user
+    joined_time: -1
+    last_challenge_time: -1
+    challenger: none
 
   heir_apparent:
-    uuid:
-    joined_time:
-    challenge:
-      last_challenge_time:
-      challenger:
-      challenging:
+    uuid: none
+    name: user
+    joined_time: -1
+    last_challenge_time: -1
+    challenger: none
+    challenging: none
 
   heir_presumptive:
-    uuid:
-    joined_time:
-    challenge:
-      last_challenge_time:
-      challenger:
-      challenging:
+    uuid: none
+    name: user
+    joined_time: -1
+    last_challenge_time: -1
+    challenger: none
+    challenging: none
 
   noble_apparent:
-    uuid:
-    joined_time:
-    challenge:
-      last_challenge_time:
-      challenger:
-      challenging:
+    uuid: none
+    name: user
+    joined_time: -1
+    last_challenge_time: -1
+    challenger: none
+    challenging: none
 
   noble_presumptive:
-    uuid:
-    joined_time:
-    challenge:
-      last_challenge_time:
-      challenger:
-      challenging:
+    uuid: none
+    name: user
+    joined_time: -1
+    last_challenge_time: -1
+    challenger: none
+    challenging: none
 
 silk:
 
   ruler:
-    uuid:
-    joined_time:
-    challenge:
-      last_challenge_time:
-      challenger:
+    uuid: none
+    title: none
+    name: user
+    joined_time: -1
+    last_challenge_time: -1
+    challenger: none
 
   heir_apparent:
-    uuid:
-    joined_time:
-    challenge:
-      last_challenge_time:
-      challenger:
-      challenging:
+    uuid: none
+    name: user
+    joined_time: -1
+    last_challenge_time: -1
+    challenger: none
+    challenging: none
 
   heir_presumptive:
-    uuid:
-    joined_time:
-    challenge:
-      last_challenge_time:
-      challenger:
-      challenging:
+    uuid: none
+    name: user
+    joined_time: -1
+    last_challenge_time: -1
+    challenger: none
+    challenging: none
 
   noble_apparent:
-    uuid:
-    joined_time:
-    challenge:
-      last_challenge_time:
-      challenger:
-      challenging:
+    uuid: none
+    name: user
+    joined_time: -1
+    last_challenge_time: -1
+    challenger: none
+    challenging: none
 
   noble_presumptive:
-    uuid:
-    joined_time:
-    challenge:
-      last_challenge_time:
-      challenger:
-      challenging:
+    uuid: none
+    name: user
+    joined_time: -1
+    last_challenge_time: -1
+    challenger: none
+    challenging: none
 
 sky:
 
   ruler:
-    uuid:
-    joined_time:
-    challenge:
-      last_challenge_time:
-      challenger:
+    uuid: none
+    title: none
+    name: user
+    joined_time: -1
+    last_challenge_time: -1
+    challenger: none
 
   heir_apparent:
-    uuid:
-    joined_time:
-    challenge:
-      last_challenge_time:
-      challenger:
-      challenging:
+    uuid: none
+    name: user
+    joined_time: -1
+    last_challenge_time: -1
+    challenger: none
+    challenging: none
 
   heir_presumptive:
-    uuid:
-    joined_time:
-    challenge:
-      last_challenge_time:
-      challenger:
-      challenging:
+    uuid: none
+    name: user
+    joined_time: -1
+    last_challenge_time: -1
+    challenger: none
+    challenging: none
 
   noble_apparent:
-    uuid:
-    joined_time:
-    challenge:
-      last_challenge_time:
-      challenger:
-      challenging:
+    uuid: none
+    name: user
+    joined_time: -1
+    last_challenge_time: -1
+    challenger: none
+    challenging: none
 
   noble_presumptive:
-    uuid:
-    joined_time:
-    challenge:
-      last_challenge_time:
-      challenger:
-      challenging:
+    uuid: none
+    name: user
+    joined_time: -1
+    last_challenge_time: -1
+    challenger: none
+    challenging: none

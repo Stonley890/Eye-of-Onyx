@@ -1,7 +1,6 @@
 package io.github.stonley890.files;
 
 import java.io.File;
-import java.io.IOException;
 
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -20,16 +19,8 @@ public class RoyaltyBoard {
         file = new File(plugin.getDataFolder(), "board.yml");
 
         if (!file.exists()) {
-
-            try {
-                if (!file.createNewFile()) {
-                    Bukkit.getLogger().severe("Error creating board.yml file.");
-                    
-                }
-            } catch (IOException e) {
-                Bukkit.getLogger().severe("Error creating board.yml file:");
-                e.printStackTrace();
-            }
+            file.getParentFile().mkdirs();
+            plugin.saveResource("board.yml", false);
         }
         boardFile = YamlConfiguration.loadConfiguration(file);
     }
