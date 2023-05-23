@@ -38,9 +38,19 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
+      <groupId>net.dv8tion</groupId>
+      <artifactId>JDA</artifactId>
+      <version>5.0.0-alpha.17</version>
+    </dependency>
+    <dependency>
       <groupId>com.github.SparklingComet</groupId>
       <artifactId>java-mojang-api</artifactId>
       <version>-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>com.github.stonley890</groupId>
+      <artifactId>dreamvisitor</artifactId>
+      <version>main-SNAPSHOT</version>
     </dependency>
   </dependencies>
 
@@ -53,32 +63,30 @@
         <filtering>true</filtering>
       </resource>
     </resources>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.8.0</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-shade-plugin</artifactId>
-          <version>3.4.1</version>
-          <executions>
-            <execution>
-              <phase>package</phase>
-              <goals>
-                <goal>shade</goal>
-              </goals>
-              <configuration>
-                <createDependencyReducedPom>false</createDependencyReducedPom>
-                <finalName>Eye Of Onyx</finalName>
-                <outputFile>${project.basedir}/target</outputFile>
-              </configuration>
-            </execution>
-          </executions>
-        </plugin>
-      </plugins>
-    </pluginManagement>
+    <plugins>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.8.0</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>3.4.1</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <createDependencyReducedPom>false</createDependencyReducedPom>
+              <finalName>Eye Of Onyx</finalName>
+              <outputFile>${project.basedir}/server/plugins/EyeOfOnyx.jar</outputFile>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
   </build>
 
 </project>

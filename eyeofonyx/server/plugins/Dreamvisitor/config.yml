@@ -1,0 +1,17 @@
+# The bot token. DO NOT SHARE THIS
+bot-token: MTA0NDAyNzE0MDI0MjQxNTcwNg.G9IR9S.4yNq_ez6z-dKhlg6y8HhKqOyVDeTeY308ZKEYU
+
+# The channel ID of the game chat
+chatChannelID: '1008590641091072020'
+# The channel ID of the whitelist chat
+whitelistChannelID: '1020730055539839116'
+# The role ID of step 3
+step3RoleID: '1056031152206524426'
+# The role ID of member
+memberRoleID: '1008234966812983367'
+
+# Don't change unless you know what you're doing!
+chatPaused: false
+softwhitelist: false
+playerlimit: -1
+disablepvp: false

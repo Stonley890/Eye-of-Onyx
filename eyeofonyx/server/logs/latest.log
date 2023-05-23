@@ -1,0 +1,86 @@
+[21:12:43] [ServerMain/INFO]: Environment: authHost='https://authserver.mojang.com', accountsHost='https://api.mojang.com', sessionHost='https://sessionserver.mojang.com', servicesHost='https://api.minecraftservices.com', name='PROD'
+[21:12:45] [ServerMain/INFO]: Loaded 7 recipes
+[21:12:46] [Server thread/INFO]: Starting minecraft server version 1.19.4
+[21:12:46] [Server thread/INFO]: Loading properties
+[21:12:46] [Server thread/INFO]: This server is running Paper version git-Paper-538 (MC: 1.19.4) (Implementing API version 1.19.4-R0.1-SNAPSHOT) (Git: bcd8dc2)
+[21:12:46] [Server thread/INFO]: Using 4 threads for Netty based IO
+[21:12:46] [Server thread/INFO]: Server Ping Player Sample Count: 12
+[21:12:46] [Server thread/WARN]: [!] The timings profiler has been enabled but has been scheduled for removal from Paper in the future.
+    We recommend installing the spark profiler as a replacement: https://spark.lucko.me/
+    For more information please visit: https://github.com/PaperMC/Paper/issues/8948
+[21:12:46] [Server thread/INFO]: [ChunkTaskScheduler] Chunk system is using 1 I/O threads, 2 worker threads, and gen parallelism of 2 threads
+[21:12:46] [Server thread/INFO]: Default game type: CREATIVE
+[21:12:46] [Server thread/INFO]: Generating keypair
+[21:12:46] [Server thread/INFO]: Starting Minecraft server on *:25565
+[21:12:46] [Server thread/INFO]: Using default channel type
+[21:12:46] [Server thread/INFO]: Paper: Using Java compression from Velocity.
+[21:12:46] [Server thread/INFO]: Paper: Using Java cipher from Velocity.
+[21:12:47] [Server thread/INFO]: [Dreamvisitor] Loading server plugin Dreamvisitor v1.9.1
+[21:12:47] [Server thread/INFO]: [EyeOfOnyx] Loading server plugin EyeOfOnyx v1.0.0
+[21:12:47] [Server thread/INFO]: Server permissions file permissions.yml is empty, ignoring it
+[21:12:47] [Server thread/INFO]: Preparing level "world"
+[21:12:48] [Server thread/INFO]: Preparing start region for dimension minecraft:overworld
+[21:12:48] [Server thread/INFO]: Time elapsed: 140 ms
+[21:12:48] [Server thread/INFO]: Preparing start region for dimension minecraft:the_nether
+[21:12:48] [Server thread/INFO]: Time elapsed: 40 ms
+[21:12:48] [Server thread/INFO]: Preparing start region for dimension minecraft:the_end
+[21:12:48] [Server thread/INFO]: Time elapsed: 50 ms
+[21:12:48] [Server thread/INFO]: [Dreamvisitor] Enabling Dreamvisitor v1.9.1
+[21:12:48] [Server thread/INFO]: [Dreamvisitor] Dreamvisitor: A plugin created by Bog for WoF:TNW to add various features.
+[21:12:50] [Server thread/INFO]: [net.dv8tion.jda.api.JDA] Login Successful!
+[21:12:51] [JDA MainWS-WriteThread/INFO]: [net.dv8tion.jda.internal.requests.WebSocketClient] Connected to WebSocket
+[21:12:51] [JDA MainWS-ReadThread/INFO]: [net.dv8tion.jda.api.JDA] Finished Loading!
+[21:12:51] [Server thread/INFO]: [EyeOfOnyx] Enabling EyeOfOnyx v1.0.0
+[21:12:51] [Server thread/INFO]: Eye of Onyx 1.0.0: A plugin that manages the royalty board on Wings of Fire: The New World
+[21:12:51] [Server thread/INFO]: Running delayed init tasks
+[21:12:51] [Server thread/INFO]: Done (5.365s)! For help, type "help"
+[21:12:51] [Server thread/INFO]: Timings Reset
+[21:13:03] [Server thread/INFO]: Created missing IceWing team.
+[21:13:03] [Server thread/INFO]: Created missing LeafWing team.
+[21:13:03] [Server thread/INFO]: Created missing NightWing team.
+[21:13:03] [Server thread/INFO]: Created missing RainWing team.
+[21:13:03] [Server thread/INFO]: Created missing SandWing team.
+[21:13:03] [Server thread/INFO]: Created missing SeaWing team.
+[21:13:03] [Server thread/INFO]: Created missing SilkWing team.
+[21:13:03] [Server thread/INFO]: Created missing SkyWing team.
+[21:13:10] [Server thread/INFO]: ROYALTY BOARD
+MudWing ---
+[ RULER: King Bog (BogTheMudWing)
+[ HEIR APPARENT: none
+[ HEIR PRESUMPTIVE: none
+[ NOBLE APPARENT: none
+[ NOBLE PRESUMPTIVE: none
+[21:14:33] [Server thread/INFO]: Not a valid position.
+[21:14:33] [Server thread/INFO]: /royalty <set|remove|list>
+[21:14:36] [Server thread/INFO]: /royalty <set|remove|list>
+[21:14:38] [Server thread/INFO]: Not a valid tribe.
+[21:14:38] [Server thread/INFO]: /royalty <set|remove|list>
+[21:14:41] [Server thread/INFO]: Stopping the server
+[21:14:41] [Server thread/INFO]: Stopping server
+[21:14:41] [Server thread/INFO]: [EyeOfOnyx] Disabling EyeOfOnyx v1.0.0
+[21:14:41] [Server thread/INFO]: [Dreamvisitor] Disabling Dreamvisitor v1.9.1
+[21:14:41] [Server thread/INFO]: [Dreamvisitor] Closing bot instance.
+[21:14:41] [Server thread/INFO]: Saving players
+[21:14:42] [Server thread/INFO]: Saving worlds
+[21:14:42] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[21:14:42] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk system to halt for world 'world'
+[21:14:42] [Server thread/INFO]: [ChunkHolderManager] Halted chunk system for world 'world'
+[21:14:42] [Server thread/INFO]: [ChunkHolderManager] Saving all chunkholders for world 'world'
+[21:14:43] [Server thread/INFO]: [ChunkHolderManager] Saved 529 block chunks, 529 entity chunks, 0 poi chunks in world 'world' in 1.47s
+[21:14:43] [Server thread/INFO]: ThreadedAnvilChunkStorage (world): All chunks are saved
+[21:14:43] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world_nether]'/minecraft:the_nether
+[21:14:43] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk system to halt for world 'world_nether'
+[21:14:43] [Server thread/INFO]: [ChunkHolderManager] Halted chunk system for world 'world_nether'
+[21:14:43] [Server thread/INFO]: [ChunkHolderManager] Saving all chunkholders for world 'world_nether'
+[21:14:44] [Server thread/INFO]: [ChunkHolderManager] Saved 529 block chunks, 529 entity chunks, 0 poi chunks in world 'world_nether' in 1.08s
+[21:14:44] [Server thread/INFO]: ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[21:14:44] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world_the_end]'/minecraft:the_end
+[21:14:44] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk system to halt for world 'world_the_end'
+[21:14:44] [Server thread/INFO]: [ChunkHolderManager] Halted chunk system for world 'world_the_end'
+[21:14:44] [Server thread/INFO]: [ChunkHolderManager] Saving all chunkholders for world 'world_the_end'
+[21:14:45] [Server thread/INFO]: [ChunkHolderManager] Saved 529 block chunks, 529 entity chunks, 0 poi chunks in world 'world_the_end' in 0.35s
+[21:14:45] [Server thread/INFO]: ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[21:14:45] [Server thread/INFO]: ThreadedAnvilChunkStorage: All dimensions are saved
+[21:14:45] [Server thread/INFO]: Flushing Chunk IO
+[21:14:45] [Server thread/INFO]: Closing Thread Pool
+[21:14:45] [Server thread/INFO]: Closing Server

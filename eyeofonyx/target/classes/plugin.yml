@@ -5,6 +5,7 @@ api-version: 1.19
 description: A plugin that manages the royalty board on Wings of Fire The New World
 authors: [Stonley890, iHeron]
 website: https://github.com/Stonley890/EyeOfOnyx
+depend: [Dreamvisitor]
 
 commands:
   eyeofonyx:
@@ -13,4 +14,4 @@ commands:
     permission: minecraft.command.op
   royalty:
     description: Access or manage the royalty board.
-    usage: /<command> <set|remove|get>
+    usage: /<command> <set|remove|list>
