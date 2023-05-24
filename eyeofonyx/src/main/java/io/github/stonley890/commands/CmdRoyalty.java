@@ -1,7 +1,7 @@
 package io.github.stonley890.commands;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
@@ -58,129 +58,180 @@ public class CmdRoyalty implements CommandExecutor {
                 sender.sendMessage("Created missing " + teamNames[i] + " team.");
             }
         }
-        
+
+        RoyaltyBoard.reload();
+
         // Fail if not enough arguements
         if (args.length < 1) {
             return false;
-        } // If first arguement is "set" and there is another arguement
-        else if (args[0].equalsIgnoreCase("set") && args.length > 2) {
+        } else if (args[0].equalsIgnoreCase("set") && args.length > 2) {
 
-            // Try to get online Player, otherwise lookup OfflinePlayer
-            UUID targetPlayerUUID = UUID.fromString(mojang.getUUIDOfUsername(args[1]).replaceFirst(
-                    "(\\p{XDigit}{8})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}+)",
-                    "$1-$2-$3-$4-$5"));
-
-            // Get tribe from scoreboard team
-            String playerTribe = null;
-            try {
-
-                // Get team of player by iterating through list
-                for (int i = 0; i < teamNames.length; i++) {
-                    if (scoreboard.getTeam(teamNames[i]).hasEntry(args[1]))
-                        playerTribe = tribes[i];
-                }
-
-                // If target has no associated tribe team, fail
-                if (playerTribe == null) {
-                    sender.sendMessage(ChatColor.RED + "Target does not have a tribe tag!");
-                    return false;
-                }
-
-                // Check if third arguement contains a valid position
-                if (Arrays.stream(validPositions).anyMatch(args[2]::contains)) {
-
-                    // Set value in board.yml
-                    setBoard(playerTribe, args[2], "uuid", targetPlayerUUID.toString());
-                    RoyaltyBoard.save();
-                    sender.sendMessage(ChatColor.YELLOW + "" + args[1] + " is now " + args[2]);
-
-                    // If no name was provided, use username
-                    if (args.length == 3) {
-                        setBoard(playerTribe, args[2], "name", args[1]);
-
-                        // If ruler, set title to Ruler
-                        if (args[2].equals(validPositions[0])) {
-                            setBoard(playerTribe, args[2], "title", "Ruler");
-                        }
-                    }
-
-                    // Canon name
-                    // if ruler do title, then name
-                    if (args[2].equals(validPositions[0]) && args.length > 4) {
-                        setBoard(playerTribe, args[2], "title", args[3]);
-                        setBoard(playerTribe, args[2], "name", args[4]);
-                    } else {
-                        setBoard(playerTribe, args[2], "name", args[3]);
-                    }
-
-                    setBoard(playerTribe, args[2], "joined_time", Calendar.getInstance().getTime().getTime());
-
-                } else {
-                    sender.sendMessage(
-                            ChatColor.RED + "Invalid position. Valid positions: " + Arrays.toString(validPositions));
-                }
-            } catch (IllegalArgumentException e) {
-                // getTeam() throws IllegalArgumentException if teams do not exist
-                sender.sendMessage(ChatColor.RED + "Required teams do not exist!");
-            }
+            set(sender, args);
 
         } else if (args[0].equalsIgnoreCase("list")) {
-            // If no other arguements, build and send full board
-            if (args.length == 1) {
-                // Init a StringBuilder to store message for building
-                StringBuilder boardMessage = new StringBuilder();
 
-                // Build for each tribe
-                for (int i = 0; i < teamNames.length; i++) {
-                    boardMessage.append(buildBoard(i));
-                }
+            list(sender, args);
 
-                // Send built message
-                sender.sendMessage(ChatColor.YELLOW + "ROYALTY BOARD" + boardMessage.toString());
-
-            } // If next argument is a tribe, send just that board
-            else if (Arrays.stream(tribes).anyMatch(args[1]::contains)) {
-
-                // Init a StringBuilder to store message for building
-                StringBuilder boardMessage;
-
-                // Find index of tribe and build
-                boardMessage = buildBoard(Arrays.binarySearch(tribes, args[1]));
-
-                // Send built message
-                sender.sendMessage(ChatColor.YELLOW + "ROYALTY BOARD" + boardMessage.toString());
-
-            } else {
-                // Invalid arguement
-                sender.sendMessage(ChatColor.RED + "Invalid tribe name!");
-                return false;
-            }
         } else if (args[0].equalsIgnoreCase("clear") && args.length > 2) {
-            
-            if (Arrays.stream(tribes).noneMatch(args[1]::contains)) {
-                sender.sendMessage(ChatColor.RED + "Not a valid tribe.");
-                return false;
-            }
-            if (Arrays.stream(validPositions).noneMatch(args[2]::contains)) {
-                sender.sendMessage(ChatColor.RED + "Not a valid position.");
-                return false;
-            }
 
-            setBoard(args[1], args[2], "uuid", "none");
-            setBoard(args[1], args[2], "name", "none");
-            setBoard(args[1], args[2], "joined_time", "none");
-            setBoard(args[1], args[2], "last_challenge_time", "none");
-            setBoard(args[1], args[2], "challenger", "none");
-            if (args[2].equals(validPositions[0])) { setBoard(args[1], args[2], "title", "none"); }
+            clear(sender, args);
+        
+        } else if (args[0].equalsIgnoreCase("reload")) {
 
-            sender.sendMessage(args[1].toUpperCase() + " " + args[2].toUpperCase() + " position cleared.");
+            sender.sendMessage("Reloading and updating the board...");
+            RoyaltyBoard.reload();
+            RoyaltyBoard.updateBoard();
+            board = RoyaltyBoard.get();
+            sender.sendMessage(ChatColor.YELLOW + "Board updated.");
 
         } else {
             return false;
         }
 
-        RoyaltyBoard.save();
+        RoyaltyBoard.save(board);
         return true;
+    }
+
+    // royalty set <player> <position> [name]
+    boolean set(CommandSender sender, String[] args) {
+
+        UUID targetPlayerUUID;
+
+        try {
+            // Try to get online Player, otherwise lookup OfflinePlayer
+            targetPlayerUUID = UUID.fromString(mojang.getUUIDOfUsername(args[1]).replaceFirst(
+                    "(\\p{XDigit}{8})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}+)",
+                    "$1-$2-$3-$4-$5"));
+        } catch (NullPointerException e) {
+            sender.sendMessage(ChatColor.RED + "Player not found.");
+            return false;
+        }
+
+        // Get tribe from scoreboard team
+        String playerTribe = null;
+        try {
+
+            // Get team of player by iterating through list
+            for (int i = 0; i < teamNames.length; i++) {
+                if (scoreboard.getTeam(teamNames[i]).hasEntry(args[1]))
+                    playerTribe = tribes[i];
+            }
+
+            // If target has no associated tribe team, fail
+            if (playerTribe == null) {
+                sender.sendMessage(ChatColor.RED + "Target does not have a tribe tag!");
+                return false;
+            }
+
+            // Check if third arguement contains a valid position
+            if (Arrays.stream(validPositions).anyMatch(args[2]::contains)) {
+
+                // Set value in board.yml
+                setBoard(playerTribe, args[2], "uuid", targetPlayerUUID.toString());
+                RoyaltyBoard.save(board);
+                sender.sendMessage(ChatColor.YELLOW + "" + args[1] + " is now " + args[2].toUpperCase().replace('_', ' '));
+
+                // If no name was provided, use username
+                if (args.length == 3) {
+                    setBoard(playerTribe, args[2], "name", args[1]);
+
+                    // If ruler, set title to Ruler
+                    if (args[2].equals(validPositions[0])) {
+                        setBoard(playerTribe, args[2], "title", "Ruler");
+                    }
+                }
+
+                // Canon name
+                // if ruler do title, then name
+                if (args[2].equals(validPositions[0]) && args.length > 3) {
+                    setBoard(playerTribe, args[2], "title", args[3]);
+                    setBoard(playerTribe, args[2], "name", args[4]);
+                } else if (args.length > 3) {
+                    setBoard(playerTribe, args[2], "name", args[3]);
+                }
+
+                setBoard(playerTribe, args[2], "joined_time", LocalDateTime.now().toString());
+                setBoard(playerTribe, args[2], "last_challenge_time", LocalDateTime.now().toString());
+
+            } else {
+                sender.sendMessage(
+                        ChatColor.RED + "Invalid position. Valid positions: " + Arrays.toString(validPositions));
+            }
+        } catch (IllegalArgumentException e) {
+            // getTeam() throws IllegalArgumentException if teams do not exist
+            sender.sendMessage(ChatColor.RED + "Required teams do not exist!");
+        }
+
+        return true;
+    }
+
+    // royalty list [tribe]
+    boolean list(CommandSender sender, String[] args) {
+
+        // If no other arguements, build and send full board
+        if (args.length == 1) {
+            // Init a StringBuilder to store message for building
+            StringBuilder boardMessage = new StringBuilder();
+
+            // Build for each tribe
+            for (int i = 0; i < teamNames.length; i++) {
+                boardMessage.append(buildBoard(i));
+            }
+
+            // Send built message
+            sender.sendMessage(ChatColor.YELLOW + "ROYALTY BOARD" + boardMessage.toString());
+
+        } // If next argument is a tribe, send just that board
+        else if (Arrays.stream(tribes).anyMatch(args[1]::contains)) {
+
+            // Init a StringBuilder to store message for building
+            StringBuilder boardMessage;
+
+            // Find index of tribe and build
+            boardMessage = buildBoard(Arrays.binarySearch(tribes, args[1]));
+
+            // Send built message
+            sender.sendMessage(ChatColor.YELLOW + "ROYALTY BOARD" + boardMessage.toString());
+
+        } else {
+            // Invalid arguement
+            sender.sendMessage(ChatColor.RED + "Invalid tribe name!");
+            return false;
+        }
+
+        return true;
+    }
+
+    // royalty clear <tribe> <position>
+    boolean clear(CommandSender sender, String[] args) {
+
+        if (Arrays.stream(tribes).noneMatch(args[1]::contains)) {
+            sender.sendMessage(ChatColor.RED + "Not a valid tribe.");
+            return false;
+        }
+        if (Arrays.stream(validPositions).noneMatch(args[2]::contains)) {
+            sender.sendMessage(ChatColor.RED + "Not a valid position.");
+            return false;
+        }
+
+        // Clear data
+        setBoard(args[1], args[2], "uuid", "none");
+        setBoard(args[1], args[2], "name", "none");
+        setBoard(args[1], args[2], "joined_time", "none");
+        setBoard(args[1], args[2], "last_challenge_time", "none");
+        setBoard(args[1], args[2], "challenger", "none");
+
+        // If ruler, clear title, else clear challenging
+        if (args[2].equals(validPositions[0])) {
+            setBoard(args[1], args[2], "title", "none");
+        } else {
+            setBoard(args[1], args[2], "challenging", "none");
+        }
+
+        sender.sendMessage(args[1].toUpperCase() + " " + args[2].toUpperCase() + " position cleared.");
+
+        return true;
+
     }
 
     /*
@@ -191,12 +242,12 @@ public class CmdRoyalty implements CommandExecutor {
      * royalty.yml
      * Here is what the result looks like:
      * 
-     *1 TeamName ---
-     *2 [ RULER: Title Name (Username)
-     *3 [ HEIR APPARENT: Name (Username)
-     *4 [ HEIR PRESUMPTIVE: Name (Username)
-     *5 [ NOBLE APPARENT: Name (Username)
-     *6 [ NOBLE PRESUMPTIVE: Name (Username)
+     * 1 TeamName ---
+     * 2 [ RULER: Title Name (Username)
+     * 3 [ HEIR APPARENT: Name (Username)
+     * 4 [ HEIR PRESUMPTIVE: Name (Username)
+     * 5 [ NOBLE APPARENT: Name (Username)
+     * 6 [ NOBLE PRESUMPTIVE: Name (Username)
      * 
      */
     StringBuilder buildBoard(int index) {
@@ -222,7 +273,10 @@ public class CmdRoyalty implements CommandExecutor {
                 }
                 // Add canon name w/ username in parenthesis
                 strBuild.append(board.get(tribes[index] + "." + validPositions[j] + ".name"));
-                strBuild.append(" (" + mojang.getPlayerProfile((String) board.get(tribes[index] + "." + validPositions[j] + ".uuid")).getUsername() + ")");
+                strBuild.append(" ("
+                        + mojang.getPlayerProfile((String) board.get(tribes[index] + "." + validPositions[j] + ".uuid"))
+                                .getUsername()
+                        + ")");
             }
         }
         return strBuild;

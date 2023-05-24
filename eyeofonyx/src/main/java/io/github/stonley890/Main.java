@@ -32,7 +32,6 @@ public class Main extends JavaPlugin {
 
         // Set up royalty board file
         RoyaltyBoard.setup();
-        RoyaltyBoard.save();
 
         // Initialize command executors
         getCommand("eyeofonyx").setExecutor(new CmdEyeOfOnyx());
