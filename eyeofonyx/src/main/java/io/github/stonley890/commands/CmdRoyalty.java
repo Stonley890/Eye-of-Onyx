@@ -32,20 +32,13 @@ public class CmdRoyalty implements CommandExecutor {
     FileConfiguration board = RoyaltyBoard.get();
 
     // Team names
-    String[] teamNames = {
-            "HiveWing", "IceWing", "LeafWing", "MudWing", "NightWing", "RainWing", "SandWing", "SeaWing", "SilkWing",
-            "SkyWing"
-    };
+    String[] teamNames = RoyaltyBoard.getTeamNames();
 
     // Tribe IDs
-    String[] tribes = {
-            "hive", "ice", "leaf", "mud", "night", "rain", "sand", "sea", "silk", "sky"
-    };
+    String[] tribes = RoyaltyBoard.getTribes();
 
     // Valid positions
-    String[] validPositions = {
-            "ruler", "heir_apparent", "heir_presumptive", "noble_apparent", "noble_presumptive"
-    };
+    String[] validPositions = RoyaltyBoard.getValidPositions();
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
@@ -152,6 +145,7 @@ public class CmdRoyalty implements CommandExecutor {
 
                 setBoard(playerTribe, args[2], "joined_time", LocalDateTime.now().toString());
                 setBoard(playerTribe, args[2], "last_challenge_time", LocalDateTime.now().toString());
+                setBoard(playerTribe, args[2], "last_online", LocalDateTime.now().toString());
 
             } else {
                 sender.sendMessage(
@@ -220,6 +214,7 @@ public class CmdRoyalty implements CommandExecutor {
         setBoard(args[1], args[2], "joined_time", "none");
         setBoard(args[1], args[2], "last_challenge_time", "none");
         setBoard(args[1], args[2], "challenger", "none");
+        setBoard(args[1], args[2], "last_online", "none");
 
         // If ruler, clear title, else clear challenging
         if (args[2].equals(validPositions[0])) {

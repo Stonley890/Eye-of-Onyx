@@ -9,6 +9,7 @@ import io.github.stonley890.commands.CmdEyeOfOnyx;
 import io.github.stonley890.commands.CmdRoyalty;
 import io.github.stonley890.files.RoyaltyBoard;
 import io.github.stonley890.listeners.ListenJoin;
+import io.github.stonley890.listeners.ListenLeave;
 
 /*
  * The main ticking thread.
@@ -39,6 +40,7 @@ public class Main extends JavaPlugin {
 
         // Initialize listeners
         getServer().getPluginManager().registerEvents(new ListenJoin(), this);
+        getServer().getPluginManager().registerEvents(new ListenLeave(), this);
 
         // Start message
         Bukkit.getLogger().log(Level.INFO, "Eye of Onyx {0}: A plugin that manages the royalty board on Wings of Fire: The New World", version);

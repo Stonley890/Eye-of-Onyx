@@ -14,6 +14,12 @@ public class RoyaltyBoard {
     private static FileConfiguration boardFile;
     private static Main plugin = Main.getPlugin();
 
+    // Team names
+    static String[] teamNames = {
+        "HiveWing", "IceWing", "LeafWing", "MudWing", "NightWing", "RainWing", "SandWing", "SeaWing", "SilkWing",
+        "SkyWing"
+    };
+
     // Tribe IDs
     static String[] tribes = {
             "hive", "ice", "leaf", "mud", "night", "rain", "sand", "sea", "silk", "sky"
@@ -23,6 +29,18 @@ public class RoyaltyBoard {
     static String[] validPositions = {
             "ruler", "heir_apparent", "heir_presumptive", "noble_apparent", "noble_presumptive"
     };
+
+    public static String[] getTeamNames() {
+        return teamNames;
+    }
+
+    public static String[] getTribes() {
+        return tribes;
+    }
+
+    public static String[] getValidPositions() {
+        return validPositions;
+    }
 
     public static void setup() {
 
@@ -58,7 +76,7 @@ public class RoyaltyBoard {
 
         reload();
         // joined_time access
-        String joinedTime;
+        String last_online;
         // Track current position
         String currentPath;
         // Count number of empty positions
@@ -68,23 +86,23 @@ public class RoyaltyBoard {
         for (int i = 0; i < tribes.length; i++) {
 
             positionsEmpty = 0;
-            
+
             // For each position
             for (int j = 0; j < validPositions.length; j++) {
 
                 // Set current path
                 currentPath = tribes[i] + "." + validPositions[j];
 
-                // If joinedTime is before 30 days ago, set to empty
-                joinedTime = (String) boardFile.get(currentPath + ".joined_time");
-                if (!joinedTime.equals("none")) {
-                    if (LocalDateTime.parse(joinedTime).isBefore(LocalDateTime.now().minusDays(30))) {
-                        boardFile.set(currentPath + ".joined_time", "none");
+                // If last_online is before 30 days ago, set to empty
+                last_online = (String) boardFile.get(currentPath + ".last_online");
+                if (!last_online.equals("none")) {
+                    if (LocalDateTime.parse(last_online).isBefore(LocalDateTime.now().minusDays(30))) {
+                        boardFile.set(currentPath + ".last_online", "none");
                     }
                 }
 
-                // If joinedTime is empty, clear position
-                if (joinedTime.equals("none")) {
+                // If last_online is empty, clear position
+                if (last_online.equals("none")) {
 
                     // This position is empty, so count up positionsEmpty
                     positionsEmpty += 1;
@@ -93,6 +111,7 @@ public class RoyaltyBoard {
                     boardFile.set(currentPath + ".name", "none");
                     boardFile.set(currentPath + ".last_challenge_time", "none");
                     boardFile.set(currentPath + ".challenger", "none");
+                    boardFile.set(currentPath + ".last_online", "none");
 
                     // If position is ruler, change 'title'. Else, change 'challenging'
                     if (validPositions[j].equals(validPositions[0])) {
@@ -120,6 +139,8 @@ public class RoyaltyBoard {
                                 LocalDateTime.now().toString());
                         boardFile.set(tribes[i] + "." + validPositions[j - positionsEmpty] + ".joined_time",
                                 LocalDateTime.now().toString());
+                        boardFile.set(tribes[i] + "." + validPositions[j - positionsEmpty] + ".last_online",
+                                LocalDateTime.now().toString());
 
                         // If previous position is ruler, also set title
                         if (validPositions[j - 1].equals(validPositions[0])) {
@@ -135,8 +156,10 @@ public class RoyaltyBoard {
                         boardFile.set(currentPath + ".last_challenge_time", "none");
                         boardFile.set(currentPath + ".challenger", "none");
                         boardFile.set(currentPath + ".challenging", "none");
+                        boardFile.set(currentPath + ".last_online", "none");
 
-                        // This position is now empty and another user will move up on the next iteration
+                        // This position is now empty and another user will move up on the next
+                        // iteration
                         // if there is an active user below this position
                     }
                 }
