@@ -7,6 +7,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import io.github.stonley890.commands.CmdEyeOfOnyx;
 import io.github.stonley890.commands.CmdRoyalty;
+import io.github.stonley890.commands.tabcomplete.TabRoyalty;
 import io.github.stonley890.files.RoyaltyBoard;
 import io.github.stonley890.listeners.ListenJoin;
 import io.github.stonley890.listeners.ListenLeave;
@@ -37,6 +38,9 @@ public class Main extends JavaPlugin {
         // Initialize command executors
         getCommand("eyeofonyx").setExecutor(new CmdEyeOfOnyx());
         getCommand("royalty").setExecutor(new CmdRoyalty());
+
+        // Initialize tab completers
+        getCommand("royalty").setTabCompleter(new TabRoyalty());
 
         // Initialize listeners
         getServer().getPluginManager().registerEvents(new ListenJoin(), this);

@@ -1,66 +1,117 @@
-[10:51:07] [ServerMain/INFO]: Environment: authHost='https://authserver.mojang.com', accountsHost='https://api.mojang.com', sessionHost='https://sessionserver.mojang.com', servicesHost='https://api.minecraftservices.com', name='PROD'
-[10:51:09] [ServerMain/INFO]: Loaded 7 recipes
-[10:51:10] [Server thread/INFO]: Starting minecraft server version 1.19.4
-[10:51:10] [Server thread/INFO]: Loading properties
-[10:51:10] [Server thread/INFO]: This server is running Paper version git-Paper-538 (MC: 1.19.4) (Implementing API version 1.19.4-R0.1-SNAPSHOT) (Git: bcd8dc2)
-[10:51:10] [Server thread/INFO]: Server Ping Player Sample Count: 12
-[10:51:10] [Server thread/INFO]: Using 4 threads for Netty based IO
-[10:51:10] [Server thread/WARN]: [!] The timings profiler has been enabled but has been scheduled for removal from Paper in the future.
+[11:42:08] [ServerMain/INFO]: Environment: authHost='https://authserver.mojang.com', accountsHost='https://api.mojang.com', sessionHost='https://sessionserver.mojang.com', servicesHost='https://api.minecraftservices.com', name='PROD'
+[11:42:10] [ServerMain/INFO]: Loaded 7 recipes
+[11:42:11] [Server thread/INFO]: Starting minecraft server version 1.19.4
+[11:42:11] [Server thread/INFO]: Loading properties
+[11:42:11] [Server thread/INFO]: This server is running Paper version git-Paper-538 (MC: 1.19.4) (Implementing API version 1.19.4-R0.1-SNAPSHOT) (Git: bcd8dc2)
+[11:42:11] [Server thread/INFO]: Using 4 threads for Netty based IO
+[11:42:11] [Server thread/INFO]: Server Ping Player Sample Count: 12
+[11:42:11] [Server thread/WARN]: [!] The timings profiler has been enabled but has been scheduled for removal from Paper in the future.
     We recommend installing the spark profiler as a replacement: https://spark.lucko.me/
     For more information please visit: https://github.com/PaperMC/Paper/issues/8948
-[10:51:10] [Server thread/INFO]: [ChunkTaskScheduler] Chunk system is using 1 I/O threads, 2 worker threads, and gen parallelism of 2 threads
-[10:51:11] [Server thread/INFO]: Default game type: CREATIVE
-[10:51:11] [Server thread/INFO]: Generating keypair
-[10:51:11] [Server thread/INFO]: Starting Minecraft server on *:25565
-[10:51:11] [Server thread/INFO]: Using default channel type
-[10:51:11] [Server thread/INFO]: Paper: Using Java compression from Velocity.
-[10:51:11] [Server thread/INFO]: Paper: Using Java cipher from Velocity.
-[10:51:12] [Server thread/INFO]: [Dreamvisitor] Loading server plugin Dreamvisitor v1.9.1
-[10:51:12] [Server thread/INFO]: [EyeOfOnyx] Loading server plugin EyeOfOnyx v1.0.0
-[10:51:12] [Server thread/INFO]: Server permissions file permissions.yml is empty, ignoring it
-[10:51:12] [Server thread/INFO]: Preparing level "world"
-[10:51:12] [Server thread/INFO]: Preparing start region for dimension minecraft:overworld
-[10:51:12] [Server thread/INFO]: Time elapsed: 203 ms
-[10:51:12] [Server thread/INFO]: Preparing start region for dimension minecraft:the_nether
-[10:51:13] [Server thread/INFO]: Time elapsed: 107 ms
-[10:51:13] [Server thread/INFO]: Preparing start region for dimension minecraft:the_end
-[10:51:13] [Server thread/INFO]: Time elapsed: 44 ms
-[10:51:13] [Server thread/INFO]: [Dreamvisitor] Enabling Dreamvisitor v1.9.1
-[10:51:13] [Server thread/INFO]: [Dreamvisitor] Dreamvisitor: A plugin created by Bog for WoF:TNW to add various features.
-[10:51:15] [Server thread/INFO]: [net.dv8tion.jda.api.JDA] Login Successful!
-[10:51:16] [JDA MainWS-ReadThread/INFO]: [net.dv8tion.jda.internal.requests.WebSocketClient] Connected to WebSocket
-[10:51:16] [JDA MainWS-ReadThread/INFO]: [net.dv8tion.jda.api.JDA] Finished Loading!
-[10:51:16] [Server thread/INFO]: [EyeOfOnyx] Enabling EyeOfOnyx v1.0.0
-[10:51:16] [Server thread/INFO]: Eye of Onyx 1.0.0: A plugin that manages the royalty board on Wings of Fire: The New World
-[10:51:16] [Server thread/INFO]: Running delayed init tasks
-[10:51:16] [Server thread/INFO]: Done (6.296s)! For help, type "help"
-[10:51:16] [Server thread/INFO]: Timings Reset
-[10:51:19] [Server thread/INFO]: Stopping the server
-[10:51:19] [Server thread/INFO]: Stopping server
-[10:51:19] [Server thread/INFO]: [EyeOfOnyx] Disabling EyeOfOnyx v1.0.0
-[10:51:19] [Server thread/INFO]: [Dreamvisitor] Disabling Dreamvisitor v1.9.1
-[10:51:19] [Server thread/INFO]: [Dreamvisitor] Closing bot instance.
-[10:51:19] [Server thread/INFO]: Saving players
-[10:51:20] [Server thread/INFO]: Saving worlds
-[10:51:20] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
-[10:51:20] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk system to halt for world 'world'
-[10:51:20] [Server thread/INFO]: [ChunkHolderManager] Halted chunk system for world 'world'
-[10:51:20] [Server thread/INFO]: [ChunkHolderManager] Saving all chunkholders for world 'world'
-[10:51:22] [Server thread/INFO]: [ChunkHolderManager] Saved 529 block chunks, 529 entity chunks, 0 poi chunks in world 'world' in 2.22s
-[10:51:22] [Server thread/INFO]: ThreadedAnvilChunkStorage (world): All chunks are saved
-[10:51:22] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world_nether]'/minecraft:the_nether
-[10:51:22] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk system to halt for world 'world_nether'
-[10:51:22] [Server thread/INFO]: [ChunkHolderManager] Halted chunk system for world 'world_nether'
-[10:51:22] [Server thread/INFO]: [ChunkHolderManager] Saving all chunkholders for world 'world_nether'
-[10:51:23] [Server thread/INFO]: [ChunkHolderManager] Saved 529 block chunks, 529 entity chunks, 0 poi chunks in world 'world_nether' in 1.02s
-[10:51:23] [Server thread/INFO]: ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[10:51:23] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world_the_end]'/minecraft:the_end
-[10:51:23] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk system to halt for world 'world_the_end'
-[10:51:23] [Server thread/INFO]: [ChunkHolderManager] Halted chunk system for world 'world_the_end'
-[10:51:23] [Server thread/INFO]: [ChunkHolderManager] Saving all chunkholders for world 'world_the_end'
-[10:51:23] [Server thread/INFO]: [ChunkHolderManager] Saved 529 block chunks, 529 entity chunks, 0 poi chunks in world 'world_the_end' in 0.18s
-[10:51:24] [Server thread/INFO]: ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[10:51:24] [Server thread/INFO]: ThreadedAnvilChunkStorage: All dimensions are saved
-[10:51:24] [Server thread/INFO]: Flushing Chunk IO
-[10:51:24] [Server thread/INFO]: Closing Thread Pool
-[10:51:24] [Server thread/INFO]: Closing Server
+[11:42:11] [Server thread/INFO]: [ChunkTaskScheduler] Chunk system is using 1 I/O threads, 2 worker threads, and gen parallelism of 2 threads
+[11:42:11] [Server thread/INFO]: Default game type: CREATIVE
+[11:42:11] [Server thread/INFO]: Generating keypair
+[11:42:12] [Server thread/INFO]: Starting Minecraft server on *:25565
+[11:42:12] [Server thread/INFO]: Using default channel type
+[11:42:12] [Server thread/INFO]: Paper: Using Java compression from Velocity.
+[11:42:12] [Server thread/INFO]: Paper: Using Java cipher from Velocity.
+[11:42:13] [Server thread/INFO]: [Dreamvisitor] Loading server plugin Dreamvisitor v1.9.1
+[11:42:13] [Server thread/INFO]: [EyeOfOnyx] Loading server plugin EyeOfOnyx v1.0.0
+[11:42:13] [Server thread/INFO]: Server permissions file permissions.yml is empty, ignoring it
+[11:42:13] [Server thread/INFO]: Preparing level "world"
+[11:42:13] [Server thread/INFO]: Preparing start region for dimension minecraft:overworld
+[11:42:13] [Server thread/INFO]: Time elapsed: 139 ms
+[11:42:13] [Server thread/INFO]: Preparing start region for dimension minecraft:the_nether
+[11:42:13] [Server thread/INFO]: Time elapsed: 32 ms
+[11:42:13] [Server thread/INFO]: Preparing start region for dimension minecraft:the_end
+[11:42:13] [Server thread/INFO]: Time elapsed: 31 ms
+[11:42:13] [Server thread/INFO]: [Dreamvisitor] Enabling Dreamvisitor v1.9.1
+[11:42:13] [Server thread/INFO]: [Dreamvisitor] Dreamvisitor: A plugin created by Bog for WoF:TNW to add various features.
+[11:42:15] [Server thread/INFO]: [net.dv8tion.jda.api.JDA] Login Successful!
+[11:42:15] [JDA MainWS-ReadThread/INFO]: [net.dv8tion.jda.internal.requests.WebSocketClient] Connected to WebSocket
+[11:42:16] [JDA MainWS-ReadThread/INFO]: [net.dv8tion.jda.api.JDA] Finished Loading!
+[11:42:16] [Server thread/INFO]: [EyeOfOnyx] Enabling EyeOfOnyx v1.0.0
+[11:42:16] [Server thread/INFO]: Eye of Onyx 1.0.0: A plugin that manages the royalty board on Wings of Fire: The New World
+[11:42:16] [Server thread/INFO]: Running delayed init tasks
+[11:42:16] [Server thread/INFO]: Done (5.202s)! For help, type "help"
+[11:42:16] [Server thread/INFO]: Timings Reset
+[13:07:30] [JDA MainWS-ReadThread/WARN]: [net.dv8tion.jda.internal.requests.WebSocketClient] Got disconnected from WebSocket (Code 1000). Appending to reconnect queue
+[13:07:33] [JDA MainWS-ReadThread/INFO]: [net.dv8tion.jda.internal.requests.WebSocketClient] Connected to WebSocket
+[13:07:33] [JDA MainWS-ReadThread/INFO]: [net.dv8tion.jda.api.JDA] Finished (Re)Loading!
+[14:21:14] [JDA MainWS-ReadThread/WARN]: [net.dv8tion.jda.internal.requests.WebSocketClient] Reconnect failed! Next attempt in 2s
+[14:21:16] [JDA MainWS-ReadThread/WARN]: [net.dv8tion.jda.internal.requests.WebSocketClient] Reconnect failed! Next attempt in 4s
+[14:21:20] [JDA MainWS-ReadThread/WARN]: [net.dv8tion.jda.internal.requests.WebSocketClient] Reconnect failed! Next attempt in 8s
+[14:21:28] [JDA MainWS-ReadThread/WARN]: [net.dv8tion.jda.internal.requests.WebSocketClient] Reconnect failed! Next attempt in 16s
+[14:49:30] [JDA MainWS-ReadThread/WARN]: [net.dv8tion.jda.internal.requests.WebSocketClient] Got disconnected from WebSocket (Code 1000). Appending to reconnect queue
+[14:55:10] [JDA MainWS-ReadThread/INFO]: [net.dv8tion.jda.internal.requests.WebSocketClient] Connected to WebSocket
+[14:55:10] [JDA MainWS-ReadThread/INFO]: [net.dv8tion.jda.api.JDA] Finished (Re)Loading!
+[16:27:43] [Server thread/INFO]: Stopping server
+[16:27:43] [Server thread/INFO]: [EyeOfOnyx] Disabling EyeOfOnyx v1.0.0
+[16:27:43] [Server console handler/ERROR]: Caught previously unhandled exception :
+java.io.IOError: java.io.IOException: Input/output error
+	at org.jline.keymap.BindingReader.readCharacter(BindingReader.java:170) ~[jline-reader-3.20.0.jar:?]
+	at org.jline.keymap.BindingReader.readBinding(BindingReader.java:110) ~[jline-reader-3.20.0.jar:?]
+	at org.jline.keymap.BindingReader.readBinding(BindingReader.java:61) ~[jline-reader-3.20.0.jar:?]
+	at org.jline.reader.impl.LineReaderImpl.doReadBinding(LineReaderImpl.java:923) ~[jline-reader-3.20.0.jar:?]
+	at org.jline.reader.impl.LineReaderImpl.readBinding(LineReaderImpl.java:956) ~[jline-reader-3.20.0.jar:?]
+	at org.jline.reader.impl.LineReaderImpl.readLine(LineReaderImpl.java:651) ~[jline-reader-3.20.0.jar:?]
+	at org.jline.reader.impl.LineReaderImpl.readLine(LineReaderImpl.java:468) ~[jline-reader-3.20.0.jar:?]
+	at net.minecrell.terminalconsole.SimpleTerminalConsole.readCommands(SimpleTerminalConsole.java:158) ~[terminalconsoleappender-1.3.0.jar:?]
+	at net.minecrell.terminalconsole.SimpleTerminalConsole.start(SimpleTerminalConsole.java:141) ~[terminalconsoleappender-1.3.0.jar:?]
+	at net.minecraft.server.dedicated.DedicatedServer$1.run(DedicatedServer.java:102) ~[paper-1.19.4.jar:git-Paper-538]
+Caused by: java.io.IOException: Input/output error
+	at java.io.FileInputStream.read0(Native Method) ~[?:?]
+	at java.io.FileInputStream.read(FileInputStream.java:228) ~[?:?]
+	at org.jline.terminal.impl.AbstractPty$PtyInputStream.read(AbstractPty.java:73) ~[jline-terminal-3.21.0.jar:?]
+	at org.jline.utils.NonBlockingInputStream.read(NonBlockingInputStream.java:62) ~[jline-terminal-3.21.0.jar:?]
+	at org.jline.utils.NonBlocking$NonBlockingInputStreamReader.read(NonBlocking.java:168) ~[jline-terminal-3.21.0.jar:?]
+	at org.jline.utils.NonBlockingReader.read(NonBlockingReader.java:57) ~[jline-terminal-3.21.0.jar:?]
+	at org.jline.keymap.BindingReader.readCharacter(BindingReader.java:160) ~[jline-reader-3.20.0.jar:?]
+	... 9 more
+[16:27:43] [Server thread/INFO]: [Dreamvisitor] Disabling Dreamvisitor v1.9.1
+[16:27:43] [Server thread/INFO]: [Dreamvisitor] Closing bot instance.
+[16:27:43] [Server thread/ERROR]: Error occurred (in the plugin loader) while disabling Dreamvisitor v1.9.1 (Is it up to date?)
+java.util.concurrent.RejectedExecutionException: The Requester has been stopped! No new requests can be requested!
+	at net.dv8tion.jda.internal.requests.Requester.request(Requester.java:109) ~[dreamvisitor-1.9.1.jar:?]
+	at net.dv8tion.jda.internal.requests.RestActionImpl.queue(RestActionImpl.java:198) ~[dreamvisitor-1.9.1.jar:?]
+	at net.dv8tion.jda.api.requests.RestAction.queue(RestAction.java:573) ~[dreamvisitor-1.9.1.jar:?]
+	at net.dv8tion.jda.api.requests.RestAction.queue(RestAction.java:539) ~[dreamvisitor-1.9.1.jar:?]
+	at io.github.stonley890.Main.lambda$1(Main.java:126) ~[dreamvisitor-1.9.1.jar:?]
+	at java.util.ArrayList.forEach(ArrayList.java:1511) ~[?:?]
+	at java.util.Collections$UnmodifiableCollection.forEach(Collections.java:1092) ~[?:?]
+	at io.github.stonley890.Main.onDisable(Main.java:126) ~[dreamvisitor-1.9.1.jar:?]
+	at org.bukkit.plugin.java.JavaPlugin.setEnabled(JavaPlugin.java:283) ~[paper-api-1.19.4-R0.1-SNAPSHOT.jar:?]
+	at io.papermc.paper.plugin.manager.PaperPluginInstanceManager.disablePlugin(PaperPluginInstanceManager.java:224) ~[paper-1.19.4.jar:git-Paper-538]
+	at io.papermc.paper.plugin.manager.PaperPluginInstanceManager.disablePlugins(PaperPluginInstanceManager.java:148) ~[paper-1.19.4.jar:git-Paper-538]
+	at io.papermc.paper.plugin.manager.PaperPluginManagerImpl.disablePlugins(PaperPluginManagerImpl.java:92) ~[paper-1.19.4.jar:git-Paper-538]
+	at org.bukkit.plugin.SimplePluginManager.disablePlugins(SimplePluginManager.java:528) ~[paper-api-1.19.4-R0.1-SNAPSHOT.jar:?]
+	at org.bukkit.craftbukkit.v1_19_R3.CraftServer.disablePlugins(CraftServer.java:487) ~[paper-1.19.4.jar:git-Paper-538]
+	at net.minecraft.server.MinecraftServer.stopServer(MinecraftServer.java:947) ~[paper-1.19.4.jar:git-Paper-538]
+	at net.minecraft.server.dedicated.DedicatedServer.stopServer(DedicatedServer.java:804) ~[paper-1.19.4.jar:git-Paper-538]
+	at net.minecraft.server.MinecraftServer.runServer(MinecraftServer.java:1213) ~[paper-1.19.4.jar:git-Paper-538]
+	at net.minecraft.server.MinecraftServer.lambda$spin$0(MinecraftServer.java:320) ~[paper-1.19.4.jar:git-Paper-538]
+	at java.lang.Thread.run(Thread.java:833) ~[?:?]
+[16:27:43] [Server thread/INFO]: Saving players
+[16:27:43] [Server thread/INFO]: Saving worlds
+[16:27:43] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[16:27:43] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk system to halt for world 'world'
+[16:27:43] [Server thread/INFO]: [ChunkHolderManager] Halted chunk system for world 'world'
+[16:27:43] [Server thread/INFO]: [ChunkHolderManager] Saving all chunkholders for world 'world'
+[16:27:43] [Server thread/INFO]: [ChunkHolderManager] Saved 0 block chunks, 59 entity chunks, 0 poi chunks in world 'world' in 0.04s
+[16:27:43] [Server thread/INFO]: ThreadedAnvilChunkStorage (world): All chunks are saved
+[16:27:43] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world_nether]'/minecraft:the_nether
+[16:27:43] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk system to halt for world 'world_nether'
+[16:27:43] [Server thread/INFO]: [ChunkHolderManager] Halted chunk system for world 'world_nether'
+[16:27:43] [Server thread/INFO]: [ChunkHolderManager] Saving all chunkholders for world 'world_nether'
+[16:27:43] [Server thread/INFO]: [ChunkHolderManager] Saved 0 block chunks, 11 entity chunks, 0 poi chunks in world 'world_nether' in 0.01s
+[16:27:43] [Server thread/INFO]: ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[16:27:43] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world_the_end]'/minecraft:the_end
+[16:27:43] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk system to halt for world 'world_the_end'
+[16:27:43] [Server thread/INFO]: [ChunkHolderManager] Halted chunk system for world 'world_the_end'
+[16:27:43] [Server thread/INFO]: [ChunkHolderManager] Saving all chunkholders for world 'world_the_end'
+[16:27:43] [Server thread/INFO]: [ChunkHolderManager] Saved 10 block chunks, 10 entity chunks, 0 poi chunks in world 'world_the_end' in 0.03s
+[16:27:44] [Server thread/INFO]: ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[16:27:44] [Server thread/INFO]: ThreadedAnvilChunkStorage: All dimensions are saved
+[16:27:44] [Server thread/INFO]: Flushing Chunk IO
+[16:27:44] [Server thread/INFO]: Closing Thread Pool
+[16:27:44] [Server thread/INFO]: Closing Server
