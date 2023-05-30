@@ -1,1 +1,8 @@
-[]
+[
+  {
+    "uuid": "eedf3c55-2e73-4e73-99a7-81d953745f0a",
+    "name": "BogTheMudWing",
+    "level": 4,
+    "bypassesPlayerLimit": false
+  }
+]

@@ -11,6 +11,7 @@ import io.github.stonley890.commands.tabcomplete.TabRoyalty;
 import io.github.stonley890.files.RoyaltyBoard;
 import io.github.stonley890.listeners.ListenJoin;
 import io.github.stonley890.listeners.ListenLeave;
+import net.md_5.bungee.api.ChatColor;
 
 /*
  * The main ticking thread.
@@ -19,6 +20,7 @@ import io.github.stonley890.listeners.ListenLeave;
 public class Main extends JavaPlugin {
 
     public final String version = getDescription().getVersion();
+    public static final String eoo = ChatColor.GRAY + "[" + ChatColor.GREEN + "EoO" + ChatColor.GRAY + "] " + ChatColor.RESET;
 
     static Main plugin;
 

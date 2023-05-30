@@ -15,3 +15,4 @@ commands:
   royalty:
     description: Access or manage the royalty board.
     usage: /<command> <set|remove|list>
+    permission: minecraft.command.op

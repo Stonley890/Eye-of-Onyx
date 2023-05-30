@@ -5,39 +5,44 @@ hive:
   ruler:
     uuid: none
     title: none
-    name: none
+    name: user
     joined_time: none
+    last_online: none
     last_challenge_time: none
     challenger: none
   
   heir_apparent:
     uuid: none
-    name: none
+    name: user
     joined_time: none
+    last_online: none
     last_challenge_time: none
     challenger: none
     challenging: none
   
   heir_presumptive:
     uuid: none
-    name: none
+    name: user
     joined_time: none
+    last_online: none
     last_challenge_time: none
     challenger: none
     challenging: none
   
   noble_apparent:
     uuid: none
-    name: none
+    name: user
     joined_time: none
+    last_online: none
     last_challenge_time: none
     challenger: none
     challenging: none
   
   noble_presumptive:
     uuid: none
-    name: none
+    name: user
     joined_time: none
+    last_online: none
     last_challenge_time: none
     challenger: none
     challenging: none
@@ -47,39 +52,44 @@ ice:
   ruler:
     uuid: none
     title: none
-    name: none
+    name: user
     joined_time: none
+    last_online: none
     last_challenge_time: none
     challenger: none
   
   heir_apparent:
     uuid: none
-    name: none
+    name: user
     joined_time: none
+    last_online: none
     last_challenge_time: none
     challenger: none
     challenging: none
   
   heir_presumptive:
     uuid: none
-    name: none
+    name: user
     joined_time: none
+    last_online: none
     last_challenge_time: none
     challenger: none
     challenging: none
   
   noble_apparent:
     uuid: none
-    name: none
+    name: user
     joined_time: none
+    last_online: none
     last_challenge_time: none
     challenger: none
     challenging: none
   
   noble_presumptive:
     uuid: none
-    name: none
+    name: user
     joined_time: none
+    last_online: none
     last_challenge_time: none
     challenger: none
     challenging: none
@@ -89,39 +99,44 @@ leaf:
   ruler:
     uuid: none
     title: none
-    name: none
+    name: user
     joined_time: none
+    last_online: none
     last_challenge_time: none
     challenger: none
   
   heir_apparent:
     uuid: none
-    name: none
+    name: user
     joined_time: none
+    last_online: none
     last_challenge_time: none
     challenger: none
     challenging: none
   
   heir_presumptive:
     uuid: none
-    name: none
+    name: user
     joined_time: none
+    last_online: none
     last_challenge_time: none
     challenger: none
     challenging: none
   
   noble_apparent:
     uuid: none
-    name: none
+    name: user
     joined_time: none
+    last_online: none
     last_challenge_time: none
     challenger: none
     challenging: none
   
   noble_presumptive:
     uuid: none
-    name: none
+    name: user
     joined_time: none
+    last_online: none
     last_challenge_time: none
     challenger: none
     challenging: none
@@ -129,41 +144,46 @@ leaf:
 mud:
   
   ruler:
-    uuid: 0745f7d3-3a45-4f85-86c4-ab0e7b7cdda5
+    uuid: none
     title: none
-    name: Raina
-    joined_time: '2023-05-24T12:30:58.780944'
-    last_challenge_time: '2023-05-24T12:30:58.780882'
+    name: none
+    joined_time: none
+    last_online: none
+    last_challenge_time: none
     challenger: none
   
   heir_apparent:
     uuid: none
-    name: none
+    name: user
     joined_time: none
+    last_online: none
     last_challenge_time: none
     challenger: none
     challenging: none
   
   heir_presumptive:
     uuid: none
-    name: none
+    name: user
     joined_time: none
+    last_online: none
     last_challenge_time: none
     challenger: none
     challenging: none
   
   noble_apparent:
     uuid: none
-    name: none
+    name: user
     joined_time: none
+    last_online: none
     last_challenge_time: none
     challenger: none
     challenging: none
   
   noble_presumptive:
     uuid: none
-    name: none
+    name: user
     joined_time: none
+    last_online: none
     last_challenge_time: none
     challenger: none
     challenging: none
@@ -173,39 +193,44 @@ night:
   ruler:
     uuid: none
     title: none
-    name: none
+    name: user
     joined_time: none
+    last_online: none
     last_challenge_time: none
     challenger: none
   
   heir_apparent:
     uuid: none
-    name: none
+    name: user
     joined_time: none
+    last_online: none
     last_challenge_time: none
     challenger: none
     challenging: none
   
   heir_presumptive:
     uuid: none
-    name: none
+    name: user
     joined_time: none
+    last_online: none
     last_challenge_time: none
     challenger: none
     challenging: none
   
   noble_apparent:
     uuid: none
-    name: none
+    name: user
     joined_time: none
+    last_online: none
     last_challenge_time: none
     challenger: none
     challenging: none
   
   noble_presumptive:
     uuid: none
-    name: none
+    name: user
     joined_time: none
+    last_online: none
     last_challenge_time: none
     challenger: none
     challenging: none
@@ -215,39 +240,44 @@ rain:
   ruler:
     uuid: none
     title: none
-    name: none
+    name: user
     joined_time: none
+    last_online: none
     last_challenge_time: none
     challenger: none
   
   heir_apparent:
     uuid: none
-    name: none
+    name: user
     joined_time: none
+    last_online: none
     last_challenge_time: none
     challenger: none
     challenging: none
   
   heir_presumptive:
     uuid: none
-    name: none
+    name: user
     joined_time: none
+    last_online: none
     last_challenge_time: none
     challenger: none
     challenging: none
   
   noble_apparent:
     uuid: none
-    name: none
+    name: user
     joined_time: none
+    last_online: none
     last_challenge_time: none
     challenger: none
     challenging: none
   
   noble_presumptive:
     uuid: none
-    name: none
+    name: user
     joined_time: none
+    last_online: none
     last_challenge_time: none
     challenger: none
     challenging: none
@@ -257,39 +287,44 @@ sand:
   ruler:
     uuid: none
     title: none
-    name: none
+    name: user
     joined_time: none
+    last_online: none
     last_challenge_time: none
     challenger: none
   
   heir_apparent:
     uuid: none
-    name: none
+    name: user
     joined_time: none
+    last_online: none
     last_challenge_time: none
     challenger: none
     challenging: none
   
   heir_presumptive:
     uuid: none
-    name: none
+    name: user
     joined_time: none
+    last_online: none
     last_challenge_time: none
     challenger: none
     challenging: none
   
   noble_apparent:
     uuid: none
-    name: none
+    name: user
     joined_time: none
+    last_online: none
     last_challenge_time: none
     challenger: none
     challenging: none
   
   noble_presumptive:
     uuid: none
-    name: none
+    name: user
     joined_time: none
+    last_online: none
     last_challenge_time: none
     challenger: none
     challenging: none
@@ -299,39 +334,44 @@ sea:
   ruler:
     uuid: none
     title: none
-    name: none
+    name: user
     joined_time: none
+    last_online: none
     last_challenge_time: none
     challenger: none
   
   heir_apparent:
     uuid: none
-    name: none
+    name: user
     joined_time: none
+    last_online: none
     last_challenge_time: none
     challenger: none
     challenging: none
   
   heir_presumptive:
     uuid: none
-    name: none
+    name: user
     joined_time: none
+    last_online: none
     last_challenge_time: none
     challenger: none
     challenging: none
   
   noble_apparent:
     uuid: none
-    name: none
+    name: user
     joined_time: none
+    last_online: none
     last_challenge_time: none
     challenger: none
     challenging: none
   
   noble_presumptive:
     uuid: none
-    name: none
+    name: user
     joined_time: none
+    last_online: none
     last_challenge_time: none
     challenger: none
     challenging: none
@@ -341,39 +381,44 @@ silk:
   ruler:
     uuid: none
     title: none
-    name: none
+    name: user
     joined_time: none
+    last_online: none
     last_challenge_time: none
     challenger: none
   
   heir_apparent:
     uuid: none
-    name: none
+    name: user
     joined_time: none
+    last_online: none
     last_challenge_time: none
     challenger: none
     challenging: none
   
   heir_presumptive:
     uuid: none
-    name: none
+    name: user
     joined_time: none
+    last_online: none
     last_challenge_time: none
     challenger: none
     challenging: none
   
   noble_apparent:
     uuid: none
-    name: none
+    name: user
     joined_time: none
+    last_online: none
     last_challenge_time: none
     challenger: none
     challenging: none
   
   noble_presumptive:
     uuid: none
-    name: none
+    name: user
     joined_time: none
+    last_online: none
     last_challenge_time: none
     challenger: none
     challenging: none
@@ -383,39 +428,44 @@ sky:
   ruler:
     uuid: none
     title: none
-    name: none
+    name: user
     joined_time: none
+    last_online: none
     last_challenge_time: none
     challenger: none
   
   heir_apparent:
     uuid: none
-    name: none
+    name: user
     joined_time: none
+    last_online: none
     last_challenge_time: none
     challenger: none
     challenging: none
   
   heir_presumptive:
     uuid: none
-    name: none
+    name: user
     joined_time: none
+    last_online: none
     last_challenge_time: none
     challenger: none
     challenging: none
   
   noble_apparent:
     uuid: none
-    name: none
+    name: user
     joined_time: none
+    last_online: none
     last_challenge_time: none
     challenger: none
     challenging: none
   
   noble_presumptive:
     uuid: none
-    name: none
+    name: user
     joined_time: none
+    last_online: none
     last_challenge_time: none
     challenger: none
     challenging: none

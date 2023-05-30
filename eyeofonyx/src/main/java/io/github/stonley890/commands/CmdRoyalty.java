@@ -48,7 +48,7 @@ public class CmdRoyalty implements CommandExecutor {
             if (scoreboard.getTeam(teamNames[i]) == null) {
 
                 scoreboard.registerNewTeam(teamNames[i]);
-                sender.sendMessage("Created missing " + teamNames[i] + " team.");
+                sender.sendMessage(Main.eoo + "Created missing " + teamNames[i] + " team.");
             }
         }
 
@@ -69,13 +69,13 @@ public class CmdRoyalty implements CommandExecutor {
 
             clear(sender, args);
         
-        } else if (args[0].equalsIgnoreCase("reload")) {
+        } else if (args[0].equalsIgnoreCase("update")) {
 
-            sender.sendMessage("Reloading and updating the board...");
+            sender.sendMessage(Main.eoo + "Reloading and updating the board...");
             RoyaltyBoard.reload();
             RoyaltyBoard.updateBoard();
             board = RoyaltyBoard.get();
-            sender.sendMessage(ChatColor.YELLOW + "Board updated.");
+            sender.sendMessage(Main.eoo + ChatColor.YELLOW + "Board updated.");
 
         } else {
             return false;
@@ -96,7 +96,7 @@ public class CmdRoyalty implements CommandExecutor {
                     "(\\p{XDigit}{8})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}+)",
                     "$1-$2-$3-$4-$5"));
         } catch (NullPointerException e) {
-            sender.sendMessage(ChatColor.RED + "Player not found.");
+            sender.sendMessage(Main.eoo + ChatColor.RED + "Player not found.");
             return false;
         }
 
@@ -112,7 +112,7 @@ public class CmdRoyalty implements CommandExecutor {
 
             // If target has no associated tribe team, fail
             if (playerTribe == null) {
-                sender.sendMessage(ChatColor.RED + "Target does not have a tribe tag!");
+                sender.sendMessage(Main.eoo + ChatColor.RED + "Target does not have a tribe tag!");
                 return false;
             }
 
@@ -122,7 +122,7 @@ public class CmdRoyalty implements CommandExecutor {
                 // Set value in board.yml
                 setBoard(playerTribe, args[2], "uuid", targetPlayerUUID.toString());
                 RoyaltyBoard.save(board);
-                sender.sendMessage(ChatColor.YELLOW + "" + args[1] + " is now " + args[2].toUpperCase().replace('_', ' '));
+                sender.sendMessage(Main.eoo + ChatColor.YELLOW + "" + args[1] + " is now " + args[2].toUpperCase().replace('_', ' '));
 
                 // If no name was provided, use username
                 if (args.length == 3) {
@@ -148,12 +148,12 @@ public class CmdRoyalty implements CommandExecutor {
                 setBoard(playerTribe, args[2], "last_online", LocalDateTime.now().toString());
 
             } else {
-                sender.sendMessage(
+                sender.sendMessage(Main.eoo + 
                         ChatColor.RED + "Invalid position. Valid positions: " + Arrays.toString(validPositions));
             }
         } catch (IllegalArgumentException e) {
             // getTeam() throws IllegalArgumentException if teams do not exist
-            sender.sendMessage(ChatColor.RED + "Required teams do not exist!");
+            sender.sendMessage(Main.eoo + ChatColor.RED + "Required teams do not exist!");
         }
 
         return true;
@@ -173,7 +173,7 @@ public class CmdRoyalty implements CommandExecutor {
             }
 
             // Send built message
-            sender.sendMessage(ChatColor.YELLOW + "ROYALTY BOARD" + boardMessage.toString());
+            sender.sendMessage(Main.eoo + ChatColor.YELLOW + "ROYALTY BOARD" + boardMessage.toString());
 
         } // If next argument is a tribe, send just that board
         else if (Arrays.stream(tribes).anyMatch(args[1]::contains)) {
@@ -185,11 +185,11 @@ public class CmdRoyalty implements CommandExecutor {
             boardMessage = buildBoard(Arrays.binarySearch(tribes, args[1]));
 
             // Send built message
-            sender.sendMessage(ChatColor.YELLOW + "ROYALTY BOARD" + boardMessage.toString());
+            sender.sendMessage(Main.eoo + ChatColor.YELLOW + "ROYALTY BOARD" + boardMessage.toString());
 
         } else {
             // Invalid arguement
-            sender.sendMessage(ChatColor.RED + "Invalid tribe name!");
+            sender.sendMessage(Main.eoo + ChatColor.RED + "Invalid tribe name!");
             return false;
         }
 
@@ -200,11 +200,11 @@ public class CmdRoyalty implements CommandExecutor {
     boolean clear(CommandSender sender, String[] args) {
 
         if (Arrays.stream(tribes).noneMatch(args[1]::contains)) {
-            sender.sendMessage(ChatColor.RED + "Not a valid tribe.");
+            sender.sendMessage(Main.eoo + ChatColor.RED + "Not a valid tribe.");
             return false;
         }
         if (Arrays.stream(validPositions).noneMatch(args[2]::contains)) {
-            sender.sendMessage(ChatColor.RED + "Not a valid position.");
+            sender.sendMessage(Main.eoo + ChatColor.RED + "Not a valid position.");
             return false;
         }
 
@@ -223,7 +223,7 @@ public class CmdRoyalty implements CommandExecutor {
             setBoard(args[1], args[2], "challenging", "none");
         }
 
-        sender.sendMessage(args[1].toUpperCase() + " " + args[2].toUpperCase() + " position cleared.");
+        sender.sendMessage(Main.eoo + ChatColor.YELLOW + args[1].toUpperCase() + " " + args[2].toUpperCase() + " position cleared.");
 
         return true;
 
