@@ -55,8 +55,6 @@ public class TabRoyalty implements TabCompleter {
             // royalty set <clear> <arg1> <position>
             suggestions.addAll(List.of(positions));
 
-        } else {
-            suggestions = null;
         }
 
         return suggestions;
