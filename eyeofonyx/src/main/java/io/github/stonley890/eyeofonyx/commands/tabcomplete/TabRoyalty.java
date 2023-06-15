@@ -2,6 +2,8 @@ package io.github.stonley890.eyeofonyx.commands.tabcomplete;
 
 import java.util.List;
 
+
+import kotlin.collections.builders.ListBuilder;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -9,7 +11,7 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
 import io.github.stonley890.eyeofonyx.files.RoyaltyBoard;
-import kotlin.collections.builders.ListBuilder;
+import org.jetbrains.annotations.NotNull;
 
 public class TabRoyalty implements TabCompleter {
 
@@ -19,7 +21,7 @@ public class TabRoyalty implements TabCompleter {
     List<String> suggestions = new ListBuilder<>();
 
     @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
+    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
 
         // Clear previous suggestions or create a new ListBuilder
         if (suggestions != null) {

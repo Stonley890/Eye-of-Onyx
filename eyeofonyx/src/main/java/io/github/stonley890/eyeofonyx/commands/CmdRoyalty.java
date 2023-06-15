@@ -2,6 +2,7 @@ package io.github.stonley890.eyeofonyx.commands;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
@@ -10,8 +11,8 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.scoreboard.Scoreboard;
+import org.jetbrains.annotations.NotNull;
 import org.shanerx.mojang.Mojang;
 
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
@@ -19,14 +20,11 @@ import io.github.stonley890.eyeofonyx.files.RoyaltyBoard;
 
 public class CmdRoyalty implements CommandExecutor {
 
-    // Get plugin instance (main thread)
-    Plugin plugin = EyeOfOnyx.getPlugin();
-
     // Get Mojang services
     Mojang mojang = new Mojang().connect();
 
     // Get server scoreboard service (for teams)
-    Scoreboard scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
+    Scoreboard scoreboard = Objects.requireNonNull(Bukkit.getScoreboardManager()).getMainScoreboard();
 
     // Easy access royalty board
     FileConfiguration board = RoyaltyBoard.get();
@@ -41,20 +39,20 @@ public class CmdRoyalty implements CommandExecutor {
     String[] validPositions = RoyaltyBoard.getValidPositions();
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
 
         // Check for and create missing teams
-        for (int i = 0; i < teamNames.length; i++) {
-            if (scoreboard.getTeam(teamNames[i]) == null) {
+        for (String teamName : teamNames) {
+            if (scoreboard.getTeam(teamName) == null) {
 
-                scoreboard.registerNewTeam(teamNames[i]);
-                sender.sendMessage(EyeOfOnyx.EOO + "Created missing " + teamNames[i] + " team.");
+                scoreboard.registerNewTeam(teamName);
+                sender.sendMessage(EyeOfOnyx.EOO + "Created missing " + teamName + " team.");
             }
         }
 
         RoyaltyBoard.reload();
 
-        // Fail if not enough arguements
+        // Fail if not enough arguments
         if (args.length < 1) {
             return false;
         } else if (args[0].equalsIgnoreCase("set") && args.length > 2) {
@@ -86,7 +84,7 @@ public class CmdRoyalty implements CommandExecutor {
     }
 
     // royalty set <player> <position> [name]
-    boolean set(CommandSender sender, String[] args) {
+    void set(CommandSender sender, String[] args) {
 
         UUID targetPlayerUUID;
 
@@ -97,7 +95,7 @@ public class CmdRoyalty implements CommandExecutor {
                     "$1-$2-$3-$4-$5"));
         } catch (NullPointerException e) {
             sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Player not found.");
-            return false;
+            return;
         }
 
         // Get tribe from scoreboard team
@@ -106,23 +104,23 @@ public class CmdRoyalty implements CommandExecutor {
 
             // Get team of player by iterating through list
             for (int i = 0; i < teamNames.length; i++) {
-                if (scoreboard.getTeam(teamNames[i]).hasEntry(args[1]))
+                if (Objects.requireNonNull(scoreboard.getTeam(teamNames[i])).hasEntry(args[1]))
                     playerTribe = tribes[i];
             }
 
             // If target has no associated tribe team, fail
             if (playerTribe == null) {
                 sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Target does not have a tribe tag!");
-                return false;
+                return;
             }
 
-            // Check if third arguement contains a valid position
+            // Check if third argument contains a valid position
             if (Arrays.stream(validPositions).anyMatch(args[2]::contains)) {
 
                 // Set value in board.yml
                 setBoard(playerTribe, args[2], "uuid", targetPlayerUUID.toString());
                 RoyaltyBoard.save(board);
-                sender.sendMessage(EyeOfOnyx.EOO + ChatColor.YELLOW + "" + args[1] + " is now " + args[2].toUpperCase().replace('_', ' '));
+                sender.sendMessage(EyeOfOnyx.EOO + ChatColor.YELLOW + args[1] + " is now " + args[2].toUpperCase().replace('_', ' '));
 
                 // If no name was provided, use username
                 if (args.length == 3) {
@@ -156,13 +154,12 @@ public class CmdRoyalty implements CommandExecutor {
             sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Required teams do not exist!");
         }
 
-        return true;
     }
 
     // royalty list [tribe]
-    boolean list(CommandSender sender, String[] args) {
+    void list(CommandSender sender, String[] args) {
 
-        // If no other arguements, build and send full board
+        // If no other arguments, build and send full board
         if (args.length == 1) {
             // Init a StringBuilder to store message for building
             StringBuilder boardMessage = new StringBuilder();
@@ -173,7 +170,7 @@ public class CmdRoyalty implements CommandExecutor {
             }
 
             // Send built message
-            sender.sendMessage(EyeOfOnyx.EOO + ChatColor.YELLOW + "ROYALTY BOARD" + boardMessage.toString());
+            sender.sendMessage(EyeOfOnyx.EOO + ChatColor.YELLOW + "ROYALTY BOARD" + boardMessage);
 
         } // If next argument is a tribe, send just that board
         else if (Arrays.stream(tribes).anyMatch(args[1]::contains)) {
@@ -188,24 +185,22 @@ public class CmdRoyalty implements CommandExecutor {
             sender.sendMessage(EyeOfOnyx.EOO + ChatColor.YELLOW + "ROYALTY BOARD" + boardMessage.toString());
 
         } else {
-            // Invalid arguement
+            // Invalid argument
             sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Invalid tribe name!");
-            return false;
         }
 
-        return true;
     }
 
     // royalty clear <tribe> <position>
-    boolean clear(CommandSender sender, String[] args) {
+    void clear(CommandSender sender, String[] args) {
 
         if (Arrays.stream(tribes).noneMatch(args[1]::contains)) {
             sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Not a valid tribe.");
-            return false;
+            return;
         }
         if (Arrays.stream(validPositions).noneMatch(args[2]::contains)) {
             sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Not a valid position.");
-            return false;
+            return;
         }
 
         // Clear data
@@ -224,8 +219,6 @@ public class CmdRoyalty implements CommandExecutor {
         }
 
         sender.sendMessage(EyeOfOnyx.EOO + ChatColor.YELLOW + args[1].toUpperCase() + " " + args[2].toUpperCase() + " position cleared.");
-
-        return true;
 
     }
 
@@ -247,31 +240,29 @@ public class CmdRoyalty implements CommandExecutor {
      */
     StringBuilder buildBoard(int index) {
 
-        // Create stringbuilder
+        // Create string builder
         StringBuilder strBuild = new StringBuilder();
         // Add tribe name (line 1)
-        strBuild.append("\n" + ChatColor.GOLD + teamNames[index] + " ---" + ChatColor.RESET);
+        strBuild.append("\n").append(ChatColor.GOLD).append(teamNames[index]).append(" ---").append(ChatColor.RESET);
 
         // For each position...
         for (int j = 0; j < validPositions.length; j++) {
 
             // Add the name of the position, change to uppercase, remove underscores
-            strBuild.append("\n[ " + validPositions[j].toUpperCase().replace('_', ' ') + ": ");
+            strBuild.append("\n[ ").append(validPositions[j].toUpperCase().replace('_', ' ')).append(": ");
             // If no one filling position, report as "none"
-            if (board.get(tribes[index] + "." + validPositions[j] + ".uuid").equals("none")) {
+            if (Objects.equals(board.get(tribes[index] + "." + validPositions[j] + ".uuid"), "none")) {
                 strBuild.append("none");
             } // Otherwise...
             else {
                 // If position is ruler, prepend the title
                 if (j == 0) {
-                    strBuild.append(board.get(tribes[index] + "." + validPositions[j] + ".title") + " ");
+                    strBuild.append(board.get(tribes[index] + "." + validPositions[j] + ".title")).append(" ");
                 }
-                // Add canon name w/ username in parenthesis
+                // Add canon name w/ username in parentheses
                 strBuild.append(board.get(tribes[index] + "." + validPositions[j] + ".name"));
-                strBuild.append(" ("
-                        + mojang.getPlayerProfile((String) board.get(tribes[index] + "." + validPositions[j] + ".uuid"))
-                                .getUsername()
-                        + ")");
+                strBuild.append(" (").append(mojang.getPlayerProfile((String) board.get(tribes[index] + "." + validPositions[j] + ".uuid"))
+                        .getUsername()).append(")");
             }
         }
         return strBuild;
@@ -280,4 +271,5 @@ public class CmdRoyalty implements CommandExecutor {
     void setBoard(String tribe, String position, String data, Object value) {
         board.set(tribe + "." + position + "." + data, value);
     }
+
 }

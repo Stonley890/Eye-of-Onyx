@@ -2,6 +2,7 @@ package io.github.stonley890.eyeofonyx.listeners;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Objects;
 
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -17,7 +18,7 @@ import io.github.stonley890.eyeofonyx.files.RoyaltyBoard;
 public class ListenJoin implements Listener {
 
     FileConfiguration board = RoyaltyBoard.get();
-    Scoreboard scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
+    Scoreboard scoreboard = Objects.requireNonNull(Bukkit.getScoreboardManager()).getMainScoreboard();
 
     Mojang mojang = new Mojang().connect();
 
@@ -31,20 +32,20 @@ public class ListenJoin implements Listener {
         Player player = event.getPlayer();
 
         try {
-            String playerTeam = scoreboard.getEntryTeam(player.getName()).getName();
+            String playerTeam = Objects.requireNonNull(scoreboard.getEntryTeam(player.getName())).getName();
             int playerTribe = Arrays.binarySearch(teamNames, playerTeam);
             String playerUUID = mojang.getUUIDOfUsername(player.getName()).replaceFirst(
                     "(\\p{XDigit}{8})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}+)",
                     "$1-$2-$3-$4-$5");
 
             // Check each position for player
-            for (int i = 0; i < validPositions.length; i++) {
+            for (String validPosition : validPositions) {
 
                 // If player is found on board, update last_online
-                if (board.contains(tribes[playerTribe] + "." + validPositions[i] + "." + playerUUID)) {
-                    board.set(tribes[playerTribe] + "." + validPositions[i] + ".last_online",
+                if (board.contains(tribes[playerTribe] + "." + validPosition + "." + playerUUID)) {
+                    board.set(tribes[playerTribe] + "." + validPosition + ".last_online",
                             LocalDateTime.now().toString());
-                    
+
                     RoyaltyBoard.save(board);
                 }
             }

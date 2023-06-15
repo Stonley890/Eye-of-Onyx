@@ -1,6 +1,8 @@
 package io.github.stonley890.eyeofonyx;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Objects;
 
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -11,49 +13,41 @@ import io.github.stonley890.eyeofonyx.files.RoyaltyBoard;
 
 public class Challenge {
 
-    Scoreboard scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
+    Scoreboard scoreboard = Objects.requireNonNull(Bukkit.getScoreboardManager()).getMainScoreboard();
 
     Mojang mojang = new Mojang().connect();
 
-    FileConfiguration board = RoyaltyBoard.get();
+    static FileConfiguration board = RoyaltyBoard.get();
 
     String[] teams = RoyaltyBoard.getTeamNames();
-    String[] tribes = RoyaltyBoard.getTribes();
-    String[] positions = RoyaltyBoard.getValidPositions();
+    static String[] tribes = RoyaltyBoard.getTribes();
+    static String[] positions = RoyaltyBoard.getValidPositions();
 
-    public boolean isChallengeValid(String attackingPlayerUUID, String defendingPlayerUUID) {
+    public static boolean isChallengeValid(String attackingPlayerUUID, String defendingPlayerUUID) {
 
-        // Get player information
-        String attackingPlayer = mojang.getPlayerProfile(attackingPlayerUUID).getUsername();
-        int attackingTribe = Arrays.binarySearch(teams, scoreboard.getEntryTeam(attackingPlayer).getName());
-        // Position is set to 5 (civilian) by default
-        int attackingPosition = 5;
+        // Get attacking tribe
+        int attackingTribe = RoyaltyBoard.getTribeIndexOfUUID(attackingPlayerUUID);
+        // Get attacking position
+        int attackingPosition = RoyaltyBoard.getPositionIndexOfUUID(attackingPlayerUUID);
 
-        // Check each position in board.yml
-        for (int i = 0; i < positions.length; i++) {
-            if (board.contains(tribes[attackingTribe] + "." + positions[i] + "." + attackingPlayerUUID)) {
-                // Change position if found on the royalty board
-                attackingPosition = i;
-            }
-        }
-
-        // Get player information
-        String defendingPlayer = mojang.getPlayerProfile(defendingPlayerUUID).getUsername();
-        int defendingTribe = Arrays.binarySearch(teams, scoreboard.getEntryTeam(defendingPlayer).getName());
-        // Position is set to 5 (civilian) by default
-        int defendingPosition = 5;
-
-        // Check each position in board.yml
-        for (int i = 0; i < positions.length; i++) {
-            if (board.contains(tribes[defendingTribe] + "." + positions[i] + "." + defendingPlayerUUID)) {
-                // Change position if found on the royalty board
-                defendingPosition = i;
-            }
-        }
+        // Get defending tribe
+        int defendingTribe = RoyaltyBoard.getTribeIndexOfUUID(defendingPlayerUUID);
+        // Get defending position
+        int defendingPosition = RoyaltyBoard.getPositionIndexOfUUID(defendingPlayerUUID);
 
         // Make sure the defending player is not a civilian
         // Make sure both players are of same tribe
         // Make sure defendingPosition is one index below attackingPosition
-        return (defendingPosition != 5 && attackingTribe == defendingTribe && (attackingPosition - 1) == defendingPosition);
+        if (defendingPosition != 5 && attackingTribe == defendingTribe && (attackingPosition - 1) == defendingPosition) {
+            return (
+                    Objects.equals(board.getString(tribes[attackingTribe] + "." + positions[attackingPosition] + ".challenging"), "none") &&
+                            Objects.equals(board.getString(tribes[attackingTribe] + "." + positions[attackingPosition] + ".challenger"), "none") &&
+                            Objects.equals(board.getString(tribes[defendingTribe] + "." + positions[defendingPosition] + ".challenger"), "none") &&
+                            (defendingPosition == 0 || Objects.equals(board.getString(tribes[defendingTribe] + "." + positions[defendingPosition] + ".challenging"), "none"))
+            );
+        }
+        return false;
     }
+
+
 }

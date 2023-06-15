@@ -2,17 +2,24 @@ package io.github.stonley890.eyeofonyx.files;
 
 import java.io.File;
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.Objects;
+
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
+import org.bukkit.scoreboard.Scoreboard;
+import org.shanerx.mojang.Mojang;
 
 public class RoyaltyBoard {
 
     private static File file;
     private static FileConfiguration boardFile;
-    private static EyeOfOnyx plugin = EyeOfOnyx.getPlugin();
+    private static final EyeOfOnyx plugin = EyeOfOnyx.getPlugin();
+    static Mojang mojang = new Mojang().connect();
+    static Scoreboard scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
 
     // Team names
     static String[] teamNames = {
@@ -47,8 +54,9 @@ public class RoyaltyBoard {
         file = new File(plugin.getDataFolder(), "board.yml");
 
         if (!file.exists()) {
-            file.getParentFile().mkdirs();
-            plugin.saveResource("board.yml", false);
+            if (file.getParentFile().mkdirs()) {
+                plugin.saveResource("board.yml", false);
+            }
         }
         boardFile = YamlConfiguration.loadConfiguration(file);
         save(boardFile);
@@ -83,7 +91,7 @@ public class RoyaltyBoard {
         int positionsEmpty = 0;
 
         // For each tribe
-        for (int i = 0; i < tribes.length; i++) {
+        for (String tribe : tribes) {
 
             positionsEmpty = 0;
 
@@ -91,10 +99,11 @@ public class RoyaltyBoard {
             for (int j = 0; j < validPositions.length; j++) {
 
                 // Set current path
-                currentPath = tribes[i] + "." + validPositions[j];
+                currentPath = tribe + "." + validPositions[j];
 
                 // If last_online is before 30 days ago, set to empty
                 last_online = (String) boardFile.get(currentPath + ".last_online");
+                assert last_online != null;
                 if (!last_online.equals("none")) {
                     if (LocalDateTime.parse(last_online).isBefore(LocalDateTime.now().minusDays(30))) {
                         boardFile.set(currentPath + ".last_online", "none");
@@ -128,23 +137,23 @@ public class RoyaltyBoard {
                     if (positionsEmpty > 0) {
 
                         // copy uuid & name to first empty position (thisPosition - emptyPositions)
-                        boardFile.set(tribes[i] + "." + validPositions[j - positionsEmpty] + ".uuid",
+                        boardFile.set(tribe + "." + validPositions[j - positionsEmpty] + ".uuid",
                                 boardFile.get(currentPath + ".uuid"));
-                        boardFile.set(tribes[i] + "." + validPositions[j - positionsEmpty] + ".name",
+                        boardFile.set(tribe + "." + validPositions[j - positionsEmpty] + ".name",
                                 boardFile.get(currentPath + ".name"));
 
                         // Update last_challenge and joined_time
                         // This will give the user movement cooldown
-                        boardFile.set(tribes[i] + "." + validPositions[j - positionsEmpty] + ".last_challenge_time",
+                        boardFile.set(tribe + "." + validPositions[j - positionsEmpty] + ".last_challenge_time",
                                 LocalDateTime.now().toString());
-                        boardFile.set(tribes[i] + "." + validPositions[j - positionsEmpty] + ".joined_time",
+                        boardFile.set(tribe + "." + validPositions[j - positionsEmpty] + ".joined_time",
                                 LocalDateTime.now().toString());
-                        boardFile.set(tribes[i] + "." + validPositions[j - positionsEmpty] + ".last_online",
+                        boardFile.set(tribe + "." + validPositions[j - positionsEmpty] + ".last_online",
                                 LocalDateTime.now().toString());
 
                         // If previous position is ruler, also set title
                         if (validPositions[j - 1].equals(validPositions[0])) {
-                            boardFile.set(tribes[i] + "." + validPositions[j - positionsEmpty] + ".title", "Ruler");
+                            boardFile.set(tribe + "." + validPositions[j - positionsEmpty] + ".title", "Ruler");
                         }
 
                         // TO DO: notify challenger of challenge cancellation
@@ -169,6 +178,70 @@ public class RoyaltyBoard {
 
         save(boardFile);
 
+    }
+
+    public static int getTribeIndexOfUUID(String playerUuid) {
+        // Get player name from Mojang
+         String playerUsername = mojang.getPlayerProfile(playerUuid).getUsername();
+        
+        // Search for valid team from player scoreboard team
+        return Arrays.binarySearch(teamNames, Objects.requireNonNull(Objects.requireNonNull(scoreboard.getEntryTeam(playerUsername)).getName()));
+    }
+
+    public static int getTribeIndexOfUsername(String playerUsername) {
+
+        // Search for valid team from player scoreboard team
+        return Arrays.binarySearch(teamNames, Objects.requireNonNull(Objects.requireNonNull(scoreboard.getEntryTeam(playerUsername)).getName()));
+    }
+
+    public static int getPositionIndexOfUUID(String playerUuid) {
+        
+        // Get player name from Mojang
+        String playerUsername = mojang.getPlayerProfile(playerUuid).getUsername();
+        
+        // Get player tribe
+        int playerTribe = getTribeIndexOfUUID(playerUuid);
+        
+        // Position is 5 by default (citizen)
+        int playerPosition = 5;
+
+        // Iterate though positions to search for target player
+        for (int i = 0; i < validPositions.length; i++) {
+            if (boardFile.contains(tribes[playerTribe] + "." + validPositions[i] + "." + playerUuid)) {
+                // Change position if found on the royalty board
+                playerPosition = i;
+                break;
+            }
+        }
+        
+        return playerPosition;
+    }
+
+    public static int getPositionIndexOfUsername(String playerUsername) {
+
+        // Get player uuid from Mojang
+        String playerUuid = mojang.getUUIDOfUsername(playerUsername);
+
+        // Get player tribe
+        int playerTribe = getTribeIndexOfUUID(playerUuid);
+
+        // Position is 5 by default (citizen)
+        int playerPosition = 5;
+
+        // Iterate though positions to search for target player
+        for (int i = 0; i < validPositions.length; i++) {
+            if (boardFile.contains(tribes[playerTribe] + "." + validPositions[i] + "." + playerUuid)) {
+                // Change position if found on the royalty board
+                playerPosition = i;
+                break;
+            }
+        }
+
+        return playerPosition;
+    }
+
+    public static String getValueOfPosition(int tribeIndex, int positionIndex, String value) {
+        return boardFile.getString(tribes[tribeIndex] + "." + validPositions[positionIndex] + ".uuid");
     }
 
     private RoyaltyBoard() {

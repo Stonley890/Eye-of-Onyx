@@ -1,7 +1,9 @@
 package io.github.stonley890.eyeofonyx;
 
+import java.util.Objects;
 import java.util.logging.Level;
 
+import io.github.stonley890.eyeofonyx.commands.CmdChallenge;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -40,11 +42,12 @@ public class EyeOfOnyx extends JavaPlugin {
         RoyaltyBoard.setup();
 
         // Initialize command executors
-        getCommand("eyeofonyx").setExecutor(new CmdEyeOfOnyx());
-        getCommand("royalty").setExecutor(new CmdRoyalty());
+        Objects.requireNonNull(getCommand("eyeofonyx")).setExecutor(new CmdEyeOfOnyx());
+        Objects.requireNonNull(getCommand("royalty")).setExecutor(new CmdRoyalty());
+        Objects.requireNonNull(getCommand("challenge")).setExecutor(new CmdChallenge());
 
-        // Initialize tab completers
-        getCommand("royalty").setTabCompleter(new TabRoyalty());
+        // Initialize tab completer
+        Objects.requireNonNull(getCommand("royalty")).setTabCompleter(new TabRoyalty());
 
         // Initialize listeners
         getServer().getPluginManager().registerEvents(new ListenJoin(), this);

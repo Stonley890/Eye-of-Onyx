@@ -16,3 +16,6 @@ commands:
     description: Access or manage the royalty board.
     usage: /<command> <set|remove|list>
     permission: minecraft.command.op
+  challenge:
+    description: Initiate a challenge.
+    usage: /<command>
