@@ -1,5 +1,9 @@
+debug: true
+log-console: true
+enable-log-console-commands: true
+
 # The bot token. DO NOT SHARE THIS
-bot-token: MTA0NDAyNzE0MDI0MjQxNTcwNg.G9IR9S.4yNq_ez6z-dKhlg6y8HhKqOyVDeTeY308ZKEYU
+bot-token: OTQyMzQyMjMwOTY0ODU4OTEw.GzIdvJ.1MJwIGay75xW92AldGesDvgiKy5FGrG1vHULDU
 
 # The channel ID of the game chat
 chatChannelID: '1008590641091072020'
@@ -13,7 +17,75 @@ step3RoleID: '1056031152206524426'
 memberRoleID: '1008234966812983367'
 
 # Don't change unless you know what you're doing!
-chatPaused: false
+chatPaused: true
 softwhitelist: false
 playerlimit: -1
 disablepvp: false
+hubLocation:
+  ==: org.bukkit.Location
+  world: world
+  x: 102.5
+  y: 66.0
+  z: -192.5
+  pitch: 0.0
+  yaw: 0.0
+itemBlacklist:
+- ==: org.bukkit.inventory.ItemStack
+  v: 3465
+  type: POISONOUS_POTATO
+- ==: org.bukkit.inventory.ItemStack
+  v: 3465
+  type: NETHERITE_SWORD
+  meta:
+    ==: ItemMeta
+    meta-type: UNSPECIFIC
+    display-name: '{"text":"Instakiller","color":"aqua","italic":false}'
+    enchants:
+      DAMAGE_ALL: 1
+    attribute-modifiers:
+      GENERIC_ATTACK_DAMAGE:
+      - ==: org.bukkit.attribute.AttributeModifier
+        amount: 10000.0
+        name: generic.attack_damage
+        slot: HAND
+        uuid: b7916981-1fbf-49f1-9604-19ae22eab8e1
+        operation: 2
+    ItemFlags:
+    - HIDE_ENCHANTS
+    - HIDE_ATTRIBUTES
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+tribeRoles:
+- '1121851264741933138'
+- '1121851301366616164'
+- '1121851417620127855'
+- '1121851513564835900'
+- '1121852828529479690'
+- '1121852931000512585'
+- '1121852956694827150'
+- '1121852994212876318'
+- '1121853021421310083'
+- '1121853045299478699'

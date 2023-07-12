@@ -13,13 +13,13 @@ import io.github.stonley890.eyeofonyx.files.RoyaltyBoard;
 
 public class Challenge {
 
-    Scoreboard scoreboard = Objects.requireNonNull(Bukkit.getScoreboardManager()).getMainScoreboard();
+    static Scoreboard scoreboard = Objects.requireNonNull(Bukkit.getScoreboardManager()).getMainScoreboard();
 
-    Mojang mojang = new Mojang().connect();
+    static Mojang mojang = new Mojang().connect();
 
     static FileConfiguration board = RoyaltyBoard.get();
 
-    String[] teams = RoyaltyBoard.getTeamNames();
+    static String[] teams = RoyaltyBoard.getTeamNames();
     static String[] tribes = RoyaltyBoard.getTribes();
     static String[] positions = RoyaltyBoard.getValidPositions();
 
@@ -40,14 +40,19 @@ public class Challenge {
         // Make sure defendingPosition is one index below attackingPosition
         if (defendingPosition != 5 && attackingTribe == defendingTribe && (attackingPosition - 1) == defendingPosition) {
             return (
-                    Objects.equals(board.getString(tribes[attackingTribe] + "." + positions[attackingPosition] + ".challenging"), "none") &&
-                            Objects.equals(board.getString(tribes[attackingTribe] + "." + positions[attackingPosition] + ".challenger"), "none") &&
-                            Objects.equals(board.getString(tribes[defendingTribe] + "." + positions[defendingPosition] + ".challenger"), "none") &&
-                            (defendingPosition == 0 || Objects.equals(board.getString(tribes[defendingTribe] + "." + positions[defendingPosition] + ".challenging"), "none"))
+                    // Ensure attacker is not challenging
+                    RoyaltyBoard.getValueOfPosition(attackingTribe, attackingPosition, "challenging").equals("none") &&
+                            // Ensure attacker is not being challenged
+                            RoyaltyBoard.getValueOfPosition(attackingTribe, attackingPosition, "challenger").equals("none") &&
+                            // Ensure attacker is not being challenged
+                            RoyaltyBoard.getValueOfPosition(defendingTribe, defendingPosition, "challenger").equals("none") &&
+                            // Ensure attacker is not challenging OR they are civilian (in which they have no data)
+                            (defendingPosition == 0 || RoyaltyBoard.getValueOfPosition(attackingTribe, defendingPosition, "challenging").equals("none")) &&
+
+                            LocalDateTime.parse(RoyaltyBoard.getValueOfPosition(attackingTribe, attackingPosition, "last_challenge_time")).isBefore(LocalDateTime.now().minusDays(14))
             );
         }
         return false;
     }
-
 
 }

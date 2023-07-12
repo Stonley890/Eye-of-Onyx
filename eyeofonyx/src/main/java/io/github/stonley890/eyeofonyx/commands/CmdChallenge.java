@@ -38,7 +38,7 @@ public class CmdChallenge implements CommandExecutor {
 
 //                    sender.sendMessage("You are challenging " + targetName + "(" + mojang.getPlayerProfile(targetUuid).getUsername() + ")");
 
-                    sender.sendMessage("Challenge valid: " + Challenge.isChallengeV alid(player.getUniqueId().toString(), targetUuid));
+                    sender.sendMessage("Challenge valid: " + Challenge.isChallengeValid(player.getUniqueId().toString(), targetUuid));
                 }
             }
         }

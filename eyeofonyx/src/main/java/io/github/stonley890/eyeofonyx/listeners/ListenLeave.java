@@ -19,6 +19,7 @@ public class ListenLeave implements Listener {
     FileConfiguration board = RoyaltyBoard.get();
     Scoreboard scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
 
+
     Mojang mojang = new Mojang().connect();
 
     String[] teamNames = RoyaltyBoard.getTeamNames();
@@ -38,13 +39,13 @@ public class ListenLeave implements Listener {
                     "$1-$2-$3-$4-$5");
 
             // Check each position for player
-            for (int i = 0; i < validPositions.length; i++) {
+            for (String validPosition : validPositions) {
 
                 // If player is found on board, update last_online
-                if (board.contains(tribes[playerTribe] + "." + validPositions[i] + "." + playerUUID)) {
-                    board.set(tribes[playerTribe] + "." + validPositions[i] + ".last_online",
+                if (board.contains(tribes[playerTribe] + "." + validPosition + "." + playerUUID)) {
+                    board.set(tribes[playerTribe] + "." + validPosition + ".last_online",
                             LocalDateTime.now().toString());
-                    
+
                     RoyaltyBoard.save(board);
                 }
             }
