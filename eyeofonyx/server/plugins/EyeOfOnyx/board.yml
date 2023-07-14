@@ -46,6 +46,13 @@ hive:
     last_challenge_time: none
     challenger: none
     challenging: none
+  civilian:
+    uuid: none
+    name: none
+    last_challenge_time: none
+    challenger: none
+    last_online: none
+    challenging: none
 
 ice:
   
@@ -92,6 +99,13 @@ ice:
     last_online: none
     last_challenge_time: none
     challenger: none
+    challenging: none
+  civilian:
+    uuid: none
+    name: none
+    last_challenge_time: none
+    challenger: none
+    last_online: none
     challenging: none
 
 leaf:
@@ -140,24 +154,31 @@ leaf:
     last_challenge_time: none
     challenger: none
     challenging: none
+  civilian:
+    uuid: none
+    name: none
+    last_challenge_time: none
+    challenger: none
+    last_online: none
+    challenging: none
 
 mud:
   
   ruler:
-    uuid: 44a1e9eb-684c-47ff-ae9b-8a5d63ee31a9
-    title: Ruler
-    name: PhenTheFireGirl
+    uuid: none
+    title: none
+    name: none
     joined_time: '2023-06-06T19:56:10.081977364'
-    last_online: '2023-06-06T19:56:10.081986758'
-    last_challenge_time: '2023-06-06T19:56:10.081951457'
+    last_online: none
+    last_challenge_time: none
     challenger: none
   
   heir_apparent:
-    uuid: eedf3c55-2e73-4e73-99a7-81d953745f0a
-    name: BogTheMudWing
+    uuid: none
+    name: none
     joined_time: '2023-06-06T19:56:26.500679096'
-    last_online: '2023-06-06T19:56:26.500714492'
-    last_challenge_time: '2023-06-06T19:56:26.500709654'
+    last_online: none
+    last_challenge_time: none
     challenger: none
     challenging: none
   
@@ -186,6 +207,13 @@ mud:
     last_online: none
     last_challenge_time: none
     challenger: none
+    challenging: none
+  civilian:
+    uuid: none
+    name: none
+    last_challenge_time: none
+    challenger: none
+    last_online: none
     challenging: none
 
 night:
@@ -234,6 +262,13 @@ night:
     last_challenge_time: none
     challenger: none
     challenging: none
+  civilian:
+    uuid: none
+    name: none
+    last_challenge_time: none
+    challenger: none
+    last_online: none
+    challenging: none
 
 rain:
   
@@ -280,6 +315,13 @@ rain:
     last_online: none
     last_challenge_time: none
     challenger: none
+    challenging: none
+  civilian:
+    uuid: none
+    name: none
+    last_challenge_time: none
+    challenger: none
+    last_online: none
     challenging: none
 
 sand:
@@ -328,6 +370,13 @@ sand:
     last_challenge_time: none
     challenger: none
     challenging: none
+  civilian:
+    uuid: none
+    name: none
+    last_challenge_time: none
+    challenger: none
+    last_online: none
+    challenging: none
 
 sea:
   
@@ -374,6 +423,13 @@ sea:
     last_online: none
     last_challenge_time: none
     challenger: none
+    challenging: none
+  civilian:
+    uuid: none
+    name: none
+    last_challenge_time: none
+    challenger: none
+    last_online: none
     challenging: none
 
 silk:
@@ -422,6 +478,13 @@ silk:
     last_challenge_time: none
     challenger: none
     challenging: none
+  civilian:
+    uuid: none
+    name: none
+    last_challenge_time: none
+    challenger: none
+    last_online: none
+    challenging: none
 
 sky:
   
@@ -468,4 +531,11 @@ sky:
     last_online: none
     last_challenge_time: none
     challenger: none
+    challenging: none
+  civilian:
+    uuid: none
+    name: none
+    last_challenge_time: none
+    challenger: none
+    last_online: none
     challenging: none

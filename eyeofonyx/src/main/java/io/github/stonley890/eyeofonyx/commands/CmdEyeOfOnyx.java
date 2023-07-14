@@ -1,5 +1,6 @@
 package io.github.stonley890.eyeofonyx.commands;
 
+import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -15,6 +16,11 @@ public class CmdEyeOfOnyx implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         sender.sendMessage(ChatColor.YELLOW + "Eye of Onyx " + main.version + "\nStonley890 / iHeron");
+
+        if (args[0].equals("disable")) {
+            Bukkit.getPluginManager().disablePlugin(main);
+        }
+
         return true;
     }
 }

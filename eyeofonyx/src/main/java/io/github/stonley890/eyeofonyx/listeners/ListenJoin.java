@@ -17,14 +17,14 @@ import io.github.stonley890.eyeofonyx.files.RoyaltyBoard;
 
 public class ListenJoin implements Listener {
 
-    FileConfiguration board = RoyaltyBoard.get();
-    Scoreboard scoreboard = Objects.requireNonNull(Bukkit.getScoreboardManager()).getMainScoreboard();
+    private final FileConfiguration board = RoyaltyBoard.get();
+    private final Scoreboard scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
 
-    Mojang mojang = new Mojang().connect();
+    private final Mojang mojang = new Mojang().connect();
 
-    String[] teamNames = RoyaltyBoard.getTeamNames();
-    String[] tribes = RoyaltyBoard.getTribes();
-    String[] validPositions = RoyaltyBoard.getValidPositions();
+    private final String[] teamNames = RoyaltyBoard.getTeamNames();
+    private final String[] tribes = RoyaltyBoard.getTribes();
+    private final String[] validPositions = RoyaltyBoard.getValidPositions();
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
@@ -32,7 +32,7 @@ public class ListenJoin implements Listener {
         Player player = event.getPlayer();
 
         try {
-            String playerTeam = Objects.requireNonNull(scoreboard.getEntryTeam(player.getName())).getName();
+            String playerTeam = scoreboard.getEntryTeam(player.getName()).getName();
             int playerTribe = Arrays.binarySearch(teamNames, playerTeam);
             String playerUUID = mojang.getUUIDOfUsername(player.getName()).replaceFirst(
                     "(\\p{XDigit}{8})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}+)",
@@ -49,7 +49,7 @@ public class ListenJoin implements Listener {
                     RoyaltyBoard.save(board);
                 }
             }
-        } catch (IllegalArgumentException e) {
+        } catch (NullPointerException e) {
             // Player is not part of a team
         }
 

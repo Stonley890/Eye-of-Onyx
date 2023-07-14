@@ -11,18 +11,21 @@ import org.shanerx.mojang.Mojang;
 
 import io.github.stonley890.eyeofonyx.files.RoyaltyBoard;
 
+import static io.github.stonley890.eyeofonyx.files.RoyaltyBoard.CIVILIAN;
+import static io.github.stonley890.eyeofonyx.files.RoyaltyBoard.RULER;
+
 public class Challenge {
 
-    static Scoreboard scoreboard = Objects.requireNonNull(Bukkit.getScoreboardManager()).getMainScoreboard();
+    private static final Scoreboard scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
+    private static final Mojang mojang = new Mojang().connect();
 
-    static Mojang mojang = new Mojang().connect();
+    private static final FileConfiguration board = RoyaltyBoard.get();
 
-    static FileConfiguration board = RoyaltyBoard.get();
+    private static final String[] teams = RoyaltyBoard.getTeamNames();
+    private static final String[] tribes = RoyaltyBoard.getTribes();
+    private static final String[] positions = RoyaltyBoard.getValidPositions();
 
-    static String[] teams = RoyaltyBoard.getTeamNames();
-    static String[] tribes = RoyaltyBoard.getTribes();
-    static String[] positions = RoyaltyBoard.getValidPositions();
-
+    /*
     public static boolean isChallengeValid(String attackingPlayerUUID, String defendingPlayerUUID) {
 
         // Get attacking tribe
@@ -38,7 +41,7 @@ public class Challenge {
         // Make sure the defending player is not a civilian
         // Make sure both players are of same tribe
         // Make sure defendingPosition is one index below attackingPosition
-        if (defendingPosition != 5 && attackingTribe == defendingTribe && (attackingPosition - 1) == defendingPosition) {
+        if (defendingPosition != CIVILIAN && attackingTribe == defendingTribe && (attackingPosition - 1) == defendingPosition) {
             return (
                     // Ensure attacker is not challenging
                     RoyaltyBoard.getValueOfPosition(attackingTribe, attackingPosition, "challenging").equals("none") &&
@@ -47,12 +50,12 @@ public class Challenge {
                             // Ensure attacker is not being challenged
                             RoyaltyBoard.getValueOfPosition(defendingTribe, defendingPosition, "challenger").equals("none") &&
                             // Ensure attacker is not challenging OR they are civilian (in which they have no data)
-                            (defendingPosition == 0 || RoyaltyBoard.getValueOfPosition(attackingTribe, defendingPosition, "challenging").equals("none")) &&
+                            (defendingPosition == RULER || RoyaltyBoard.getValueOfPosition(attackingTribe, defendingPosition, "challenging").equals("none")) &&
 
                             LocalDateTime.parse(RoyaltyBoard.getValueOfPosition(attackingTribe, attackingPosition, "last_challenge_time")).isBefore(LocalDateTime.now().minusDays(14))
             );
         }
         return false;
     }
-
+    */
 }

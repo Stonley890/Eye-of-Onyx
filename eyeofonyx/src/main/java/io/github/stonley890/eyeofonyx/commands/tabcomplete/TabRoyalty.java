@@ -1,9 +1,9 @@
 package io.github.stonley890.eyeofonyx.commands.tabcomplete;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
-import kotlin.collections.builders.ListBuilder;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -18,16 +18,16 @@ public class TabRoyalty implements TabCompleter {
     String[] tribes = RoyaltyBoard.getTribes();
     String[] positions = RoyaltyBoard.getValidPositions();
 
-    List<String> suggestions = new ListBuilder<>();
+    List<String> suggestions = new ArrayList<>();
 
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
 
-        // Clear previous suggestions or create a new ListBuilder
+        // Clear previous suggestions or create a new ArrayList
         if (suggestions != null) {
             suggestions.clear();
         } else {
-            suggestions = new ListBuilder<>();
+            suggestions = new ArrayList<>();
         }
 
         if (args.length == 1) {

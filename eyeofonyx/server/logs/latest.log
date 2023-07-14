@@ -1,114 +1,71 @@
-[12:52:02] [ServerMain/INFO]: Environment: authHost='https://authserver.mojang.com', accountsHost='https://api.mojang.com', sessionHost='https://sessionserver.mojang.com', servicesHost='https://api.minecraftservices.com', name='PROD'
-[12:52:03] [ServerMain/INFO]: Loaded 7 recipes
-[12:52:03] [Server thread/INFO]: Starting minecraft server version 1.20.1
-[12:52:03] [Server thread/INFO]: Loading properties
-[12:52:03] [Server thread/INFO]: This server is running Paper version git-Paper-67 (MC: 1.20.1) (Implementing API version 1.20.1-R0.1-SNAPSHOT) (Git: e105354)
-[12:52:03] [Server thread/INFO]: Server Ping Player Sample Count: 12
-[12:52:03] [Server thread/INFO]: Using 4 threads for Netty based IO
-[12:52:03] [Server thread/WARN]: [!] The timings profiler has been enabled but has been scheduled for removal from Paper in the future.
+[16:42:43] [ServerMain/INFO]: Environment: authHost='https://authserver.mojang.com', accountsHost='https://api.mojang.com', sessionHost='https://sessionserver.mojang.com', servicesHost='https://api.minecraftservices.com', name='PROD'
+[16:42:45] [ServerMain/INFO]: Loaded 7 recipes
+[16:42:45] [Server thread/INFO]: Starting minecraft server version 1.20.1
+[16:42:45] [Server thread/INFO]: Loading properties
+[16:42:46] [Server thread/INFO]: This server is running Paper version git-Paper-67 (MC: 1.20.1) (Implementing API version 1.20.1-R0.1-SNAPSHOT) (Git: e105354)
+[16:42:46] [Server thread/INFO]: Server Ping Player Sample Count: 12
+[16:42:46] [Server thread/INFO]: Using 4 threads for Netty based IO
+[16:42:46] [Server thread/WARN]: [!] The timings profiler has been enabled but has been scheduled for removal from Paper in the future.
     We recommend installing the spark profiler as a replacement: https://spark.lucko.me/
     For more information please visit: https://github.com/PaperMC/Paper/issues/8948
-[12:52:03] [Server thread/INFO]: [ChunkTaskScheduler] Chunk system is using 1 I/O threads, 4 worker threads, and gen parallelism of 4 threads
-[12:52:04] [Server thread/INFO]: Default game type: CREATIVE
-[12:52:04] [Server thread/INFO]: Generating keypair
-[12:52:04] [Server thread/INFO]: Starting Minecraft server on *:25560
-[12:52:04] [Server thread/INFO]: Using epoll channel type
-[12:52:04] [Server thread/INFO]: Paper: Using libdeflate (Linux x86_64) compression from Velocity.
-[12:52:04] [Server thread/INFO]: Paper: Using OpenSSL 3.0.x (Linux x86_64) cipher from Velocity.
-[12:52:04] [Server thread/WARN]: [org.bukkit.craftbukkit.v1_20_R1.legacy.CraftLegacy] Initializing Legacy Material Support. Unless you have legacy plugins and/or data this is a bug!
-[12:52:05] [Server thread/WARN]: Legacy plugin Dreamvisitor v2.1.0 does not specify an api-version.
-[12:52:05] [Server thread/INFO]: [Dreamvisitor] Loading server plugin Dreamvisitor v2.1.0
-[12:52:05] [Server thread/INFO]: [EyeOfOnyx] Loading server plugin EyeOfOnyx v1.0.0
-[12:52:05] [Server thread/INFO]: Server permissions file permissions.yml is empty, ignoring it
-[12:52:05] [Server thread/INFO]: Preparing level "world"
-[12:52:05] [Server thread/INFO]: Preparing start region for dimension minecraft:overworld
-[12:52:05] [Server thread/INFO]: Time elapsed: 134 ms
-[12:52:05] [Server thread/INFO]: Preparing start region for dimension minecraft:the_nether
-[12:52:05] [Server thread/INFO]: Time elapsed: 15 ms
-[12:52:05] [Server thread/INFO]: Preparing start region for dimension minecraft:the_end
-[12:52:05] [Server thread/INFO]: Time elapsed: 11 ms
-[12:52:05] [Server thread/INFO]: [Dreamvisitor] Enabling Dreamvisitor v2.1.0*
-[12:52:06] [Server thread/INFO]: DEBUG: Registering listeners...
-[12:52:06] [Server thread/INFO]: DEBUG: Initializing command executors...
-[12:52:06] [Server thread/INFO]: DEBUG: Initializing tab completers...
-[12:52:06] [Server thread/INFO]: DEBUG: Creating data folder...
-[12:52:06] [Server thread/INFO]: DEBUG: Initializing accountLink.txt
-[12:52:06] [Server thread/INFO]: DEBUG: Loading accountLink.txt
-[12:52:06] [Server thread/INFO]: [Dreamvisitor] Dreamvisitor: A plugin created by Bog for WoF:TNW to add various features.
-[12:52:06] [Server thread/INFO]: DEBUG: Starting Dreamvisitor bot...
-[12:52:06] [Server thread/INFO]: DEBUG: Attempting to create a bot...
-[12:52:07] [Server thread/INFO]: [net.dv8tion.jda.api.JDA] Login Successful!
-[12:52:07] [Server thread/INFO]: DEBUG: Bot created.
-[12:52:07] [JDA MainWS-ReadThread/INFO]: [net.dv8tion.jda.internal.requests.WebSocketClient] Connected to WebSocket
-[12:52:07] [JDA MainWS-ReadThread/INFO]: [net.dv8tion.jda.api.JDA] Finished Loading!
-[12:52:07] [Server thread/INFO]: DEBUG: Bot is ready.
-[12:52:07] [Server thread/INFO]: DEBUG: Fetching recorded channels and roles from config.
-[12:52:07] [Server thread/INFO]: [Dreamvisitor] Chat is currently paused from last session! Use /pausechat to allow users to chat.
-[12:52:07] [Server thread/INFO]: [Dreamvisitor] Player limit override is currently set to -1
-[12:52:07] [Server thread/INFO]: DEBUG: Item blacklist is null. Creating an empty blacklist...
-[12:52:07] [Server thread/INFO]: DEBUG: Enable finished.
-[12:52:07] [Server thread/INFO]: [EyeOfOnyx] Enabling EyeOfOnyx v1.0.0
-[12:52:07] [Server thread/INFO]: Eye of Onyx 1.0.0: A plugin that manages the royalty board on Wings of Fire: The New World
-[12:52:07] [Server thread/INFO]: Running delayed init tasks
-[12:52:07] [Server thread/INFO]: Done (4.158s)! For help, type "help"
-[12:52:07] [Server thread/INFO]: Timings Reset
-[12:52:09] [User Authenticator #0/INFO]: UUID of player BogTheMudWing is eedf3c55-2e73-4e73-99a7-81d953745f0a
-[12:52:09] [Server thread/ERROR]: Could not pass event PlayerJoinEvent to EyeOfOnyx v1.0.0
-java.lang.ArrayIndexOutOfBoundsException: Index -7 out of bounds for length 10
-	at io.github.stonley890.eyeofonyx.listeners.ListenJoin.onPlayerJoin(ListenJoin.java:45) ~[EyeOfOnyx.jar:?]
-	at com.destroystokyo.paper.event.executor.asm.generated.GeneratedEventExecutor9.execute(Unknown Source) ~[?:?]
-	at org.bukkit.plugin.EventExecutor$2.execute(EventExecutor.java:77) ~[paper-api-1.20.1-R0.1-SNAPSHOT.jar:?]
-	at co.aikar.timings.TimedEventExecutor.execute(TimedEventExecutor.java:81) ~[paper-api-1.20.1-R0.1-SNAPSHOT.jar:git-Paper-67]
-	at org.bukkit.plugin.RegisteredListener.callEvent(RegisteredListener.java:70) ~[paper-api-1.20.1-R0.1-SNAPSHOT.jar:?]
-	at io.papermc.paper.plugin.manager.PaperEventManager.callEvent(PaperEventManager.java:54) ~[paper-1.20.1.jar:git-Paper-67]
-	at io.papermc.paper.plugin.manager.PaperPluginManagerImpl.callEvent(PaperPluginManagerImpl.java:126) ~[paper-1.20.1.jar:git-Paper-67]
-	at org.bukkit.plugin.SimplePluginManager.callEvent(SimplePluginManager.java:615) ~[paper-api-1.20.1-R0.1-SNAPSHOT.jar:?]
-	at net.minecraft.server.players.PlayerList.placeNewPlayer(PlayerList.java:339) ~[paper-1.20.1.jar:git-Paper-67]
-	at net.minecraft.server.network.ServerLoginPacketListenerImpl.placeNewPlayer(ServerLoginPacketListenerImpl.java:202) ~[?:?]
-	at net.minecraft.server.network.ServerLoginPacketListenerImpl.handleAcceptedLogin(ServerLoginPacketListenerImpl.java:183) ~[?:?]
-	at net.minecraft.server.network.ServerLoginPacketListenerImpl.tick(ServerLoginPacketListenerImpl.java:85) ~[?:?]
-	at net.minecraft.network.Connection.tick(Connection.java:602) ~[?:?]
-	at net.minecraft.server.network.ServerConnectionListener.tick(ServerConnectionListener.java:234) ~[?:?]
-	at net.minecraft.server.MinecraftServer.tickChildren(MinecraftServer.java:1587) ~[paper-1.20.1.jar:git-Paper-67]
-	at net.minecraft.server.dedicated.DedicatedServer.tickChildren(DedicatedServer.java:447) ~[paper-1.20.1.jar:git-Paper-67]
-	at net.minecraft.server.MinecraftServer.tickServer(MinecraftServer.java:1394) ~[paper-1.20.1.jar:git-Paper-67]
-	at net.minecraft.server.MinecraftServer.runServer(MinecraftServer.java:1171) ~[paper-1.20.1.jar:git-Paper-67]
-	at net.minecraft.server.MinecraftServer.lambda$spin$0(MinecraftServer.java:318) ~[paper-1.20.1.jar:git-Paper-67]
-	at java.lang.Thread.run(Thread.java:833) ~[?:?]
-[12:52:09] [Server thread/INFO]: BogTheMudWing joined the game
-[12:52:09] [Server thread/INFO]: BogTheMudWing[/127.0.0.1:37200] logged in with entity id 182 at ([world]-209.52734594922197, 85.5, 101.50209502587548)
-[12:52:12] [Server thread/INFO]: BogTheMudWing issued server command: /playerlimit
-[12:52:13] [Server thread/INFO]: BogTheMudWing lost connection: Disconnected
-[12:52:13] [Server thread/ERROR]: Could not pass event PlayerQuitEvent to EyeOfOnyx v1.0.0
-java.lang.ArrayIndexOutOfBoundsException: Index -7 out of bounds for length 10
-	at io.github.stonley890.eyeofonyx.listeners.ListenLeave.onPlayerQuit(ListenLeave.java:45) ~[EyeOfOnyx.jar:?]
-	at com.destroystokyo.paper.event.executor.asm.generated.GeneratedEventExecutor10.execute(Unknown Source) ~[?:?]
-	at org.bukkit.plugin.EventExecutor$2.execute(EventExecutor.java:77) ~[paper-api-1.20.1-R0.1-SNAPSHOT.jar:?]
-	at co.aikar.timings.TimedEventExecutor.execute(TimedEventExecutor.java:81) ~[paper-api-1.20.1-R0.1-SNAPSHOT.jar:git-Paper-67]
-	at org.bukkit.plugin.RegisteredListener.callEvent(RegisteredListener.java:70) ~[paper-api-1.20.1-R0.1-SNAPSHOT.jar:?]
-	at io.papermc.paper.plugin.manager.PaperEventManager.callEvent(PaperEventManager.java:54) ~[paper-1.20.1.jar:git-Paper-67]
-	at io.papermc.paper.plugin.manager.PaperPluginManagerImpl.callEvent(PaperPluginManagerImpl.java:126) ~[paper-1.20.1.jar:git-Paper-67]
-	at org.bukkit.plugin.SimplePluginManager.callEvent(SimplePluginManager.java:615) ~[paper-api-1.20.1-R0.1-SNAPSHOT.jar:?]
-	at net.minecraft.server.players.PlayerList.remove(PlayerList.java:599) ~[paper-1.20.1.jar:git-Paper-67]
-	at net.minecraft.server.players.PlayerList.remove(PlayerList.java:584) ~[paper-1.20.1.jar:git-Paper-67]
-	at net.minecraft.server.network.ServerGamePacketListenerImpl.onDisconnect(ServerGamePacketListenerImpl.java:2123) ~[?:?]
-	at net.minecraft.server.network.ServerGamePacketListenerImpl.onDisconnect(ServerGamePacketListenerImpl.java:2102) ~[?:?]
-	at net.minecraft.network.Connection.handleDisconnection(Connection.java:818) ~[?:?]
-	at net.minecraft.server.network.ServerConnectionListener.tick(ServerConnectionListener.java:254) ~[?:?]
-	at net.minecraft.server.MinecraftServer.tickChildren(MinecraftServer.java:1587) ~[paper-1.20.1.jar:git-Paper-67]
-	at net.minecraft.server.dedicated.DedicatedServer.tickChildren(DedicatedServer.java:447) ~[paper-1.20.1.jar:git-Paper-67]
-	at net.minecraft.server.MinecraftServer.tickServer(MinecraftServer.java:1394) ~[paper-1.20.1.jar:git-Paper-67]
-	at net.minecraft.server.MinecraftServer.runServer(MinecraftServer.java:1171) ~[paper-1.20.1.jar:git-Paper-67]
-	at net.minecraft.server.MinecraftServer.lambda$spin$0(MinecraftServer.java:318) ~[paper-1.20.1.jar:git-Paper-67]
-	at java.lang.Thread.run(Thread.java:833) ~[?:?]
-[12:52:13] [Server thread/INFO]: BogTheMudWing left the game
-[12:53:13] [Server thread/INFO]: Stopping the server
-[12:53:13] [Server thread/INFO]: Stopping server
-[12:53:13] [Server thread/INFO]: [EyeOfOnyx] Disabling EyeOfOnyx v1.0.0
-[12:53:13] [Server thread/INFO]: [Dreamvisitor] Disabling Dreamvisitor v2.1.0
-[12:53:13] [Server thread/INFO]: [Dreamvisitor] Closing bot instance.
-[12:53:13] [Server thread/INFO]: Saving players
-[12:53:13] [JDA RateLimit-Worker 3/ERROR]: [net.dv8tion.jda.internal.requests.Requester] There was an unexpected error while executing a REST request
+[16:42:46] [Server thread/INFO]: [ChunkTaskScheduler] Chunk system is using 1 I/O threads, 2 worker threads, and gen parallelism of 2 threads
+[16:42:46] [Server thread/INFO]: Default game type: CREATIVE
+[16:42:46] [Server thread/INFO]: Generating keypair
+[16:42:46] [Server thread/INFO]: Starting Minecraft server on *:25560
+[16:42:46] [Server thread/INFO]: Using default channel type
+[16:42:46] [Server thread/INFO]: Paper: Using Java compression from Velocity.
+[16:42:46] [Server thread/INFO]: Paper: Using Java cipher from Velocity.
+[16:42:47] [Server thread/WARN]: [org.bukkit.craftbukkit.v1_20_R1.legacy.CraftLegacy] Initializing Legacy Material Support. Unless you have legacy plugins and/or data this is a bug!
+[16:42:52] [Server thread/WARN]: Legacy plugin Dreamvisitor v2.1.0 does not specify an api-version.
+[16:42:52] [Server thread/INFO]: [Dreamvisitor] Loading server plugin Dreamvisitor v2.1.0
+[16:42:52] [Server thread/INFO]: [EyeOfOnyx] Loading server plugin EyeOfOnyx v1.0.0
+[16:42:52] [Server thread/INFO]: Server permissions file permissions.yml is empty, ignoring it
+[16:42:52] [Server thread/INFO]: Preparing level "world"
+[16:42:52] [Server thread/INFO]: Preparing start region for dimension minecraft:overworld
+[16:42:53] [Server thread/INFO]: Time elapsed: 295 ms
+[16:42:53] [Server thread/INFO]: Preparing start region for dimension minecraft:the_nether
+[16:42:53] [Server thread/INFO]: Time elapsed: 42 ms
+[16:42:53] [Server thread/INFO]: Preparing start region for dimension minecraft:the_end
+[16:42:53] [Server thread/INFO]: Time elapsed: 35 ms
+[16:42:53] [Server thread/INFO]: [Dreamvisitor] Enabling Dreamvisitor v2.1.0*
+[16:42:53] [Server thread/INFO]: DEBUG: Registering listeners...
+[16:42:53] [Server thread/INFO]: DEBUG: Initializing command executors...
+[16:42:53] [Server thread/INFO]: DEBUG: Initializing tab completers...
+[16:42:53] [Server thread/INFO]: DEBUG: Creating data folder...
+[16:42:53] [Server thread/INFO]: DEBUG: Initializing accountLink.txt
+[16:42:53] [Server thread/INFO]: DEBUG: Loading accountLink.txt
+[16:42:53] [Server thread/INFO]: [Dreamvisitor] Dreamvisitor: A plugin created by Bog for WoF:TNW to add various features.
+[16:42:53] [Server thread/INFO]: DEBUG: Starting Dreamvisitor bot...
+[16:42:53] [Server thread/INFO]: DEBUG: Attempting to create a bot...
+[16:42:55] [Server thread/INFO]: [net.dv8tion.jda.api.JDA] Login Successful!
+[16:42:55] [Server thread/INFO]: DEBUG: Bot created.
+[16:42:55] [JDA MainWS-WriteThread/INFO]: [net.dv8tion.jda.internal.requests.WebSocketClient] Connected to WebSocket
+[16:42:56] [JDA MainWS-ReadThread/INFO]: [net.dv8tion.jda.api.JDA] Finished Loading!
+[16:42:56] [Server thread/INFO]: DEBUG: Bot is ready.
+[16:42:56] [Server thread/INFO]: DEBUG: Fetching recorded channels and roles from config.
+[16:42:56] [Server thread/INFO]: [Dreamvisitor] Chat is currently paused from last session! Use /pausechat to allow users to chat.
+[16:42:56] [Server thread/INFO]: [Dreamvisitor] Player limit override is currently set to -1
+[16:42:56] [Server thread/INFO]: DEBUG: Item blacklist is null. Creating an empty blacklist...
+[16:42:56] [Server thread/INFO]: DEBUG: Enable finished.
+[16:42:56] [Server thread/INFO]: [EyeOfOnyx] Enabling EyeOfOnyx v1.0.0
+[16:42:56] [Server thread/INFO]: Eye of Onyx 1.0.0: A plugin that manages the royalty board on Wings of Fire: The New World
+[16:42:56] [Server thread/INFO]: Running delayed init tasks
+[16:42:56] [Server thread/INFO]: Done (10.683s)! For help, type "help"
+[16:42:56] [Server thread/INFO]: Timings Reset
+[16:42:59] [User Authenticator #0/INFO]: UUID of player SunsetSequoia is 9a6915d2-b487-455f-aa65-7620e4a4a9c7
+[16:43:01] [Server thread/INFO]: SunsetSequoia joined the game
+[16:43:01] [Server thread/INFO]: SunsetSequoia[/127.0.0.1:63097] logged in with entity id 233 at ([world]36.70305163890609, 71.0, 18.780326958874895)
+[16:43:03] [Server thread/INFO]: SunsetSequoia issued server command: /challenge
+[16:43:29] [Server thread/INFO]: SunsetSequoia lost connection: Disconnected
+[16:43:29] [Server thread/INFO]: SunsetSequoia left the game
+[16:43:34] [Server thread/INFO]: Stopping the server
+[16:43:34] [Server thread/INFO]: Stopping server
+[16:43:34] [Server thread/INFO]: [EyeOfOnyx] Disabling EyeOfOnyx v1.0.0
+[16:43:34] [Server thread/INFO]: [Dreamvisitor] Disabling Dreamvisitor v2.1.0
+[16:43:34] [Server thread/INFO]: [Dreamvisitor] Closing bot instance.
+[16:43:34] [JDA RateLimit-Worker 4/ERROR]: [net.dv8tion.jda.internal.requests.Requester] There was an I/O error while executing a REST request: null
+[16:43:34] [Server thread/INFO]: Saving players
+[16:43:34] [JDA RateLimit-Worker 4/ERROR]: [net.dv8tion.jda.internal.requests.RateLimiter] Encountered exception trying to execute request
 java.lang.IllegalStateException: zip file closed
 	at java.util.zip.ZipFile.ensureOpen(ZipFile.java:831) ~[?:?]
 	at java.util.zip.ZipFile.getEntry(ZipFile.java:330) ~[?:?]
@@ -117,46 +74,17 @@ java.lang.IllegalStateException: zip file closed
 	at org.bukkit.plugin.java.PluginClassLoader.findClass(PluginClassLoader.java:195) ~[paper-api-1.20.1-R0.1-SNAPSHOT.jar:?]
 	at java.lang.ClassLoader.loadClass(ClassLoader.java:587) ~[?:?]
 	at org.bukkit.plugin.java.PluginClassLoader.loadClass0(PluginClassLoader.java:155) ~[paper-api-1.20.1-R0.1-SNAPSHOT.jar:?]
-	at org.bukkit.plugin.java.PluginClassLoader.loadClass(PluginClassLoader.java:150) ~[paper-api-1.20.1-R0.1-SNAPSHOT.jar:?]
-	at java.lang.ClassLoader.loadClass(ClassLoader.java:520) ~[?:?]
-	at okhttp3.internal.connection.ExchangeFinder.trackFailure(ExchangeFinder.kt:261) ~[dreamvisitor-2.1.0.jar:?]
-	at okhttp3.internal.connection.ExchangeFinder.find(ExchangeFinder.kt:84) ~[dreamvisitor-2.1.0.jar:?]
-	at okhttp3.internal.connection.RealCall.initExchange$okhttp(RealCall.kt:255) ~[dreamvisitor-2.1.0.jar:?]
-	at okhttp3.internal.connection.ConnectInterceptor.intercept(ConnectInterceptor.kt:32) ~[dreamvisitor-2.1.0.jar:?]
-	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:109) ~[dreamvisitor-2.1.0.jar:?]
-	at okhttp3.internal.cache.CacheInterceptor.intercept(CacheInterceptor.kt:95) ~[dreamvisitor-2.1.0.jar:?]
-	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:109) ~[dreamvisitor-2.1.0.jar:?]
-	at okhttp3.internal.http.BridgeInterceptor.intercept(BridgeInterceptor.kt:83) ~[dreamvisitor-2.1.0.jar:?]
-	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:109) ~[dreamvisitor-2.1.0.jar:?]
-	at okhttp3.internal.http.RetryAndFollowUpInterceptor.intercept(RetryAndFollowUpInterceptor.kt:76) ~[dreamvisitor-2.1.0.jar:?]
-	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:109) ~[dreamvisitor-2.1.0.jar:?]
-	at okhttp3.internal.connection.RealCall.getResponseWithInterceptorChain$okhttp(RealCall.kt:201) ~[dreamvisitor-2.1.0.jar:?]
-	at okhttp3.internal.connection.RealCall.execute(RealCall.kt:154) ~[dreamvisitor-2.1.0.jar:?]
-	at net.dv8tion.jda.internal.requests.Requester.execute(Requester.java:203) ~[dreamvisitor-2.1.0.jar:?]
-	at net.dv8tion.jda.internal.requests.Requester.execute(Requester.java:143) ~[dreamvisitor-2.1.0.jar:?]
-	at net.dv8tion.jda.internal.requests.Requester.execute(Requester.java:126) ~[dreamvisitor-2.1.0.jar:?]
-	at net.dv8tion.jda.internal.requests.ratelimit.BotRateLimiter$Bucket.run(BotRateLimiter.java:481) ~[dreamvisitor-2.1.0.jar:?]
-	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:539) ~[?:?]
-	at java.util.concurrent.FutureTask.run(FutureTask.java:264) ~[?:?]
-	at java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:304) ~[?:?]
-	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136) ~[?:?]
-	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635) ~[?:?]
-	at java.lang.Thread.run(Thread.java:833) ~[?:?]
-[12:53:13] [JDA RateLimit-Worker 3/ERROR]: [net.dv8tion.jda.internal.requests.RateLimiter] Encountered exception trying to execute request
-java.lang.IllegalStateException: zip file closed
-	at java.util.zip.ZipFile.ensureOpen(ZipFile.java:831) ~[?:?]
-	at java.util.zip.ZipFile.getEntry(ZipFile.java:330) ~[?:?]
-	at java.util.jar.JarFile.getEntry(JarFile.java:518) ~[?:?]
-	at java.util.jar.JarFile.getJarEntry(JarFile.java:473) ~[?:?]
-	at org.bukkit.plugin.java.PluginClassLoader.findClass(PluginClassLoader.java:195) ~[paper-api-1.20.1-R0.1-SNAPSHOT.jar:?]
-	at java.lang.ClassLoader.loadClass(ClassLoader.java:587) ~[?:?]
-	at org.bukkit.plugin.java.PluginClassLoader.loadClass0(PluginClassLoader.java:155) ~[paper-api-1.20.1-R0.1-SNAPSHOT.jar:?]
+	at org.bukkit.plugin.java.PluginClassLoader.loadClass(PluginClassLoader.java:130) ~[paper-api-1.20.1-R0.1-SNAPSHOT.jar:?]
+	at io.papermc.paper.plugin.entrypoint.classloader.group.SpigotPluginClassLoaderGroup.lookupClass(SpigotPluginClassLoaderGroup.java:43) ~[paper-1.20.1.jar:git-Paper-67]
+	at io.papermc.paper.plugin.entrypoint.classloader.group.SimpleListPluginClassLoaderGroup.getClassByName(SimpleListPluginClassLoaderGroup.java:30) ~[paper-1.20.1.jar:git-Paper-67]
+	at io.papermc.paper.plugin.entrypoint.classloader.group.LockingClassLoaderGroup.getClassByName(LockingClassLoaderGroup.java:34) ~[paper-1.20.1.jar:git-Paper-67]
+	at org.bukkit.plugin.java.PluginClassLoader.loadClass0(PluginClassLoader.java:173) ~[paper-api-1.20.1-R0.1-SNAPSHOT.jar:?]
 	at org.bukkit.plugin.java.PluginClassLoader.loadClass(PluginClassLoader.java:150) ~[paper-api-1.20.1-R0.1-SNAPSHOT.jar:?]
 	at java.lang.ClassLoader.loadClass(ClassLoader.java:520) ~[?:?]
 	at net.dv8tion.jda.api.requests.Request.onFailure(Request.java:118) ~[dreamvisitor-2.1.0.jar:?]
 	at net.dv8tion.jda.internal.requests.RestActionImpl.handleResponse(RestActionImpl.java:273) ~[dreamvisitor-2.1.0.jar:?]
 	at net.dv8tion.jda.api.requests.Request.handleResponse(Request.java:259) ~[dreamvisitor-2.1.0.jar:?]
-	at net.dv8tion.jda.internal.requests.Requester.execute(Requester.java:262) ~[dreamvisitor-2.1.0.jar:?]
+	at net.dv8tion.jda.internal.requests.Requester.execute(Requester.java:256) ~[dreamvisitor-2.1.0.jar:?]
 	at net.dv8tion.jda.internal.requests.Requester.execute(Requester.java:143) ~[dreamvisitor-2.1.0.jar:?]
 	at net.dv8tion.jda.internal.requests.Requester.execute(Requester.java:126) ~[dreamvisitor-2.1.0.jar:?]
 	at net.dv8tion.jda.internal.requests.ratelimit.BotRateLimiter$Bucket.run(BotRateLimiter.java:481) ~[dreamvisitor-2.1.0.jar:?]
@@ -166,26 +94,26 @@ java.lang.IllegalStateException: zip file closed
 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136) ~[?:?]
 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635) ~[?:?]
 	at java.lang.Thread.run(Thread.java:833) ~[?:?]
-[12:53:13] [Server thread/INFO]: Saving worlds
-[12:53:13] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
-[12:53:13] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk system to halt for world 'world'
-[12:53:13] [Server thread/INFO]: [ChunkHolderManager] Halted chunk system for world 'world'
-[12:53:13] [Server thread/INFO]: [ChunkHolderManager] Saving all chunkholders for world 'world'
-[12:53:14] [Server thread/INFO]: [ChunkHolderManager] Saved 822 block chunks, 822 entity chunks, 0 poi chunks in world 'world' in 0.65s
-[12:53:14] [Server thread/INFO]: ThreadedAnvilChunkStorage (world): All chunks are saved
-[12:53:14] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world_nether]'/minecraft:the_nether
-[12:53:14] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk system to halt for world 'world_nether'
-[12:53:14] [Server thread/INFO]: [ChunkHolderManager] Halted chunk system for world 'world_nether'
-[12:53:14] [Server thread/INFO]: [ChunkHolderManager] Saving all chunkholders for world 'world_nether'
-[12:53:14] [Server thread/INFO]: [ChunkHolderManager] Saved 529 block chunks, 529 entity chunks, 0 poi chunks in world 'world_nether' in 0.33s
-[12:53:14] [Server thread/INFO]: ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[12:53:14] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world_the_end]'/minecraft:the_end
-[12:53:14] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk system to halt for world 'world_the_end'
-[12:53:14] [Server thread/INFO]: [ChunkHolderManager] Halted chunk system for world 'world_the_end'
-[12:53:14] [Server thread/INFO]: [ChunkHolderManager] Saving all chunkholders for world 'world_the_end'
-[12:53:14] [Server thread/INFO]: [ChunkHolderManager] Saved 529 block chunks, 529 entity chunks, 0 poi chunks in world 'world_the_end' in 0.05s
-[12:53:14] [Server thread/INFO]: ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[12:53:14] [Server thread/INFO]: ThreadedAnvilChunkStorage: All dimensions are saved
-[12:53:14] [Server thread/INFO]: Flushing Chunk IO
-[12:53:14] [Server thread/INFO]: Closing Thread Pool
-[12:53:14] [Server thread/INFO]: Closing Server
+[16:43:34] [Server thread/INFO]: Saving worlds
+[16:43:34] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[16:43:34] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk system to halt for world 'world'
+[16:43:34] [Server thread/INFO]: [ChunkHolderManager] Halted chunk system for world 'world'
+[16:43:34] [Server thread/INFO]: [ChunkHolderManager] Saving all chunkholders for world 'world'
+[16:43:37] [Server thread/INFO]: [ChunkHolderManager] Saved 676 block chunks, 676 entity chunks, 0 poi chunks in world 'world' in 3.19s
+[16:43:37] [Server thread/INFO]: ThreadedAnvilChunkStorage (world): All chunks are saved
+[16:43:37] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world_nether]'/minecraft:the_nether
+[16:43:37] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk system to halt for world 'world_nether'
+[16:43:37] [Server thread/INFO]: [ChunkHolderManager] Halted chunk system for world 'world_nether'
+[16:43:37] [Server thread/INFO]: [ChunkHolderManager] Saving all chunkholders for world 'world_nether'
+[16:43:38] [Server thread/INFO]: [ChunkHolderManager] Saved 529 block chunks, 529 entity chunks, 0 poi chunks in world 'world_nether' in 0.94s
+[16:43:38] [Server thread/INFO]: ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[16:43:38] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world_the_end]'/minecraft:the_end
+[16:43:38] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk system to halt for world 'world_the_end'
+[16:43:38] [Server thread/INFO]: [ChunkHolderManager] Halted chunk system for world 'world_the_end'
+[16:43:38] [Server thread/INFO]: [ChunkHolderManager] Saving all chunkholders for world 'world_the_end'
+[16:43:39] [Server thread/INFO]: [ChunkHolderManager] Saved 529 block chunks, 529 entity chunks, 0 poi chunks in world 'world_the_end' in 0.30s
+[16:43:39] [Server thread/INFO]: ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[16:43:39] [Server thread/INFO]: ThreadedAnvilChunkStorage: All dimensions are saved
+[16:43:39] [Server thread/INFO]: Flushing Chunk IO
+[16:43:39] [Server thread/INFO]: Closing Thread Pool
+[16:43:39] [Server thread/INFO]: Closing Server

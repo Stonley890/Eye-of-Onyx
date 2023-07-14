@@ -11,6 +11,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import org.bukkit.scoreboard.Scoreboard;
+import org.bukkit.scoreboard.Team;
 import org.shanerx.mojang.Mojang;
 
 public class RoyaltyBoard {
@@ -18,24 +19,43 @@ public class RoyaltyBoard {
     private static File file;
     private static FileConfiguration boardFile;
     private static final EyeOfOnyx plugin = EyeOfOnyx.getPlugin();
-    static Mojang mojang = new Mojang().connect();
-    static Scoreboard scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
+    private static final Mojang mojang = new Mojang().connect();
+    private static final Scoreboard scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
 
     // Team names
-    static String[] teamNames = {
+    private static final String[] teamNames = {
         "HiveWing", "IceWing", "LeafWing", "MudWing", "NightWing", "RainWing", "SandWing", "SeaWing", "SilkWing",
         "SkyWing"
     };
 
+    public static final int HIVE = 0;
+    public static final int ICE = 1;
+    public static final int LEAF = 2;
+    public static final int MUD = 3;
+    public static final int NIGHT = 4;
+    public static final int RAIN = 5;
+    public static final int SAND = 6;
+    public static final int SEA = 7;
+    public static final int SILK = 8;
+    public static final int SKY = 9;
+
     // Tribe IDs
-    static String[] tribes = {
+    private static final String[] tribes = {
             "hive", "ice", "leaf", "mud", "night", "rain", "sand", "sea", "silk", "sky"
     };
 
     // Valid positions
-    static String[] validPositions = {
-            "ruler", "heir_apparent", "heir_presumptive", "noble_apparent", "noble_presumptive"
+    private static final String[] validPositions = {
+            "ruler", "heir_apparent", "heir_presumptive", "noble_apparent", "noble_presumptive", "civilian"
     };
+
+    public static final int RULER = 0;
+    public static final int HEIR_APPARENT = 1;
+    public static final int HEIR_PRESUMPTIVE = 2;
+    public static final int NOBLE_APPARENT = 3;
+    public static final int NOBLE_PRESUMPTIVE = 4;
+    public static final int CIVILIAN = 5;
+
 
     public static String[] getTeamNames() {
         return teamNames;
@@ -91,27 +111,26 @@ public class RoyaltyBoard {
         int positionsEmpty = 0;
 
         // For each tribe
-        for (String tribe : tribes) {
+        for (int tribe = 0; tribe < tribes.length; tribe++) {
 
             positionsEmpty = 0;
 
             // For each position
-            for (int j = 0; j < validPositions.length; j++) {
+            for (int pos = 0; pos < validPositions.length; pos++) {
 
                 // Set current path
-                currentPath = tribe + "." + validPositions[j];
+                currentPath = tribes[tribe] + "." + validPositions[pos];
 
                 // If last_online is before 30 days ago, set to empty
-                last_online = (String) boardFile.get(currentPath + ".last_online");
-                assert last_online != null;
-                if (!last_online.equals("none")) {
+                last_online = getLastOnline(tribe, pos);
+                if (last_online != null && !last_online.equals("none")) {
                     if (LocalDateTime.parse(last_online).isBefore(LocalDateTime.now().minusDays(30))) {
                         boardFile.set(currentPath + ".last_online", "none");
                     }
                 }
 
                 // If last_online is empty, clear position
-                if (last_online.equals("none")) {
+                if (last_online == null || last_online.equals("none")) {
 
                     // This position is empty, so count up positionsEmpty
                     positionsEmpty += 1;
@@ -123,7 +142,7 @@ public class RoyaltyBoard {
                     boardFile.set(currentPath + ".last_online", "none");
 
                     // If position is ruler, change 'title'. Else, change 'challenging'
-                    if (validPositions[j].equals(validPositions[0])) {
+                    if (validPositions[pos].equals(validPositions[RULER])) {
                         boardFile.set(currentPath + ".title", "none");
                     } else {
                         boardFile.set(currentPath + ".challenging", "none");
@@ -137,23 +156,23 @@ public class RoyaltyBoard {
                     if (positionsEmpty > 0) {
 
                         // copy uuid & name to first empty position (thisPosition - emptyPositions)
-                        boardFile.set(tribe + "." + validPositions[j - positionsEmpty] + ".uuid",
+                        boardFile.set(tribe + "." + validPositions[pos - positionsEmpty] + ".uuid",
                                 boardFile.get(currentPath + ".uuid"));
-                        boardFile.set(tribe + "." + validPositions[j - positionsEmpty] + ".name",
+                        boardFile.set(tribe + "." + validPositions[pos - positionsEmpty] + ".name",
                                 boardFile.get(currentPath + ".name"));
 
                         // Update last_challenge and joined_time
                         // This will give the user movement cooldown
-                        boardFile.set(tribe + "." + validPositions[j - positionsEmpty] + ".last_challenge_time",
+                        boardFile.set(tribe + "." + validPositions[pos - positionsEmpty] + ".last_challenge_time",
                                 LocalDateTime.now().toString());
-                        boardFile.set(tribe + "." + validPositions[j - positionsEmpty] + ".joined_time",
+                        boardFile.set(tribe + "." + validPositions[pos - positionsEmpty] + ".joined_time",
                                 LocalDateTime.now().toString());
-                        boardFile.set(tribe + "." + validPositions[j - positionsEmpty] + ".last_online",
+                        boardFile.set(tribe + "." + validPositions[pos - positionsEmpty] + ".last_online",
                                 LocalDateTime.now().toString());
 
                         // If previous position is ruler, also set title
-                        if (validPositions[j - 1].equals(validPositions[0])) {
-                            boardFile.set(tribe + "." + validPositions[j - positionsEmpty] + ".title", "Ruler");
+                        if (validPositions[pos - 1].equals(validPositions[RULER])) {
+                            boardFile.set(tribe + "." + validPositions[pos - positionsEmpty] + ".title", "Ruler");
                         }
 
                         // TO DO: notify challenger of challenge cancellation
@@ -191,7 +210,12 @@ public class RoyaltyBoard {
     public static int getTribeIndexOfUsername(String playerUsername) {
 
         // Search for valid team from player scoreboard team
-        return Arrays.binarySearch(teamNames, Objects.requireNonNull(Objects.requireNonNull(scoreboard.getEntryTeam(playerUsername)).getName()));
+        Team team = scoreboard.getEntryTeam(playerUsername);
+        if (team != null) {
+            return Arrays.binarySearch(teamNames, team.getName());
+        } else {
+            throw new RuntimeException("Player is not part of a team!");
+        }
     }
 
     public static int getPositionIndexOfUUID(String playerUuid) {
@@ -203,7 +227,7 @@ public class RoyaltyBoard {
         int playerTribe = getTribeIndexOfUUID(playerUuid);
         
         // Position is 5 by default (citizen)
-        int playerPosition = 5;
+        int playerPosition = CIVILIAN;
 
         // Iterate though positions to search for target player
         for (int i = 0; i < validPositions.length; i++) {
@@ -226,7 +250,7 @@ public class RoyaltyBoard {
         int playerTribe = getTribeIndexOfUUID(playerUuid);
 
         // Position is 5 by default (citizen)
-        int playerPosition = 5;
+        int playerPosition = CIVILIAN;
 
         // Iterate though positions to search for target player
         for (int i = 0; i < validPositions.length; i++) {
@@ -240,8 +264,63 @@ public class RoyaltyBoard {
         return playerPosition;
     }
 
-    public static String getValueOfPosition(int tribeIndex, int positionIndex, String value) {
+    public static String getValue(int tribeIndex, int positionIndex, String value) {
+        return boardFile.getString(tribes[tribeIndex] + "." + validPositions[positionIndex] + value);
+    }
+    public static void setValue(int tribeIndex, int positionIndex, String key, String value) {
+        boardFile.set(tribeIndex + "." + positionIndex + "." + key, value);
+        save(boardFile);
+    }
+
+    public static String getUuid(int tribeIndex, int positionIndex) {
         return boardFile.getString(tribes[tribeIndex] + "." + validPositions[positionIndex] + ".uuid");
+    }
+
+    public static String getRulerTitle(int tribeIndex) {
+        return boardFile.getString(tribes[tribeIndex] + "." + validPositions[RULER] + ".title");
+    }
+
+    public static String getOcName(int tribeIndex, int positionIndex) {
+        return boardFile.getString(tribes[tribeIndex] + "." + validPositions[positionIndex] + ".name");
+    }
+
+    public static String getJoinedDate(int tribeIndex, int positionIndex) {
+        return boardFile.getString(tribes[tribeIndex] + "." + validPositions[positionIndex] + ".joined_time");
+    }
+
+    public static String getLastOnline(int tribeIndex, int positionIndex) {
+        return boardFile.getString(tribes[tribeIndex] + "." + validPositions[positionIndex] + ".last_online");
+    }
+
+    public static String getLastChallengeDate(int tribeIndex, int positionIndex) {
+        return boardFile.getString(tribes[tribeIndex] + "." + validPositions[positionIndex] + ".last_challenge_time");
+    }
+
+    public static String getAttacker(int tribeIndex, int positionIndex) {
+        return boardFile.getString(tribes[tribeIndex] + "." + validPositions[positionIndex] + ".challenger");
+    }
+    public static void setAttacker(int tribeIndex, int positionIndex, String uuid) {
+        setValue(tribeIndex, positionIndex, "challenger", uuid);
+    }
+
+    public static String getAttacking(int tribeIndex, int positionIndex) {
+        return boardFile.getString(tribes[tribeIndex] + "." + validPositions[positionIndex] + ".challenging");
+    }
+    public static void setAttacking(int tribeIndex, int positionIndex, String uuid) {
+        setValue(tribeIndex, positionIndex, "challenging", uuid);
+
+    }
+
+    public static boolean isOnCooldown(int tribeIndex, int positionIndex) {
+        LocalDateTime lastChallenge = LocalDateTime.parse(getLastChallengeDate(tribeIndex, positionIndex));
+        return lastChallenge.isBefore(LocalDateTime.now().minusDays(14));
+    }
+
+    public static boolean isOnCooldown(String uuid) {
+        int tribe = getTribeIndexOfUUID(uuid);
+        int pos = getPositionIndexOfUUID(uuid);
+        LocalDateTime lastChallenge = LocalDateTime.parse(getLastChallengeDate(tribe, pos));
+        return lastChallenge.isBefore(LocalDateTime.now().minusDays(14));
     }
 
     private RoyaltyBoard() {

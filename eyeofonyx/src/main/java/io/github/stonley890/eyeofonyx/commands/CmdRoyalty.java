@@ -21,22 +21,22 @@ import io.github.stonley890.eyeofonyx.files.RoyaltyBoard;
 public class CmdRoyalty implements CommandExecutor {
 
     // Get Mojang services
-    Mojang mojang = new Mojang().connect();
+    private static final Mojang mojang = new Mojang().connect();
 
     // Get server scoreboard service (for teams)
-    Scoreboard scoreboard = Objects.requireNonNull(Bukkit.getScoreboardManager()).getMainScoreboard();
+    private static final Scoreboard scoreboard = Objects.requireNonNull(Bukkit.getScoreboardManager()).getMainScoreboard();
 
     // Easy access royalty board
-    FileConfiguration board = RoyaltyBoard.get();
+    private static FileConfiguration board = RoyaltyBoard.get();
 
     // Team names
-    String[] teamNames = RoyaltyBoard.getTeamNames();
+    private static final String[] teamNames = RoyaltyBoard.getTeamNames();
 
     // Tribe IDs
-    String[] tribes = RoyaltyBoard.getTribes();
+    private static final String[] tribes = RoyaltyBoard.getTribes();
 
     // Valid positions
-    String[] validPositions = RoyaltyBoard.getValidPositions();
+    private static final String[] validPositions = RoyaltyBoard.getValidPositions();
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {

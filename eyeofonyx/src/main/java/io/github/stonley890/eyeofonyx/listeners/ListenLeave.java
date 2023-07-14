@@ -16,15 +16,15 @@ import io.github.stonley890.eyeofonyx.files.RoyaltyBoard;
 
 public class ListenLeave implements Listener {
 
-    FileConfiguration board = RoyaltyBoard.get();
-    Scoreboard scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
+    private final FileConfiguration board = RoyaltyBoard.get();
+    private final Scoreboard scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
 
 
-    Mojang mojang = new Mojang().connect();
+    private final Mojang mojang = new Mojang().connect();
 
-    String[] teamNames = RoyaltyBoard.getTeamNames();
-    String[] tribes = RoyaltyBoard.getTribes();
-    String[] validPositions = RoyaltyBoard.getValidPositions();
+    private final String[] teamNames = RoyaltyBoard.getTeamNames();
+    private final String[] tribes = RoyaltyBoard.getTribes();
+    private final String[] validPositions = RoyaltyBoard.getValidPositions();
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
@@ -49,7 +49,7 @@ public class ListenLeave implements Listener {
                     RoyaltyBoard.save(board);
                 }
             }
-        } catch (IllegalArgumentException e) {
+        } catch (NullPointerException e) {
             // Player is not part of a team
         }
 

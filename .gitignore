@@ -1,2 +1,11 @@
 /eyeofonyx/eyeofonyx.iml
 /.vscode/
+/.idea/
+/eyeofonyx/server/crash-reports/
+/eyeofonyx/server/libraries/
+/eyeofonyx/server/versions/
+/eyeofonyx/server/banned-ips.json
+/eyeofonyx/server/banned-players.json
+/eyeofonyx/server/eula.txt
+/eyeofonyx/target/
+**.DS_Store

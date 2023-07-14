@@ -1,10 +1,13 @@
 package io.github.stonley890.eyeofonyx;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.logging.Level;
 
 import io.github.stonley890.eyeofonyx.commands.CmdChallenge;
+import io.github.stonley890.eyeofonyx.files.Banned;
+import io.github.stonley890.eyeofonyx.files.Notification;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -28,8 +31,7 @@ public class EyeOfOnyx extends JavaPlugin {
 
     public final String version = getDescription().getVersion();
     public static final String EOO = ChatColor.GRAY + "[" + ChatColor.GREEN + "EoO" + ChatColor.GRAY + "] " + ChatColor.RESET;
-
-    static EyeOfOnyx plugin;
+    private static EyeOfOnyx plugin;
 
     @Override
     public void onEnable() {
@@ -41,16 +43,22 @@ public class EyeOfOnyx extends JavaPlugin {
         getConfig().options().copyDefaults();
         saveDefaultConfig();
 
-        // Set up royalty board file
-        RoyaltyBoard.setup();
+        // Set up files
+        try {
+            RoyaltyBoard.setup();
+            Banned.setup();
+            Notification.setup();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         // Initialize command executors
-        Objects.requireNonNull(getCommand("eyeofonyx")).setExecutor(new CmdEyeOfOnyx());
-        Objects.requireNonNull(getCommand("royalty")).setExecutor(new CmdRoyalty());
-        Objects.requireNonNull(getCommand("challenge")).setExecutor(new CmdChallenge());
+        getCommand("eyeofonyx").setExecutor(new CmdEyeOfOnyx());
+        getCommand("royalty").setExecutor(new CmdRoyalty());
+        getCommand("challenge").setExecutor(new CmdChallenge());
 
         // Initialize tab completer
-        Objects.requireNonNull(getCommand("royalty")).setTabCompleter(new TabRoyalty());
+        getCommand("royalty").setTabCompleter(new TabRoyalty());
 
         // Initialize listeners
         getServer().getPluginManager().registerEvents(new ListenJoin(), this);
