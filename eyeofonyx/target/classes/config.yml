@@ -1,0 +1,5 @@
+# The address to use for the challenge availability web interface.
+# "localhost" makes the page address "localhost:8000/challenge"
+# "http://bogthemudwing.ddns.net" will NOT WORK because you must NOT prepend "http://"
+# "woftnw.duckdns.org" will work and redirect to "http://woftnw.duckdns.org:8000/challenge"
+address: "localhost"

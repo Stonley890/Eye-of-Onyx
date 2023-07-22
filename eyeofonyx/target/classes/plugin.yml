@@ -19,3 +19,7 @@ commands:
   challenge:
     description: Initiate a challenge.
     usage: /<command>
+  tribeupdate:
+    description: Update Discord role based on in-game team
+    usage: /<command> [player]
+    permission: minecraft.command.op

@@ -1,10 +1,13 @@
 package io.github.stonley890.eyeofonyx.listeners;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Objects;
 
+import io.github.stonley890.eyeofonyx.files.Notification;
 import org.bukkit.Bukkit;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -32,8 +35,21 @@ public class ListenJoin implements Listener {
         Player player = event.getPlayer();
 
         try {
+            for (Notification notification : Notification.getNotificationsOfPlayer(player.getUniqueId().toString())) {
+                notification.sendMessage();
+            }
+        } catch (IOException | InvalidConfigurationException e) {
+            e.printStackTrace();
+        }
+
+        try {
             String playerTeam = scoreboard.getEntryTeam(player.getName()).getName();
             int playerTribe = Arrays.binarySearch(teamNames, playerTeam);
+
+            if (playerTribe > 6 || playerTribe < 1) {
+                return;
+            }
+
             String playerUUID = mojang.getUUIDOfUsername(player.getName()).replaceFirst(
                     "(\\p{XDigit}{8})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}+)",
                     "$1-$2-$3-$4-$5");

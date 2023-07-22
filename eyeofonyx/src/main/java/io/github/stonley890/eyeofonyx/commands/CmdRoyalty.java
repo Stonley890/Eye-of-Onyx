@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.UUID;
 
+import io.github.stonley890.dreamvisitor.Dreamvisitor;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -49,6 +50,8 @@ public class CmdRoyalty implements CommandExecutor {
                 sender.sendMessage(EyeOfOnyx.EOO + "Created missing " + teamName + " team.");
             }
         }
+
+        sender.sendMessage(EyeOfOnyx.EOO + "Please wait...");
 
         RoyaltyBoard.reload();
 
@@ -249,19 +252,20 @@ public class CmdRoyalty implements CommandExecutor {
         for (int j = 0; j < validPositions.length; j++) {
 
             // Add the name of the position, change to uppercase, remove underscores
-            strBuild.append("\n[ ").append(validPositions[j].toUpperCase().replace('_', ' ')).append(": ");
+            strBuild.append(ChatColor.WHITE).append("\n[ ").append(validPositions[j].toUpperCase().replace('_', ' ')).append(": ");
             // If no one filling position, report as "none"
             if (Objects.equals(board.get(tribes[index] + "." + validPositions[j] + ".uuid"), "none")) {
-                strBuild.append("none");
+                strBuild.append(ChatColor.GRAY).append("none");
             } // Otherwise...
             else {
+                strBuild.append(ChatColor.YELLOW);
                 // If position is ruler, prepend the title
                 if (j == 0) {
                     strBuild.append(board.get(tribes[index] + "." + validPositions[j] + ".title")).append(" ");
                 }
                 // Add canon name w/ username in parentheses
                 strBuild.append(board.get(tribes[index] + "." + validPositions[j] + ".name"));
-                strBuild.append(" (").append(mojang.getPlayerProfile((String) board.get(tribes[index] + "." + validPositions[j] + ".uuid"))
+                strBuild.append(ChatColor.WHITE).append(" (").append(mojang.getPlayerProfile(board.getString(tribes[index] + "." + validPositions[j] + ".uuid"))
                         .getUsername()).append(")");
             }
         }

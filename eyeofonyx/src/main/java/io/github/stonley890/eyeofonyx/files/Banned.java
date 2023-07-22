@@ -1,6 +1,7 @@
 package io.github.stonley890.eyeofonyx.files;
 
 import io.github.stonley890.dreamvisitor.Dreamvisitor;
+import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -14,17 +15,15 @@ public class Banned {
 
     private static File file;
     private static FileConfiguration fileConfig;
-    private static final Dreamvisitor plugin = Dreamvisitor.getPlugin();
+    private static final EyeOfOnyx plugin = EyeOfOnyx.getPlugin();
 
     public static void setup() throws IOException {
 
         file = new File(plugin.getDataFolder(), "banned.yml");
 
-        if (!file.exists()) {
-            if (file.getParentFile().mkdirs()) {
-                file.createNewFile();
-            }
-        }
+        Dreamvisitor.debug("banned.yml does not exist. Creating one...");
+        file.createNewFile();
+
         fileConfig = YamlConfiguration.loadConfiguration(file);
         save(fileConfig);
     }

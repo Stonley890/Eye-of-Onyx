@@ -1,11 +1,14 @@
 package io.github.stonley890.eyeofonyx.files;
 
 import java.io.File;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Objects;
 
+import io.github.stonley890.dreamvisitor.Dreamvisitor;
 import org.bukkit.Bukkit;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -19,7 +22,7 @@ public class RoyaltyBoard {
     private static File file;
     private static FileConfiguration boardFile;
     private static final EyeOfOnyx plugin = EyeOfOnyx.getPlugin();
-    private static final Mojang mojang = new Mojang().connect();
+    private static final Mojang mojang = new org.shanerx.mojang.Mojang().connect();
     private static final Scoreboard scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
 
     // Team names
@@ -46,8 +49,19 @@ public class RoyaltyBoard {
 
     // Valid positions
     private static final String[] validPositions = {
-            "ruler", "heir_apparent", "heir_presumptive", "noble_apparent", "noble_presumptive", "civilian"
+            "ruler", "heir_apparent", "heir_presumptive", "noble_apparent", "noble_presumptive"
     };
+
+    // Stored values
+    public static final String UUID = "uuid";
+    public static final String TITLE = "title";
+    public static final String NAME = "name";
+    public static final String JOINED_TIME = "joined_time";
+    public static final String LAST_ONLINE = "last_online";
+    public static final String LAST_CHALLENGE_TIME = "last_challenge_time";
+    public static final String CHALLENGER = "challenger";
+    public static final String CHALLENGING = "challenging";
+
 
     public static final int RULER = 0;
     public static final int HEIR_APPARENT = 1;
@@ -73,11 +87,10 @@ public class RoyaltyBoard {
 
         file = new File(plugin.getDataFolder(), "board.yml");
 
-        if (!file.exists()) {
-            if (file.getParentFile().mkdirs()) {
-                plugin.saveResource("board.yml", false);
-            }
-        }
+        Dreamvisitor.debug("board.yml does not exist. Creating one...");
+        file.getParentFile().mkdirs();
+        plugin.saveResource("board.yml", false);
+
         boardFile = YamlConfiguration.loadConfiguration(file);
         save(boardFile);
     }
@@ -91,7 +104,7 @@ public class RoyaltyBoard {
         try {
             boardFile.save(file);
         } catch (Exception e) {
-            Bukkit.getLogger().severe("Error saving board.yml file:");
+            Bukkit.getLogger().severe("Eye of Onyx could not save board.yml! If this persists after a restart, report this error!");
             e.printStackTrace();
         }
     }
@@ -116,7 +129,7 @@ public class RoyaltyBoard {
             positionsEmpty = 0;
 
             // For each position
-            for (int pos = 0; pos < validPositions.length; pos++) {
+            for (int pos = 0; pos < 5; pos++) {
 
                 // Set current path
                 currentPath = tribes[tribe] + "." + validPositions[pos];
@@ -186,6 +199,9 @@ public class RoyaltyBoard {
                         boardFile.set(currentPath + ".challenging", "none");
                         boardFile.set(currentPath + ".last_online", "none");
 
+                        // Notify the user who has moved
+                        new Notification(getUuid(tribe, (pos - positionsEmpty)), "You've been promoted!", "A player was removed from the royalty board and you moved into a higher position.", NotificationType.PROMOTED).create();
+
                         // This position is now empty and another user will move up on the next
                         // iteration
                         // if there is an active user below this position
@@ -219,10 +235,7 @@ public class RoyaltyBoard {
     }
 
     public static int getPositionIndexOfUUID(String playerUuid) {
-        
-        // Get player name from Mojang
-        String playerUsername = mojang.getPlayerProfile(playerUuid).getUsername();
-        
+
         // Get player tribe
         int playerTribe = getTribeIndexOfUUID(playerUuid);
         
@@ -231,7 +244,7 @@ public class RoyaltyBoard {
 
         // Iterate though positions to search for target player
         for (int i = 0; i < validPositions.length; i++) {
-            if (boardFile.contains(tribes[playerTribe] + "." + validPositions[i] + "." + playerUuid)) {
+            if (RoyaltyBoard.getUuid(playerTribe, i).equals(playerUuid)) {
                 // Change position if found on the royalty board
                 playerPosition = i;
                 break;
@@ -254,7 +267,8 @@ public class RoyaltyBoard {
 
         // Iterate though positions to search for target player
         for (int i = 0; i < validPositions.length; i++) {
-            if (boardFile.contains(tribes[playerTribe] + "." + validPositions[i] + "." + playerUuid)) {
+
+            if (getUuid(playerTribe, i).replaceAll("-","").equals(playerUuid)) {
                 // Change position if found on the royalty board
                 playerPosition = i;
                 break;
@@ -265,46 +279,46 @@ public class RoyaltyBoard {
     }
 
     public static String getValue(int tribeIndex, int positionIndex, String value) {
-        return boardFile.getString(tribes[tribeIndex] + "." + validPositions[positionIndex] + value);
+        return boardFile.getString(tribes[tribeIndex] + "." + validPositions[positionIndex] + "." + value);
     }
     public static void setValue(int tribeIndex, int positionIndex, String key, String value) {
-        boardFile.set(tribeIndex + "." + positionIndex + "." + key, value);
+        boardFile.set(tribes[tribeIndex] + "." + validPositions[positionIndex] + "." + key, value);
         save(boardFile);
     }
 
     public static String getUuid(int tribeIndex, int positionIndex) {
-        return boardFile.getString(tribes[tribeIndex] + "." + validPositions[positionIndex] + ".uuid");
+        return getValue(tribeIndex, positionIndex, UUID);
     }
 
     public static String getRulerTitle(int tribeIndex) {
-        return boardFile.getString(tribes[tribeIndex] + "." + validPositions[RULER] + ".title");
+        return getValue(tribeIndex, RULER, TITLE);
     }
 
     public static String getOcName(int tribeIndex, int positionIndex) {
-        return boardFile.getString(tribes[tribeIndex] + "." + validPositions[positionIndex] + ".name");
+        return getValue(tribeIndex, positionIndex, NAME);
     }
 
     public static String getJoinedDate(int tribeIndex, int positionIndex) {
-        return boardFile.getString(tribes[tribeIndex] + "." + validPositions[positionIndex] + ".joined_time");
+        return getValue(tribeIndex, positionIndex, JOINED_TIME);
     }
 
     public static String getLastOnline(int tribeIndex, int positionIndex) {
-        return boardFile.getString(tribes[tribeIndex] + "." + validPositions[positionIndex] + ".last_online");
+        return getValue(tribeIndex, positionIndex, LAST_ONLINE);
     }
 
     public static String getLastChallengeDate(int tribeIndex, int positionIndex) {
-        return boardFile.getString(tribes[tribeIndex] + "." + validPositions[positionIndex] + ".last_challenge_time");
+        return getValue(tribeIndex, positionIndex, LAST_CHALLENGE_TIME);
     }
 
     public static String getAttacker(int tribeIndex, int positionIndex) {
-        return boardFile.getString(tribes[tribeIndex] + "." + validPositions[positionIndex] + ".challenger");
+        return getValue(tribeIndex, positionIndex, CHALLENGER);
     }
     public static void setAttacker(int tribeIndex, int positionIndex, String uuid) {
         setValue(tribeIndex, positionIndex, "challenger", uuid);
     }
 
     public static String getAttacking(int tribeIndex, int positionIndex) {
-        return boardFile.getString(tribes[tribeIndex] + "." + validPositions[positionIndex] + ".challenging");
+        return getValue(tribeIndex, positionIndex, CHALLENGING);
     }
     public static void setAttacking(int tribeIndex, int positionIndex, String uuid) {
         setValue(tribeIndex, positionIndex, "challenging", uuid);

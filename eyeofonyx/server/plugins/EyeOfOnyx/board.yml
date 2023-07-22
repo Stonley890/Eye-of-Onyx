@@ -46,13 +46,6 @@ hive:
     last_challenge_time: none
     challenger: none
     challenging: none
-  civilian:
-    uuid: none
-    name: none
-    last_challenge_time: none
-    challenger: none
-    last_online: none
-    challenging: none
 
 ice:
   
@@ -99,13 +92,6 @@ ice:
     last_online: none
     last_challenge_time: none
     challenger: none
-    challenging: none
-  civilian:
-    uuid: none
-    name: none
-    last_challenge_time: none
-    challenger: none
-    last_online: none
     challenging: none
 
 leaf:
@@ -154,66 +140,52 @@ leaf:
     last_challenge_time: none
     challenger: none
     challenging: none
-  civilian:
-    uuid: none
-    name: none
-    last_challenge_time: none
-    challenger: none
-    last_online: none
-    challenging: none
 
 mud:
   
   ruler:
-    uuid: none
-    title: none
-    name: none
-    joined_time: '2023-06-06T19:56:10.081977364'
-    last_online: none
-    last_challenge_time: none
+    uuid: 646a2eac-869c-47ff-bf3f-4b177caa4342
+    title: Ruler
+    name: SerpentSages
+    joined_time: '2023-07-17T15:55:39.922609335'
+    last_online: '2023-07-17T15:55:39.922684632'
+    last_challenge_time: '2023-07-17T15:55:39.922671611'
     challenger: none
   
   heir_apparent:
-    uuid: none
-    name: none
-    joined_time: '2023-06-06T19:56:26.500679096'
-    last_online: none
-    last_challenge_time: none
+    uuid: eedf3c55-2e73-4e73-99a7-81d953745f0a
+    name: BogTheMudWing
+    joined_time: '2023-07-17T10:50:36.089235487'
+    last_online: '2023-07-17T10:50:36.089273792'
+    last_challenge_time: '2023-07-17T10:50:36.089267769'
     challenger: none
-    challenging: none
+    challenging: 646a2eac-869c-47ff-bf3f-4b177caa4342
   
   heir_presumptive:
-    uuid: none
-    name: none
-    joined_time: none
-    last_online: none
-    last_challenge_time: none
+    uuid: 44a1e9eb-684c-47ff-ae9b-8a5d63ee31a9
+    name: PhenTheFireGirl
+    joined_time: '2023-07-17T10:40:44.644453679'
+    last_online: '2023-07-17T10:40:44.644480198'
+    last_challenge_time: '2023-07-17T10:40:44.644474700'
     challenger: none
     challenging: none
   
   noble_apparent:
-    uuid: none
-    name: none
-    joined_time: none
-    last_online: none
-    last_challenge_time: none
+    uuid: 83781619-ff4c-4aef-8256-86546cae4bb3
+    name: Godzilla1005
+    joined_time: '2023-07-17T10:41:36.646311591'
+    last_online: '2023-07-17T10:41:36.646347089'
+    last_challenge_time: '2023-07-17T10:41:36.646339813'
     challenger: none
     challenging: none
   
   noble_presumptive:
-    uuid: none
-    name: none
-    joined_time: none
-    last_online: none
-    last_challenge_time: none
+    uuid: 76db2bdb-0db0-455f-9be0-fee858fc16f9
+    name: iHeron_
+    joined_time: '2023-07-17T10:41:41.384921003'
+    last_online: '2023-07-17T10:41:41.384957156'
+    last_challenge_time: '2023-07-17T10:41:41.384949801'
     challenger: none
-    challenging: none
-  civilian:
-    uuid: none
-    name: none
-    last_challenge_time: none
-    challenger: none
-    last_online: none
     challenging: none
 
 night:
@@ -262,13 +234,6 @@ night:
     last_challenge_time: none
     challenger: none
     challenging: none
-  civilian:
-    uuid: none
-    name: none
-    last_challenge_time: none
-    challenger: none
-    last_online: none
-    challenging: none
 
 rain:
   
@@ -315,13 +280,6 @@ rain:
     last_online: none
     last_challenge_time: none
     challenger: none
-    challenging: none
-  civilian:
-    uuid: none
-    name: none
-    last_challenge_time: none
-    challenger: none
-    last_online: none
     challenging: none
 
 sand:
@@ -370,13 +328,6 @@ sand:
     last_challenge_time: none
     challenger: none
     challenging: none
-  civilian:
-    uuid: none
-    name: none
-    last_challenge_time: none
-    challenger: none
-    last_online: none
-    challenging: none
 
 sea:
   
@@ -423,13 +374,6 @@ sea:
     last_online: none
     last_challenge_time: none
     challenger: none
-    challenging: none
-  civilian:
-    uuid: none
-    name: none
-    last_challenge_time: none
-    challenger: none
-    last_online: none
     challenging: none
 
 silk:
@@ -478,13 +422,6 @@ silk:
     last_challenge_time: none
     challenger: none
     challenging: none
-  civilian:
-    uuid: none
-    name: none
-    last_challenge_time: none
-    challenger: none
-    last_online: none
-    challenging: none
 
 sky:
   
@@ -531,11 +468,4 @@ sky:
     last_online: none
     last_challenge_time: none
     challenger: none
-    challenging: none
-  civilian:
-    uuid: none
-    name: none
-    last_challenge_time: none
-    challenger: none
-    last_online: none
     challenging: none

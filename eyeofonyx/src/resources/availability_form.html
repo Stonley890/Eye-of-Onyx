@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="shortcut icon" type="image/x-icon"
+        href="https://media.discordapp.net/attachments/1021176520938631238/1031724646950768680/Untitled343_20221017192235.png?width=523&height=523">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wings of Fire: The New World</title>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: large;
+            color: #ffffff;
+            margin: 0px;
+            background-color: #0c0c0c;
+            line-height: normal;
+            text-align: center;
+        }
+
+        body a:link {
+            color: #1672c2;
+        }
+
+        body a:visited {
+            color: #228285;
+
+        }
+
+        body a:hover {
+            color: #868686;
+        }
+
+        body a:active {
+            color: chocolate;
+        }
+
+        body input:active {
+            background-color: #555555;
+        }
+
+        .maintext {
+            padding-left: 10%;
+            padding-right: 10%;
+            padding-top: 2%;
+            padding-bottom: 2%;
+            max-width: 1000px;
+            margin: auto;
+
+        }
+
+        .bg {
+            background: url(https://media.discordapp.net/attachments/954892581026795561/955164195266109440/Untitled7_20220320175948.png?width=929&height=523);
+            background-size: cover;
+            background-position: center;
+        }
+
+        .banner {
+
+            border-bottom: 2px white solid;
+            width: auto;
+            background: rgba(0, 0, 0, 0.85);
+
+            display: grid;
+            justify-content: center;
+            text-shadow: rgb(0, 0, 0) 0px 0px 5px;
+            margin: none;
+        }
+
+        .bannercontent {
+            width: 700px;
+            margin: none;
+            padding: 20px;
+        }
+
+
+        .bannercontent h1 {
+            margin-top: 0px;
+
+        }
+
+        .contentbox {
+            background-color: rgb(24, 24, 24);
+            width: fit-content;
+            padding: 10px;
+            border-radius: 10px;
+            width: auto;
+            margin: 20px;
+        }
+
+        header {
+            background: #3b3b3b;
+            padding: 20px;
+            border-bottom: 2px white solid;
+            margin: 0;
+        }
+
+        .minorheader {
+            padding: 2px;
+            text-align: center;
+        }
+
+        nav {
+            display: grid;
+            grid-auto-flow: column;
+        }
+
+        nav p {
+            margin: 0px;
+            text-decoration: none;
+            font-weight: normal;
+        }
+
+        main {
+            padding: 20%;
+        }
+
+        form {
+            width: fit-content;
+            display: grid;
+            justify-items: center;
+            margin: auto;
+        }
+
+        input {
+            color: #ffffff;
+            background-color: #2c2c2c;
+            border-radius: 5px;
+            border-color: #3b3b3b;
+            border-width: 0px;
+            padding: 15px;
+            margin: 10px;
+            text-align: center;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: large;
+        }
+
+        input:hover {
+            background-color: #838383;
+        }
+
+
+        footer {
+            background: #07142e;
+            padding: 20px;
+            text-align: center;
+            font-size: 14px;
+            color: #838383;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <nav>
+            <p style="text-align: left;"><b>Wings of Fire: The New World</b>
+            <p style="text-align: right;">Royalty Portal</p>
+        </nav>
+    </header>
+
+    <main style="padding: 0;">
+
+        <div class="bg">
+            <div class="banner">
+                <div class="bannercontent">
+                    <h1>Submit Availability</h1>
+                    <p>To proceed with the challenge, please add at least one data and time that you would be available
+                        to attend the challenge. Your challenger will choose from the times you've selected to
+                        participate in the challenge.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="maintext">
+
+            <br>
+
+            <form method="post" action="/availability-submitted">
+                <div style="grid-column: 1; ">
+                    <div class="contentbox">
+
+                        <div style="display: grid; grid-area: 2, 2">
+
+                            <div style="display: flex; align-items: center; justify-content: center;">
+
+                                <input type="text" id="code" name="code" required="true" minlength="4" maxlength="4"
+                                    size="4">
+                                <label for="code" style="font-weight: bold; grid-column: 2;">Enter Code</label>
+
+                            </div>
+
+                            <div style="display: flex;">
+                                <input type="submit" value="Submit">
+                                <input type="button" value="Add Another Date/Time" onclick="addDateTimeField()" style="grid-column: 2;"><br><br>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div style="grid-column: 2;">
+                    <div class="contentbox">
+                        <div id="additionalDateTimes"><input type="datetime-local" id="availability" name="availability"
+                                required="true"></div>
+                    </div>
+
+                </div>
+
+            </form>
+
+            <script>
+                function addDateTimeField() {
+                    const br = document.createElement("br");
+                    const input = document.createElement("input");
+                    input.type = "datetime-local";
+                    input.name = "availability";
+                    document.querySelector("#additionalDateTimes").appendChild(br);
+                    document.querySelector("#additionalDateTimes").appendChild(input);
+                }
+            </script>
+        </div>
+    </main>
+
+</body>
+
+</html>

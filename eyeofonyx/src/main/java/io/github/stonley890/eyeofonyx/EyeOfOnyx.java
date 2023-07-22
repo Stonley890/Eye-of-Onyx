@@ -1,27 +1,30 @@
 package io.github.stonley890.eyeofonyx;
 
-import java.io.IOException;
-import java.time.LocalDateTime;
-import java.util.Objects;
-import java.util.logging.Level;
-
-import io.github.stonley890.eyeofonyx.commands.CmdChallenge;
-import io.github.stonley890.eyeofonyx.files.Banned;
-import io.github.stonley890.eyeofonyx.files.Notification;
-import org.bukkit.Bukkit;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.plugin.java.JavaPlugin;
-
+import com.sun.net.httpserver.HttpServer;
 import io.github.stonley890.dreamvisitor.Bot;
+import io.github.stonley890.dreamvisitor.Dreamvisitor;
 import io.github.stonley890.dreamvisitor.commands.discord.DiscCommandsManager;
+import io.github.stonley890.eyeofonyx.commands.CmdChallenge;
 import io.github.stonley890.eyeofonyx.commands.CmdEyeOfOnyx;
 import io.github.stonley890.eyeofonyx.commands.CmdRoyalty;
+import io.github.stonley890.eyeofonyx.commands.CmdTribeUpdate;
 import io.github.stonley890.eyeofonyx.commands.tabcomplete.TabRoyalty;
+import io.github.stonley890.eyeofonyx.files.Banned;
+import io.github.stonley890.eyeofonyx.files.Notification;
 import io.github.stonley890.eyeofonyx.files.RoyaltyBoard;
 import io.github.stonley890.eyeofonyx.listeners.ListenJoin;
 import io.github.stonley890.eyeofonyx.listeners.ListenLeave;
+import io.github.stonley890.eyeofonyx.web.AvailabilityHandler;
+import io.github.stonley890.eyeofonyx.web.SubmitHandler;
 import net.md_5.bungee.api.ChatColor;
+import org.bukkit.Bukkit;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
+
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.util.logging.Level;
 
 /*
  * The main ticking thread.
@@ -56,6 +59,7 @@ public class EyeOfOnyx extends JavaPlugin {
         getCommand("eyeofonyx").setExecutor(new CmdEyeOfOnyx());
         getCommand("royalty").setExecutor(new CmdRoyalty());
         getCommand("challenge").setExecutor(new CmdChallenge());
+        getCommand("tribeupdate").setExecutor(new CmdTribeUpdate());
 
         // Initialize tab completer
         getCommand("royalty").setTabCompleter(new TabRoyalty());
@@ -64,9 +68,18 @@ public class EyeOfOnyx extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new ListenJoin(), this);
         getServer().getPluginManager().registerEvents(new ListenLeave(), this);
 
-        // Start message
-        Bukkit.getLogger().log(Level.INFO, "Eye of Onyx {0}: A plugin that manages the royalty board on Wings of Fire: The New World", version);
-        Bot.sendMessage(DiscCommandsManager.gameLogChannel, "*Eye of Onyx " + version + " enabled.*");
+        // Web server
+        try {
+
+            HttpServer server = HttpServer.create(new InetSocketAddress(8000), 0);
+            server.createContext("/availability", new AvailabilityHandler());
+            server.createContext("/availability-submitted", new SubmitHandler());
+            server.setExecutor(null); // creates a default executor
+            server.start();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         // 20-tick operations
         Runnable tick1200Run = new BukkitRunnable() {
@@ -81,7 +94,19 @@ public class EyeOfOnyx extends JavaPlugin {
             }
         };
 
+        Runnable pleaseWord = new BukkitRunnable() {
+            @Override
+            public void run() {
+                Dreamvisitor.debug(String.valueOf(CmdChallenge.codesOnForm.size()));
+            }
+        };
+
         Bukkit.getScheduler().runTaskTimer(this, tick1200Run, 20, 1200);
+        Bukkit.getScheduler().runTaskTimer(this, pleaseWord, 20, 20);
+
+        // Start message
+        Bukkit.getLogger().log(Level.INFO, "Eye of Onyx {0}: A plugin that manages the royalty board on Wings of Fire: The New World", version);
+        Bot.sendMessage(DiscCommandsManager.gameLogChannel, "*Eye of Onyx " + version + " enabled.*");
     }
 
     // Allow other classes to access plugin instance

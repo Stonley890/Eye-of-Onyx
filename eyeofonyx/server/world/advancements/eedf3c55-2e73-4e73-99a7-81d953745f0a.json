@@ -9,9 +9,12 @@
     "criteria": {
       "minecraft:snowy_slopes": "2023-06-16 18:19:49 -0700",
       "minecraft:frozen_river": "2023-06-16 18:10:47 -0700",
+      "minecraft:river": "2023-07-17 10:52:06 -0700",
       "minecraft:snowy_plains": "2023-06-16 18:07:23 -0700",
       "minecraft:snowy_taiga": "2023-05-29 21:01:25 -0700",
-      "minecraft:ice_spikes": "2023-06-16 18:11:56 -0700"
+      "minecraft:forest": "2023-07-17 10:52:04 -0700",
+      "minecraft:ice_spikes": "2023-06-16 18:11:56 -0700",
+      "minecraft:plains": "2023-07-19 20:34:51 -0700"
     },
     "done": false
   },
@@ -271,6 +274,18 @@
   "minecraft:recipes/food/cooked_rabbit_from_campfire_cooking": {
     "criteria": {
       "has_rabbit": "2023-07-08 15:16:45 -0700"
+    },
+    "done": true
+  },
+  "minecraft:recipes/misc/gold_nugget_from_smelting": {
+    "criteria": {
+      "has_golden_hoe": "2023-07-19 18:57:50 -0700"
+    },
+    "done": true
+  },
+  "minecraft:recipes/misc/gold_nugget_from_blasting": {
+    "criteria": {
+      "has_golden_hoe": "2023-07-19 18:57:50 -0700"
     },
     "done": true
   },

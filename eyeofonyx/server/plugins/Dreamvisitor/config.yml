@@ -17,7 +17,7 @@ step3RoleID: '1056031152206524426'
 memberRoleID: '1008234966812983367'
 
 # Don't change unless you know what you're doing!
-chatPaused: true
+chatPaused: false
 softwhitelist: false
 playerlimit: -1
 disablepvp: false
