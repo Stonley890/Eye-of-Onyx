@@ -32,6 +32,11 @@
 
   <dependencies>
     <dependency>
+    <groupId>org.thymeleaf</groupId>
+    <artifactId>thymeleaf</artifactId>
+    <version>3.1.1.RELEASE</version>
+  </dependency>
+    <dependency>
       <groupId>org.spigotmc</groupId>
       <artifactId>spigot-api</artifactId>
       <version>1.20.1-R0.1-SNAPSHOT</version>
@@ -74,8 +79,9 @@
     </resources>
     <plugins>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.8.0</version>
+        <version>3.11.0</version>
         <configuration>
           <compilerArgument>-proc:none</compilerArgument>
         </configuration>
@@ -92,8 +98,6 @@
             </goals>
             <configuration>
               <createDependencyReducedPom>false</createDependencyReducedPom>
-              <finalName>Eye Of Onyx</finalName>
-              <outputFile>${project.basedir}/server/plugins/EyeOfOnyx.jar</outputFile>
             </configuration>
           </execution>
         </executions>

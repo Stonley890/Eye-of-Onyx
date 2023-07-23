@@ -2,49 +2,47 @@ package io.github.stonley890.eyeofonyx.web;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import io.github.stonley890.dreamvisitor.Dreamvisitor;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
+import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
 
 public class AvailabilityHandler implements HttpHandler {
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
 
+        // Load the Thymeleaf template engine with the correct template resolver
+        TemplateEngine templateEngine = new TemplateEngine();
+        ClassLoaderTemplateResolver templateResolver = new ClassLoaderTemplateResolver();
+        templateResolver.setPrefix("/"); // This sets the path to the resources directory
+        templateResolver.setSuffix(".html");
+        templateResolver.setCharacterEncoding(StandardCharsets.UTF_8.name());
+        templateEngine.setTemplateResolver(templateResolver);
 
-        InputStream inputStream = EyeOfOnyx.getPlugin().getResource("availability_form.html");
-        if (inputStream == null) {
-            // Handle the case where the resource is not found
-            sendResponse(httpExchange, 404, "Resource not found.");
-            return;
-        }
+        // Get the maxDaysConfigValue from config.yml
+        FileConfiguration config = EyeOfOnyx.getPlugin().getConfig();
+        int maxDaysConfigValue = config.getInt("time-selection-period");
 
-        // Read the contents of availability_form.html from the InputStream
-        StringBuilder responseBuilder = new StringBuilder();
-        byte[] buffer = new byte[1024];
-        int bytesRead;
-        while ((bytesRead = inputStream.read(buffer)) != -1) {
-            responseBuilder.append(new String(buffer, 0, bytesRead));
-        }
+        // Create a Thymeleaf context and add the maxDaysConfigValue as a variable
+        Context context = new Context();
+        context.setVariable("maxDaysConfigValue", maxDaysConfigValue);
 
-        // Close the InputStream after reading
-        inputStream.close();
+        // Render the HTML template with Thymeleaf and get the final HTML content
+        String renderedHTML = templateEngine.process("availability_form", context);
 
-        // Set the response headers
-        httpExchange.sendResponseHeaders(200, responseBuilder.length());
+        // Set the response headers with the content type
+        httpExchange.getResponseHeaders().add("Content-Type", "text/html; charset=" + StandardCharsets.UTF_8.name());
+        httpExchange.sendResponseHeaders(200, renderedHTML.getBytes(StandardCharsets.UTF_8).length);
 
         // Get the response body and write the HTML content to it
-        OutputStream outputStream = httpExchange.getResponseBody();
-        outputStream.write(responseBuilder.toString().getBytes());
-
-        // Close the streams
-        outputStream.flush();
-        outputStream.close();
+        try (OutputStream outputStream = httpExchange.getResponseBody()) {
+            outputStream.write(renderedHTML.getBytes(StandardCharsets.UTF_8));
+        }
     }
 
 

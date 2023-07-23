@@ -114,7 +114,7 @@ public class EyeOfOnyx extends JavaPlugin {
 
         // Finish up
         RoyaltyBoard.updateBoard();
-        server.stop(5);
+        server.stop(1);
     }
 
     // Allow other classes to access plugin instance

@@ -11,13 +11,12 @@ softdepend:
 
 commands:
   eyeofonyx:
-    description: Report Eye of Onyx version.
+    description: Manage Eye of Onyx.
     usage: /<command>
     permission: minecraft.command.op
   royalty:
     description: Access or manage the royalty board.
-    usage: /<command> <set|remove|list>
-    permission: minecraft.command.op
+    usage: /<command> <set|list|clear|update>
   challenge:
     description: Initiate a challenge.
     usage: /<command>
@@ -25,3 +24,8 @@ commands:
     description: Update Discord role based on in-game team
     usage: /<command> [player]
     permission: minecraft.command.op
+
+permissions:
+  eyeofonyx.editboard:
+    description: Allows editing the royalty board.
+    default: op

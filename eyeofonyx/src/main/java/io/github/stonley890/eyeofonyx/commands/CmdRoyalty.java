@@ -221,6 +221,7 @@ public class CmdRoyalty implements CommandExecutor {
             setBoard(args[1], args[2], "challenging", "none");
         }
 
+        RoyaltyBoard.updateBoard();
         sender.sendMessage(EyeOfOnyx.EOO + ChatColor.YELLOW + args[1].toUpperCase() + " " + args[2].toUpperCase() + " position cleared.");
 
     }

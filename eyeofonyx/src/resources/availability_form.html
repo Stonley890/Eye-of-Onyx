@@ -183,7 +183,9 @@
                 <div style="grid-column: 1;">
                     <div class="contentbox">
                         <div id="additionalDateTimes">
-                            <input type="datetime-local" id="availability" name="availability" required="true" class="datebutton">
+                            <input type="datetime-local" id="availability" name="availability" required="true" class="datebutton" min="2023-07-21T09:00" max="2023-07-28T18:00"><br>
+                            <input type="datetime-local" id="availability" name="availability" class="datebutton" min="2023-07-21T09:00" max="2023-07-28T18:00"><br>
+                            <input type="datetime-local" id="availability" name="availability" class="datebutton" min="2023-07-21T09:00" max="2023-07-28T18:00">
                         </div>
                     </div>
 
@@ -215,16 +217,39 @@
 
             </form>
 
-            <script>
+            <script th:inline="javascript">
+
+            
+                // Replace maxDaysConfigValue with the actual value from config.yml
+                const maxDays = /*[[${maxDaysConfigValue}]]*/; 
+
                 function addDateTimeField() {
                     const br = document.createElement("br");
                     const input = document.createElement("input");
                     input.type = "datetime-local";
                     input.name = "availability";
                     input.className = "datebutton";
+                    input.min = minDateTime;
+                    input.max = maxDateTime.toISOString().slice(0, 16);
                     document.querySelector("#additionalDateTimes").appendChild(br);
                     document.querySelector("#additionalDateTimes").appendChild(input);
                 }
+
+                function getCurrentDateTime() {
+                const now = new Date();
+                return now.toISOString().slice(0, 16);
+                }
+
+                function setDateTimeLimits() {
+                const minDateTime = getCurrentDateTime();
+                const maxDateTime = new Date();
+                maxDateTime.setDate(maxDateTime.getDate() + maxDays);
+                document.getElementById('availability').min = minDateTime;
+                document.getElementById('availability').max = maxDateTime.toISOString().slice(0, 16);
+                }
+
+                document.addEventListener('DOMContentLoaded', setDateTimeLimits);
+
             </script>
         </div>
     </main>
