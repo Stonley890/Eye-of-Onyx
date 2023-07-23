@@ -1,14 +1,12 @@
 package io.github.stonley890.eyeofonyx.files;
 
 import java.io.File;
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Objects;
 
 import io.github.stonley890.dreamvisitor.Dreamvisitor;
 import org.bukkit.Bukkit;
-import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -83,18 +81,27 @@ public class RoyaltyBoard {
         return validPositions;
     }
 
+    /**
+     * Initializes the royalty board.
+     */
     public static void setup() {
 
         file = new File(plugin.getDataFolder(), "board.yml");
 
-        Dreamvisitor.debug("board.yml does not exist. Creating one...");
-        file.getParentFile().mkdirs();
-        plugin.saveResource("board.yml", false);
+        if (!file.exists()) {
+            Dreamvisitor.debug("board.yml does not exist. Creating one...");
+            file.getParentFile().mkdirs();
+            plugin.saveResource("board.yml", false);
+        }
 
         boardFile = YamlConfiguration.loadConfiguration(file);
         save(boardFile);
     }
 
+    /**
+     * Get the YAML FileConfiguration for board.yml. You usually shouldn't need to use this unless there isn't a method available to manipulate the data.
+     * @return A {@link FileConfiguration} of board.yml.
+     */
     public static FileConfiguration get() {
         return boardFile;
     }
@@ -109,10 +116,20 @@ public class RoyaltyBoard {
         }
     }
 
+    /**
+     * Reload the file from disk.
+     */
     public static void reload() {
         boardFile = YamlConfiguration.loadConfiguration(file);
     }
 
+    /**
+     * The first thing this method does is reload the file from disk.
+     * After that, it will automatically search for and remove inactive
+     * players as well as move players up into empty ranks if they exist.
+     * It will also set the name on board.yml based on the character
+     * name stored from OpenRP (if it exists).
+     */
     public static void updateBoard() {
 
         reload();
@@ -120,7 +137,7 @@ public class RoyaltyBoard {
         String last_online;
         // Track current position
         String currentPath;
-        // Count number of empty positions
+        // Count the number of empty positions
         int positionsEmpty = 0;
 
         // For each tribe
@@ -133,6 +150,15 @@ public class RoyaltyBoard {
 
                 // Set current path
                 currentPath = tribes[tribe] + "." + validPositions[pos];
+
+                // Set name from OpenRP character
+                if (EyeOfOnyx.openrp != null) {
+                    String uuid = getUuid(tribe, pos);
+                    String ocName = (String) EyeOfOnyx.openrp.getDesc().getUserdata().get(uuid + ".name");
+                    if (ocName != null && !ocName.equals("No name set")) {
+                        setValue(tribe, pos, plugin.getConfig().getString("character-name-field"), ocName);
+                    }
+                }
 
                 // If last_online is before 30 days ago, set to empty
                 last_online = getLastOnline(tribe, pos);
@@ -154,7 +180,7 @@ public class RoyaltyBoard {
                     boardFile.set(currentPath + ".challenger", "none");
                     boardFile.set(currentPath + ".last_online", "none");
 
-                    // If position is ruler, change 'title'. Else, change 'challenging'
+                    // If position is ruler, change 'title.' Else, change 'challenging'
                     if (validPositions[pos].equals(validPositions[RULER])) {
                         boardFile.set(currentPath + ".title", "none");
                     } else {
@@ -200,7 +226,7 @@ public class RoyaltyBoard {
                         boardFile.set(currentPath + ".last_online", "none");
 
                         // Notify the user who has moved
-                        new Notification(getUuid(tribe, (pos - positionsEmpty)), "You've been promoted!", "A player was removed from the royalty board and you moved into a higher position.", NotificationType.PROMOTED).create();
+                        new Notification(getUuid(tribe, (pos - positionsEmpty)), "You've been promoted!", "A player was removed from the royalty board and you moved into a higher position.", NotificationType.GENERIC).create();
 
                         // This position is now empty and another user will move up on the next
                         // iteration
@@ -215,14 +241,24 @@ public class RoyaltyBoard {
 
     }
 
+    /**
+     * Get the tribe index of a player UUID.
+     * @param playerUuid The player UUID to search from.
+     * @return The index of the tribe that the player is part of.
+     */
     public static int getTribeIndexOfUUID(String playerUuid) {
         // Get player name from Mojang
          String playerUsername = mojang.getPlayerProfile(playerUuid).getUsername();
         
-        // Search for valid team from player scoreboard team
+        // Search for a valid team from player scoreboard team
         return Arrays.binarySearch(teamNames, Objects.requireNonNull(Objects.requireNonNull(scoreboard.getEntryTeam(playerUsername)).getName()));
     }
 
+    /**
+     * Get the tribe index of a player username.
+     * @param playerUsername The player username to search from.
+     * @return The index of the tribe that the player is part of.
+     */
     public static int getTribeIndexOfUsername(String playerUsername) {
 
         // Search for valid team from player scoreboard team
@@ -234,6 +270,11 @@ public class RoyaltyBoard {
         }
     }
 
+    /**
+     * Get the position index of a player UUID.
+     * @param playerUuid The player UUID to search from.
+     * @return The index of the position that the player holds.
+     */
     public static int getPositionIndexOfUUID(String playerUuid) {
 
         // Get player tribe
@@ -254,6 +295,11 @@ public class RoyaltyBoard {
         return playerPosition;
     }
 
+    /**
+     * Get the position index of a player username.
+     * @param playerUsername The player username to search from.
+     * @return The index of the position that the player holds.
+     */
     public static int getPositionIndexOfUsername(String playerUsername) {
 
         // Get player uuid from Mojang
@@ -278,63 +324,148 @@ public class RoyaltyBoard {
         return playerPosition;
     }
 
+    /**
+     * Get a specific value from board.yml.
+     * @param tribeIndex The tribe to fetch from.
+     * @param positionIndex The position to fetch from.
+     * @param value The value to retrieve.
+     * @return The value requested, if it exists. {@code null} if it does not.
+     */
     public static String getValue(int tribeIndex, int positionIndex, String value) {
         return boardFile.getString(tribes[tribeIndex] + "." + validPositions[positionIndex] + "." + value);
     }
+
+    /**
+     * Set a specific value on board.yml.
+     * @param tribeIndex The tribe to set.
+     * @param positionIndex The position to set.
+     * @param key The value to set.
+     * @param value The variable to set to.
+     */
     public static void setValue(int tribeIndex, int positionIndex, String key, String value) {
         boardFile.set(tribes[tribeIndex] + "." + validPositions[positionIndex] + "." + key, value);
         save(boardFile);
     }
 
+    /**
+     * Get the UUID of a spot on the board.
+     * @param tribeIndex The tribe to fetch from.
+     * @param positionIndex The position to fetch from.
+     * @return The String UUID located at the given location.
+     */
     public static String getUuid(int tribeIndex, int positionIndex) {
         return getValue(tribeIndex, positionIndex, UUID);
     }
 
+    /**
+     * Get the title of a ruler.
+     * @param tribeIndex The tribe to get the ruler title of.
+     * @return The title of the specified ruler.
+     */
     public static String getRulerTitle(int tribeIndex) {
         return getValue(tribeIndex, RULER, TITLE);
     }
 
+    /**
+     * Get the character name of a spot on the board.
+     * @param tribeIndex The tribe to fetch from.
+     * @param positionIndex The position to fetch from.
+     * @return The character name located at the given location.
+     */
     public static String getOcName(int tribeIndex, int positionIndex) {
+
         return getValue(tribeIndex, positionIndex, NAME);
     }
 
+    /**
+     * Get the date joined of a spot on the board.
+     * @param tribeIndex The tribe to fetch from.
+     * @param positionIndex The position to fetch from.
+     * @return The date joined located at the given location.
+     */
     public static String getJoinedDate(int tribeIndex, int positionIndex) {
         return getValue(tribeIndex, positionIndex, JOINED_TIME);
     }
 
+    /**
+     * Get the date last online of a spot on the board.
+     * @param tribeIndex The tribe to fetch from.
+     * @param positionIndex The position to fetch from.
+     * @return The date joined last online at the given location.
+     */
     public static String getLastOnline(int tribeIndex, int positionIndex) {
         return getValue(tribeIndex, positionIndex, LAST_ONLINE);
     }
 
+    /**
+     * Get the date last challenged of a spot on the board.
+     * @param tribeIndex The tribe to fetch from.
+     * @param positionIndex The position to fetch from.
+     * @return The date last challenged at the given location.
+     */
     public static String getLastChallengeDate(int tribeIndex, int positionIndex) {
         return getValue(tribeIndex, positionIndex, LAST_CHALLENGE_TIME);
     }
 
+    /**
+     * Get the attacker of a spot on the board.
+     * @param tribeIndex The tribe to fetch from.
+     * @param positionIndex The position to fetch from.
+     * @return The attacker at the given location.
+     */
     public static String getAttacker(int tribeIndex, int positionIndex) {
         return getValue(tribeIndex, positionIndex, CHALLENGER);
     }
+
+    /**
+     * Set the attacker of a spot on the board.
+     * @param tribeIndex The tribe to fetch from.
+     * @param positionIndex The position to fetch from.
+     * @param uuid The UUID to set as the attacker.
+     */
     public static void setAttacker(int tribeIndex, int positionIndex, String uuid) {
         setValue(tribeIndex, positionIndex, "challenger", uuid);
     }
 
+    /**
+     * Get the target of a spot on the board.
+     * @param tribeIndex The tribe to fetch from.
+     * @param positionIndex The position to fetch from.
+     */
     public static String getAttacking(int tribeIndex, int positionIndex) {
         return getValue(tribeIndex, positionIndex, CHALLENGING);
     }
+
+    /**
+     * Set the target of a spot on the board.
+     * @param tribeIndex The tribe to fetch from.
+     * @param positionIndex The position to fetch from.
+     * @param uuid The UUID to set.
+     */
     public static void setAttacking(int tribeIndex, int positionIndex, String uuid) {
         setValue(tribeIndex, positionIndex, "challenging", uuid);
 
     }
 
-    public static boolean isOnCooldown(int tribeIndex, int positionIndex) {
+    /**
+     * Get whether a position is on cool down or not.
+     * @param tribeIndex The tribe to fetch from.
+     * @param positionIndex The position to fetch from.
+     */
+    public static boolean isOnCoolDown(int tribeIndex, int positionIndex) {
         LocalDateTime lastChallenge = LocalDateTime.parse(getLastChallengeDate(tribeIndex, positionIndex));
-        return lastChallenge.isBefore(LocalDateTime.now().minusDays(14));
+        return lastChallenge.isBefore(LocalDateTime.now().minusDays(plugin.getConfig().getInt("challenge-cool-down")));
     }
 
-    public static boolean isOnCooldown(String uuid) {
+    /**
+     * Get whether a position is on cool down or not.
+     * @param uuid The player UUID to fetch from.
+     */
+    public static boolean isOnCoolDown(String uuid) {
         int tribe = getTribeIndexOfUUID(uuid);
         int pos = getPositionIndexOfUUID(uuid);
         LocalDateTime lastChallenge = LocalDateTime.parse(getLastChallengeDate(tribe, pos));
-        return lastChallenge.isBefore(LocalDateTime.now().minusDays(14));
+        return lastChallenge.isBefore(LocalDateTime.now().minusDays(plugin.getConfig().getInt("challenge-cool-down")));
     }
 
     private RoyaltyBoard() {

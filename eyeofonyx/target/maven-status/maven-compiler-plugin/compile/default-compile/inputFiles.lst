@@ -1,3 +1,4 @@
+/home/stonley890/Documents/GitHub/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/commands/tabcomplete/TabEyeOfOnyx.java
 /home/stonley890/Documents/GitHub/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/commands/tabcomplete/TabRoyalty.java
 /home/stonley890/Documents/GitHub/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/files/Notification.java
 /home/stonley890/Documents/GitHub/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/listeners/ListenLeave.java
@@ -9,6 +10,7 @@
 /home/stonley890/Documents/GitHub/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/commands/CmdRoyalty.java
 /home/stonley890/Documents/GitHub/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/commands/CmdTribeUpdate.java
 /home/stonley890/Documents/GitHub/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/files/NotificationType.java
+/home/stonley890/Documents/GitHub/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/listeners/ListenCmdPreprocess.java
 /home/stonley890/Documents/GitHub/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/listeners/ListenJoin.java
 /home/stonley890/Documents/GitHub/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/files/Banned.java
 /home/stonley890/Documents/GitHub/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/Challenge.java

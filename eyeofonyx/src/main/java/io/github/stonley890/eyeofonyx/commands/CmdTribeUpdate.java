@@ -5,6 +5,7 @@ import io.github.stonley890.dreamvisitor.Dreamvisitor;
 import io.github.stonley890.dreamvisitor.commands.discord.DiscCommandsManager;
 import io.github.stonley890.dreamvisitor.data.AccountLink;
 import io.github.stonley890.dreamvisitor.google.UserTracker;
+import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import io.github.stonley890.eyeofonyx.files.Notification;
 import io.github.stonley890.eyeofonyx.files.NotificationType;
 import io.github.stonley890.eyeofonyx.files.RoyaltyBoard;
@@ -17,7 +18,6 @@ import org.bukkit.command.BlockCommandSender;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.Scoreboard;
@@ -113,7 +113,7 @@ public class CmdTribeUpdate implements CommandExecutor {
                                     RoyaltyBoard.setValue(playerTribe, playerPosition, "last_online", "none");
                                     RoyaltyBoard.updateBoard();
 
-                                    new Notification(uuid, "You changed your tribe!", "Because you changed your tribe, you lost your position on the royalty board! This cannot be undone.", NotificationType.REMOVED_TRIBE).create();
+                                    new Notification(uuid, "You changed your tribe!", "Because you changed your tribe, you lost your position on the royalty board! This cannot be undone.", NotificationType.GENERIC).create();
 
                                 }
                             }
@@ -122,10 +122,10 @@ public class CmdTribeUpdate implements CommandExecutor {
                     }
 
                 } else {
-                    sender.sendMessage(Dreamvisitor.PREFIX + ChatColor.RED + "No player within 10 blocks!");
+                    sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "No player within 10 blocks!");
                 }
             } else {
-                sender.sendMessage(Dreamvisitor.PREFIX + ChatColor.BLUE + "Must specify a player! /tribeupdate <player>");
+                sender.sendMessage(EyeOfOnyx.EOO + "Must specify a player! /tribeupdate <player>");
             }
         } else {
             if (Bukkit.getPlayer(args[0]) != null) {

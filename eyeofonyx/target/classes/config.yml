@@ -2,4 +2,42 @@
 # "localhost" makes the page address "localhost:8000/challenge"
 # "http://bogthemudwing.ddns.net" will NOT WORK because you must NOT prepend "http://"
 # "woftnw.duckdns.org" will work and redirect to "http://woftnw.duckdns.org:8000/challenge"
+# Default: "localhost"
 address: "localhost"
+
+# Whether the royalty board is frozen.
+# This prevents players from leaving the royalty board or initiating challenges.
+# This can be toggled using /eyeofonyx freeze
+# Default: false
+frozen: false
+
+# The name of the field where a character's name is stored in OpenRP.
+# OpenRP uses "name" by default. It can be changed in OpenRP/descriptions/config.yml.
+# Don't change this if you don't know what this is.
+# Default: "name"
+character-name-field: "name"
+
+# Cool down period:
+# The number of DAYS that a user is unable to participate in a challenge after they have completed one.
+# Default: 7
+challenge-cool-down: 7
+
+# Challenge acknowledgement period:
+# The number of DAYS that a user has to acknowledge a challenge that has been issued to them.
+# Default: 7
+challenge-acknowledgement-time: 7
+
+# Challenge time period:
+# The maximum number of DAYS from challenge acknowledgement that a challenge can be scheduled.
+# Default: 7
+challenge-time-period: 7
+
+# Time selection period:
+# The number of DAYS a challenger is allotted to select one of the provided times.
+# Default: 3
+time-selection-period: 3
+
+# Inactivity timer:
+# The number of DAYS that a user can be offline before they are removed from the royalty board.
+# Default: 30
+inactivity-timer: 30

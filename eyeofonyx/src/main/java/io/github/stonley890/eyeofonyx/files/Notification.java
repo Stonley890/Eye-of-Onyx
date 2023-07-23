@@ -11,7 +11,9 @@ import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -33,17 +35,27 @@ public class Notification {
     public final NotificationType type;
     private LocalDateTime time;
 
+    /**
+     * Initializes the notification storage.
+     * @throws IOException If the file could not be created.
+     */
     public static void setup() throws IOException {
 
         file = new File(plugin.getDataFolder(), "notifications.yml");
 
-        Dreamvisitor.debug("notifications.yml does not exist. Creating one...");
-        file.createNewFile();
+        if (!file.exists()) {
+            Dreamvisitor.debug("notifications.yml does not exist. Creating one...");
+            file.createNewFile();
+        }
 
         fileConfig = YamlConfiguration.loadConfiguration(file);
         save(fileConfig);
     }
 
+    /**
+     * Saves the current file configuration to disk.
+     * @param board The file configuration to save.
+     */
     private static void save(FileConfiguration board) {
         fileConfig = board;
         try {
@@ -54,6 +66,11 @@ public class Notification {
         }
     }
 
+    /**
+     * Saves the notification to notifications.yml on disk
+     * @param notification The notification to save.
+     * @throws IOException If file could not be accessed.
+     */
     public static void saveNotification(Notification notification) throws IOException {
 
         /* Notifications in notification.yml are saved as a list of string lists for each player
@@ -96,7 +113,14 @@ public class Notification {
         save(fileConfig);
     }
 
-    public static List<Notification> getNotificationsOfPlayer(String uuid) throws IOException, InvalidConfigurationException {
+    /**
+     * Retrieves all notifications of a given player UUID.
+     * @param uuid The player UUID to get notifications of.
+     * @return A list of {@link Notification}s. If none exist, the list will return empty.
+     * @throws IOException If the file could not be accessed.
+     * @throws InvalidConfigurationException If the configuration is invalid.
+     */
+    public static @NotNull List<Notification> getNotificationsOfPlayer(String uuid) throws IOException, InvalidConfigurationException {
 
         fileConfig.load(file);
 
@@ -132,7 +156,7 @@ public class Notification {
     }
 
     /**
-     * Creates a notification. It will automatically be sent if the recipient is online. If not, it will save to disk.
+     * Creates a notification. Append .create() to automatically try to send and save to disk.
      * @param playerUuid The UUID of the player to deliver this message to.
      * @param notificationTitle The title of the message.
      * @param notificationContent The content of the message.
@@ -144,16 +168,15 @@ public class Notification {
         content = notificationContent;
         type = notificationType;
         time = LocalDateTime.now();
-
-
     }
 
-    // Save/Send
+    /**
+     * Saves the Notification to disk and attempts to send it.
+     */
     public void create() {
         try {
-            if (Bukkit.getPlayer(UUID.fromString(this.player)) == null) {
-                saveNotification(this);
-            } else {
+            saveNotification(this);
+            if (Bukkit.getPlayer(UUID.fromString(this.player)) != null) {
                 sendMessage();
             }
         } catch (IOException | InvalidConfigurationException e) {
@@ -161,7 +184,12 @@ public class Notification {
         }
     }
 
-    // Attempt to send message
+    /**
+     * Attempts to send the message to the player.
+     * @return Whether the message was sent.
+     * @throws IOException If the file could not be accessed.
+     * @throws InvalidConfigurationException If the configuration is invalid.
+     */
     public boolean sendMessage() throws IOException, InvalidConfigurationException {
         Player onlinePlayer = Bukkit.getPlayer(UUID.fromString(player));
         if (onlinePlayer != null) {
@@ -204,12 +232,7 @@ public class Notification {
                 buttons.add(accept);
                 buttons.add(deny);
 
-            } else if (type == NotificationType.REMOVED_TRIBE) {
-
-                // Do not show notification again
-                Notification.getNotificationsOfPlayer(player).remove(this);
-
-            } else if (type == NotificationType.PROMOTED) {
+            } else if (type == NotificationType.GENERIC) {
 
                 // Do not show notification again
                 Notification.getNotificationsOfPlayer(player).remove(this);
@@ -232,8 +255,4 @@ public class Notification {
             return false;
         }
     }
-
-
-
-
 }

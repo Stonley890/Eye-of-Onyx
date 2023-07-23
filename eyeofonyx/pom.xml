@@ -55,6 +55,12 @@
       <version>main-19c8d77a2c-1</version>
       <scope>provided</scope>
     </dependency>
+    <dependency>
+      <groupId>com.github.fishydarwin</groupId>
+      <artifactId>OpenRP</artifactId>
+      <version>master-49d6bfc142-1</version>
+      <scope>provided</scope>
+    </dependency>
   </dependencies>
 
   <build>

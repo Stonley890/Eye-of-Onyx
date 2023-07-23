@@ -6,6 +6,8 @@ description: A plugin that manages the royalty board on Wings of Fire The New Wo
 authors: [Stonley890, iHeron]
 website: https://github.com/Stonley890/EyeOfOnyx
 depend: [Dreamvisitor]
+softdepend:
+  - OpenRP
 
 commands:
   eyeofonyx:

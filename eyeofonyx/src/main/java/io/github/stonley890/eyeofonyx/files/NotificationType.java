@@ -2,6 +2,24 @@ package io.github.stonley890.eyeofonyx.files;
 
 public enum NotificationType {
 
-    GENERIC, CHALLENGE_REQUESTED, CHALLENGE_ACCEPTED, COOLDOWN_END, REMOVED_INACTIVITY, REMOVED_BANNED, REMOVED_TRIBE, REMOVED_GENERIC, PROMOTED
+    /**
+     * Generic notification.
+     * Deletes when read.
+     */
+    GENERIC,
+
+    /**
+     * Challenge sent notification.
+     * Includes buttons to accept or deny.
+     * Deletes when acknowledged.
+     */
+    CHALLENGE_REQUESTED,
+
+    /**
+     * Challenge accepted notification.
+     * Includes buttons with available times.
+     * Deletes when acknowledged.
+     */
+    CHALLENGE_ACCEPTED
 
 }

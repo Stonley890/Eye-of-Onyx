@@ -72,7 +72,7 @@ public class CmdChallenge implements CommandExecutor {
 
                 return true;
 
-            } else if (playerPosition != 5 && RoyaltyBoard.isOnCooldown(playerTribe, playerPosition)) {
+            } else if (playerPosition != 5 && RoyaltyBoard.isOnCoolDown(playerTribe, playerPosition)) {
 
                 // Player is on cooldown. They cannot challenge
                 ComponentBuilder builder = new ComponentBuilder();

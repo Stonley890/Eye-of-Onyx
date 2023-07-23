@@ -2,7 +2,6 @@ package io.github.stonley890.eyeofonyx.web;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import io.github.stonley890.dreamvisitor.Dreamvisitor;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import io.github.stonley890.eyeofonyx.commands.CmdChallenge;
 import io.github.stonley890.eyeofonyx.files.Notification;

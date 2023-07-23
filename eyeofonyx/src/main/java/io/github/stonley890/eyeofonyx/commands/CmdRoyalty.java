@@ -249,23 +249,35 @@ public class CmdRoyalty implements CommandExecutor {
         strBuild.append("\n").append(ChatColor.GOLD).append(teamNames[index]).append(" ---").append(ChatColor.RESET);
 
         // For each position...
-        for (int j = 0; j < validPositions.length; j++) {
+        for (int position = 0; position < validPositions.length; position++) {
 
             // Add the name of the position, change to uppercase, remove underscores
-            strBuild.append(ChatColor.WHITE).append("\n[ ").append(validPositions[j].toUpperCase().replace('_', ' ')).append(": ");
+            strBuild.append(ChatColor.WHITE).append("\n[ ").append(validPositions[position].toUpperCase().replace('_', ' ')).append(": ");
             // If no one filling position, report as "none"
-            if (Objects.equals(board.get(tribes[index] + "." + validPositions[j] + ".uuid"), "none")) {
+            if (Objects.equals(board.get(tribes[index] + "." + validPositions[position] + ".uuid"), "none")) {
                 strBuild.append(ChatColor.GRAY).append("none");
             } // Otherwise...
             else {
                 strBuild.append(ChatColor.YELLOW);
                 // If position is ruler, prepend the title
-                if (j == 0) {
-                    strBuild.append(board.get(tribes[index] + "." + validPositions[j] + ".title")).append(" ");
+                if (position == 0) {
+                    strBuild.append(board.get(tribes[index] + "." + validPositions[position] + ".title")).append(" ");
                 }
                 // Add canon name w/ username in parentheses
-                strBuild.append(board.get(tribes[index] + "." + validPositions[j] + ".name"));
-                strBuild.append(ChatColor.WHITE).append(" (").append(mojang.getPlayerProfile(board.getString(tribes[index] + "." + validPositions[j] + ".uuid"))
+                // Set name from OpenRP character
+                if (EyeOfOnyx.openrp != null) {
+                    String uuid = RoyaltyBoard.getUuid(index, position);
+                    String ocName = (String) EyeOfOnyx.openrp.getDesc().getUserdata().get(uuid + ".name");
+                    if (ocName != null && !ocName.equals("No name set")) {
+                        strBuild.append(EyeOfOnyx.openrp.getDesc().getUserdata().getString(uuid + "." + EyeOfOnyx.getPlugin().getConfig().getString("character-name-field")));
+                    } else {
+                        strBuild.append(board.get(tribes[index] + "." + validPositions[position] + ".name"));
+                    }
+                } else {
+                    strBuild.append(board.get(tribes[index] + "." + validPositions[position] + ".name"));
+                }
+
+                strBuild.append(ChatColor.WHITE).append(" (").append(mojang.getPlayerProfile(board.getString(tribes[index] + "." + validPositions[position] + ".uuid"))
                         .getUsername()).append(")");
             }
         }
