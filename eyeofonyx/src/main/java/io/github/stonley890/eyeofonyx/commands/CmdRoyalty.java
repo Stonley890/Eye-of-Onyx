@@ -55,12 +55,11 @@ public class CmdRoyalty implements CommandExecutor {
 
         RoyaltyBoard.reload();
 
-        // Fail if not enough arguments
-        if (args.length < 1) {
-            return false;
-        } else if (args[0].equalsIgnoreCase("set") && args.length > 2) {
+        if (args.length < 1)  list(sender, args);
+        else if (args[0].equalsIgnoreCase("set") && args.length > 2) {
 
-            set(sender, args);
+            if (sender.hasPermission("eyeofonyx.manageboard")) set(sender, args);
+            else sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You are not permitted to use that command.");
 
         } else if (args[0].equalsIgnoreCase("list")) {
 
@@ -68,19 +67,21 @@ public class CmdRoyalty implements CommandExecutor {
 
         } else if (args[0].equalsIgnoreCase("clear") && args.length > 2) {
 
-            clear(sender, args);
-        
+            if (sender.hasPermission("eyeofonyx.manageboard")) clear(sender, args);
+            else sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You are not permitted to use that command.");
+
         } else if (args[0].equalsIgnoreCase("update")) {
 
-            sender.sendMessage(EyeOfOnyx.EOO + "Reloading and updating the board...");
-            RoyaltyBoard.reload();
-            RoyaltyBoard.updateBoard();
-            board = RoyaltyBoard.get();
-            sender.sendMessage(EyeOfOnyx.EOO + ChatColor.YELLOW + "Board updated.");
+            if (sender.hasPermission("eyeofonyx.manageboard")) {
+                sender.sendMessage(EyeOfOnyx.EOO + "Reloading and updating the board...");
+                RoyaltyBoard.reload();
+                RoyaltyBoard.updateBoard();
+                board = RoyaltyBoard.get();
+                sender.sendMessage(EyeOfOnyx.EOO + ChatColor.YELLOW + "Board updated.");
+            } else sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You are not permitted to use that command.");
 
-        } else {
-            return false;
-        }
+
+        } else sender.sendMessage(EyeOfOnyx.EOO + "Invalid arguments! /royalty <set|list|clear|update>");
 
         RoyaltyBoard.save(board);
         return true;
@@ -130,9 +131,7 @@ public class CmdRoyalty implements CommandExecutor {
                     setBoard(playerTribe, args[2], "name", args[1]);
 
                     // If ruler, set title to Ruler
-                    if (args[2].equals(validPositions[0])) {
-                        setBoard(playerTribe, args[2], "title", "Ruler");
-                    }
+                    if (args[2].equals(validPositions[0])) setBoard(playerTribe, args[2], "title", "Ruler");
                 }
 
                 // Canon name
@@ -140,18 +139,17 @@ public class CmdRoyalty implements CommandExecutor {
                 if (args[2].equals(validPositions[0]) && args.length > 3) {
                     setBoard(playerTribe, args[2], "title", args[3]);
                     setBoard(playerTribe, args[2], "name", args[4]);
-                } else if (args.length > 3) {
-                    setBoard(playerTribe, args[2], "name", args[3]);
-                }
+                } else if (args.length > 3) setBoard(playerTribe, args[2], "name", args[3]);
+
 
                 setBoard(playerTribe, args[2], "joined_time", LocalDateTime.now().toString());
                 setBoard(playerTribe, args[2], "last_challenge_time", LocalDateTime.now().toString());
                 setBoard(playerTribe, args[2], "last_online", LocalDateTime.now().toString());
 
-            } else {
+            } else
                 sender.sendMessage(EyeOfOnyx.EOO + 
                         ChatColor.RED + "Invalid position. Valid positions: " + Arrays.toString(validPositions));
-            }
+
         } catch (IllegalArgumentException e) {
             // getTeam() throws IllegalArgumentException if teams do not exist
             sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Required teams do not exist!");
@@ -260,10 +258,6 @@ public class CmdRoyalty implements CommandExecutor {
             } // Otherwise...
             else {
                 strBuild.append(ChatColor.YELLOW);
-                // If position is ruler, prepend the title
-                if (position == 0) {
-                    strBuild.append(board.get(tribes[index] + "." + validPositions[position] + ".title")).append(" ");
-                }
                 // Add canon name w/ username in parentheses
                 // Set name from OpenRP character
                 if (EyeOfOnyx.openrp != null) {

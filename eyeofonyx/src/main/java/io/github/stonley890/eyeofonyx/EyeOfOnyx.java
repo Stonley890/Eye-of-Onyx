@@ -3,14 +3,13 @@ package io.github.stonley890.eyeofonyx;
 import com.sun.net.httpserver.HttpServer;
 import io.github.stonley890.dreamvisitor.Bot;
 import io.github.stonley890.dreamvisitor.commands.discord.DiscCommandsManager;
+import io.github.stonley890.eyeofonyx.challenges.Competition;
 import io.github.stonley890.eyeofonyx.commands.CmdChallenge;
 import io.github.stonley890.eyeofonyx.commands.CmdEyeOfOnyx;
 import io.github.stonley890.eyeofonyx.commands.CmdRoyalty;
 import io.github.stonley890.eyeofonyx.commands.CmdTribeUpdate;
 import io.github.stonley890.eyeofonyx.commands.tabcomplete.TabRoyalty;
-import io.github.stonley890.eyeofonyx.files.Banned;
-import io.github.stonley890.eyeofonyx.files.Notification;
-import io.github.stonley890.eyeofonyx.files.RoyaltyBoard;
+import io.github.stonley890.eyeofonyx.files.*;
 import io.github.stonley890.eyeofonyx.listeners.ListenJoin;
 import io.github.stonley890.eyeofonyx.listeners.ListenLeave;
 import io.github.stonley890.eyeofonyx.web.AvailabilityHandler;
@@ -18,12 +17,15 @@ import io.github.stonley890.eyeofonyx.web.SubmitHandler;
 import net.md_5.bungee.api.ChatColor;
 import openrp.OpenRP;
 import org.bukkit.Bukkit;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.logging.Level;
 
 /*
@@ -54,6 +56,7 @@ public class EyeOfOnyx extends JavaPlugin {
             RoyaltyBoard.setup();
             Banned.setup();
             Notification.setup();
+            Challenge.setup();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -87,15 +90,31 @@ public class EyeOfOnyx extends JavaPlugin {
         // OpenRP API
         openrp = (OpenRP) Bukkit.getPluginManager().getPlugin("OpenRP");
 
-        // 20-tick operations
+        // 60-second operations
         Runnable tick1200Run = new BukkitRunnable() {
             // Run every minute
             @Override
             public void run() {
-                FileConfiguration board = RoyaltyBoard.get();
 
                 // Update board
                 RoyaltyBoard.updateBoard();
+
+                try {
+                    List<Challenge> challenges = Challenge.getChallenges();
+
+                    if (!challenges.isEmpty()) {
+                        for (Challenge challenge : challenges) {
+                            if (challenge.time.size() == 1 && challenge.time.get(0).isBefore(LocalDateTime.now())) {
+
+                                Competition.call(challenge);
+
+                            }
+                        }
+                    }
+
+                } catch (IOException | InvalidConfigurationException e) {
+                    e.printStackTrace();
+                }
 
             }
         };

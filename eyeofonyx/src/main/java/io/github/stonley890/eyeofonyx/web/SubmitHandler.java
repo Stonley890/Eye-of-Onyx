@@ -2,11 +2,10 @@ package io.github.stonley890.eyeofonyx.web;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import io.github.stonley890.dreamvisitor.Dreamvisitor;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import io.github.stonley890.eyeofonyx.commands.CmdChallenge;
-import io.github.stonley890.eyeofonyx.files.Notification;
-import io.github.stonley890.eyeofonyx.files.NotificationType;
-import io.github.stonley890.eyeofonyx.files.RoyaltyBoard;
+import io.github.stonley890.eyeofonyx.files.*;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.InvalidConfigurationException;
@@ -32,7 +31,8 @@ public class SubmitHandler implements HttpHandler {
             String formData = br.readLine();
 
             // Parse the code
-            String code = formData.split("&")[0].split("=")[1]; // Extracting code value from the form data
+            String encodedCode = formData.split("code=")[1].split("&availability=")[0]; // Extracting code value from the form data
+            String code = URLDecoder.decode(encodedCode, StandardCharsets.UTF_8.name());
 
             // Parse the availability dates and times
             List<LocalDateTime> availabilities = new ArrayList<>();
@@ -40,7 +40,9 @@ public class SubmitHandler implements HttpHandler {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
             try {
                 for (int i = 1; i < availabilityParams.length; i++) {
-                    String dateTimeString = URLDecoder.decode(availabilityParams[i], StandardCharsets.UTF_8.name());
+                    // Extract only the date and time part from the availability string
+                    String dateTimeString = availabilityParams[i].split("&")[0]; // Get the part before the "&"
+                    dateTimeString = URLDecoder.decode(dateTimeString, StandardCharsets.UTF_8.name());
                     LocalDateTime dateTime = LocalDateTime.parse(dateTimeString, formatter);
                     availabilities.add(dateTime);
                 }
@@ -88,7 +90,7 @@ public class SubmitHandler implements HttpHandler {
 
                             Bukkit.getLogger().warning("Could not find attacker.");
 
-                            // Could not find attacker
+                            // Could not find the attacker
                             Bukkit.getLogger().warning("Could not find attacker of player " + player.getUniqueId() + "\nTribe: " + playerTribe + "\n");
                             player.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "There was a problem finding your challenger. Please contact a staff member.");
 
@@ -115,7 +117,10 @@ public class SubmitHandler implements HttpHandler {
                             // Set attacker in board.yml
                             RoyaltyBoard.setAttacker(playerTribe, RoyaltyBoard.getPositionIndexOfUUID(player.getUniqueId().toString()), attackerUuid);
 
-                            //
+                            // Create challenge
+                            new Challenge(attackerUuid, player.getUniqueId().toString(), ChallengeType.UNKNOWN, availabilities).save();
+
+                            // Remove code
                             CmdChallenge.codesOnForm.remove(i);
                             CmdChallenge.playersOnForm.remove(i);
 

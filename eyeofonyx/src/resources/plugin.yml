@@ -12,11 +12,10 @@ softdepend:
 commands:
   eyeofonyx:
     description: Manage Eye of Onyx.
-    usage: /<command>
-    permission: minecraft.command.op
+    usage: /<command> <ban|unban|freeze|disable|config>
   royalty:
     description: Access or manage the royalty board.
-    usage: /<command> <set|list|clear|update>
+    usage: /<command> <set|list|clear|update|manage>
   challenge:
     description: Initiate a challenge.
     usage: /<command>
@@ -26,6 +25,9 @@ commands:
     permission: minecraft.command.op
 
 permissions:
-  eyeofonyx.editboard:
+  eyeofonyx.manageboard:
     description: Allows editing the royalty board.
+    default: op
+  eyeofonyx.ban:
+    description: Manage royalty bans.
     default: op

@@ -41,3 +41,19 @@ time-selection-period: 3
 # The number of DAYS that a user can be offline before they are removed from the royalty board.
 # Default: 30
 inactivity-timer: 30
+
+# Challenge waiting room location:
+# The locations of the challenge waiting rooms.
+# This should be set with /eyeofonyx config waiting-rooms <tribe> <x> <y> <z>
+# Do not change this unless you know what you're doing.
+waiting-rooms:
+  - null
+  - null
+  - null
+  - null
+  - null
+  - null
+  - null
+  - null
+  - null
+  - null

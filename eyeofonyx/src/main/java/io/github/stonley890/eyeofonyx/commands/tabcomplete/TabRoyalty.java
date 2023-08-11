@@ -1,6 +1,7 @@
 package io.github.stonley890.eyeofonyx.commands.tabcomplete;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 
@@ -32,34 +33,47 @@ public class TabRoyalty implements TabCompleter {
 
         if (args.length == 1) {
             
-            // royalty <clear|list|set|update>
+            // royalty <clear|list|set|update|manage>
             suggestions.add("clear");
             suggestions.add("list");
             suggestions.add("set");
             suggestions.add("update");
+            suggestions.add("manage");
 
         } else if (args.length == 2) {
 
-            // royalty <clear|set> <tribe>
-            if (args[0].equals("clear") || args[0].equals("list")) {
-                suggestions.addAll(List.of(tribes));
-
-            } // royalty <set> <player>
-            else if (args[0].equals("set")) {
-
-                for (Player player : Bukkit.getOnlinePlayers()) {
-                    suggestions.add(player.getName());
+            switch (args[0]) {
+                case "clear", "list" -> suggestions.addAll(List.of(tribes));
+                case "set" -> {
+                    for (Player player : Bukkit.getOnlinePlayers()) {
+                        suggestions.add(player.getName());
+                    }
                 }
-                
+                case "manage" -> {
+                    suggestions.addAll(Arrays.asList(RoyaltyBoard.getTribes()));
+                }
             }
-        } else if (args.length == 3 && (args[0].equals("clear") || args[0].equals("set"))) {
 
-            // royalty set <clear> <arg1> <position>
-            suggestions.addAll(List.of(positions));
+        } else if (args.length == 3) {
 
+            if (args[0].equals("clear") || args[0].equals("set") || args[0].equals("manage")) {
+                suggestions.addAll(List.of(positions));
+            }
+        } else if (args.length == 4) {
+
+            if (args[0].equals("manage")) {
+                suggestions.add("name");
+                suggestions.add("joined_time");
+                suggestions.add("last_online");
+                suggestions.add("last_challenge_time");
+                suggestions.add("challenger");
+                if (!args[2].equals("ruler")) {
+                    suggestions.add("challenging");
+                }
+            }
         }
 
         return suggestions;
     }
-    
+
 }

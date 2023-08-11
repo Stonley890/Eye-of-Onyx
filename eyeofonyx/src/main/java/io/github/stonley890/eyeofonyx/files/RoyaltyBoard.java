@@ -358,15 +358,6 @@ public class RoyaltyBoard {
     }
 
     /**
-     * Get the title of a ruler.
-     * @param tribeIndex The tribe to get the ruler title of.
-     * @return The title of the specified ruler.
-     */
-    public static String getRulerTitle(int tribeIndex) {
-        return getValue(tribeIndex, RULER, TITLE);
-    }
-
-    /**
      * Get the character name of a spot on the board.
      * @param tribeIndex The tribe to fetch from.
      * @param positionIndex The position to fetch from.
@@ -454,7 +445,7 @@ public class RoyaltyBoard {
      */
     public static boolean isOnCoolDown(int tribeIndex, int positionIndex) {
         LocalDateTime lastChallenge = LocalDateTime.parse(getLastChallengeDate(tribeIndex, positionIndex));
-        return lastChallenge.isBefore(LocalDateTime.now().minusDays(plugin.getConfig().getInt("challenge-cool-down")));
+        return lastChallenge.isAfter(LocalDateTime.now().minusDays(plugin.getConfig().getInt("challenge-cool-down")));
     }
 
     /**

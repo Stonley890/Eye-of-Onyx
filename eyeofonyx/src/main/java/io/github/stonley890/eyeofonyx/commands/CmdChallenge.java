@@ -1,15 +1,16 @@
 package io.github.stonley890.eyeofonyx.commands;
 
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
-import io.github.stonley890.eyeofonyx.files.Banned;
-import io.github.stonley890.eyeofonyx.files.Notification;
-import io.github.stonley890.eyeofonyx.files.NotificationType;
-import io.github.stonley890.eyeofonyx.files.RoyaltyBoard;
+import io.github.stonley890.eyeofonyx.challenges.Competition;
+import io.github.stonley890.eyeofonyx.files.*;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.ChatColor;
+import org.bukkit.Effect;
+import org.bukkit.Location;
+import org.bukkit.Sound;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -24,14 +25,12 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 
 import static io.github.stonley890.eyeofonyx.files.RoyaltyBoard.*;
 
 public class CmdChallenge implements CommandExecutor {
-
-    int attackingTribe;
-    int attackingPosition;
 
     String[] tribes = RoyaltyBoard.getTribes();
     String[] teams = RoyaltyBoard.getTeamNames();
@@ -77,6 +76,7 @@ public class CmdChallenge implements CommandExecutor {
                 // Player is on cooldown. They cannot challenge
                 ComponentBuilder builder = new ComponentBuilder();
                 LocalDateTime challengeDate = LocalDateTime.parse(RoyaltyBoard.getLastChallengeDate(playerTribe, playerPosition));
+                challengeDate = challengeDate.plusDays(EyeOfOnyx.getPlugin().getConfig().getInt("challenge-cool-down"));
 
                 builder.append(EyeOfOnyx.EOO)
                         .color(net.md_5.bungee.api.ChatColor.RED)
@@ -229,7 +229,7 @@ public class CmdChallenge implements CommandExecutor {
                 sender.spigot().sendMessage(builder.create());
 
 
-            } else if (args.length == 1) {
+            } else {
 
                 switch (args[0]) {
                     case "position1", "position2" -> {
@@ -283,6 +283,7 @@ public class CmdChallenge implements CommandExecutor {
                         // Check that target is not being challenged
                         if (!(RoyaltyBoard.getAttacker(playerTribe, targetPosition).equals("none") || (RoyaltyBoard.getAttacking(playerTribe, targetPosition).equals("none") && targetPosition != 0))) {
 
+                            player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
                             builder.append("That player is already in a challenge!");
                             sender.spigot().sendMessage(builder.create());
                             return true;
@@ -290,15 +291,19 @@ public class CmdChallenge implements CommandExecutor {
                         } else {
 
                             // Check for cooldown
+                            player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
                             LocalDateTime targetChallenge = LocalDateTime.parse(RoyaltyBoard.getLastChallengeDate(playerTribe, targetPosition));
-                            if (targetChallenge.isBefore(LocalDateTime.now().minusDays(14))) {
+                            targetChallenge = targetChallenge.plusDays(EyeOfOnyx.getPlugin().getConfig().getInt("challenge-cool-down"));
+                            if (RoyaltyBoard.isOnCoolDown(playerTribe, targetPosition)) {
                                 builder.append("That player is on movement cooldown until ")
                                         .append(targetChallenge.format(DateTimeFormatter.ISO_DATE));
 
+                                sender.spigot().sendMessage(builder.create());
+
                                 return true;
                             } else {
+                                player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
                                 String targetUuid = RoyaltyBoard.getUuid(playerTribe, targetPosition);
-
 
                                 // set values in board.yml
                                 // RoyaltyBoard.setAttacker(playerTribe, targetPosition, player.getUniqueId().toString());
@@ -318,6 +323,7 @@ public class CmdChallenge implements CommandExecutor {
                     }
                     case "accept" -> {
 
+                        player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
                         ComponentBuilder builder = new ComponentBuilder();
                         builder.append(EyeOfOnyx.EOO).append("One more thing! Use the link below to select times that you are available to attend the challenge. You'll need the code below too.").append("\n");
 
@@ -354,6 +360,7 @@ public class CmdChallenge implements CommandExecutor {
 
                      */
 
+                        player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
                         ComponentBuilder builder = new ComponentBuilder();
                         builder.append(EyeOfOnyx.EOO).append("Are you sure you want to forfeit your role and remove yourself from the royalty board? ")
                                 .append("This action cannot be undone.").color(net.md_5.bungee.api.ChatColor.RED).append("\n");
@@ -376,6 +383,8 @@ public class CmdChallenge implements CommandExecutor {
                     }
                     case "denyconfirm" -> {
 
+                        player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
+
                         // Remove notification
                         try {
                             Notification.getNotificationsOfPlayer(player.getUniqueId().toString()).removeIf(notification -> notification.type == NotificationType.CHALLENGE_REQUESTED);
@@ -388,11 +397,99 @@ public class CmdChallenge implements CommandExecutor {
                         RoyaltyBoard.updateBoard();
                         sender.sendMessage(EyeOfOnyx.EOO + "You have been removed from the royalty board.");
                     }
+                    /*
+                    case "date" -> {
+
+                        if (args.length > 1) {
+
+                            // Get challenge
+                            List<Challenge> challenges = null;
+                            try {
+                                challenges = Challenge.getChallenges();
+                            } catch (IOException | InvalidConfigurationException e) {
+                                e.printStackTrace();
+                            }
+
+                            Challenge challenge = null;
+
+                            if (challenges != null) {
+                                for (Challenge listChallenge : challenges) {
+                                    if (listChallenge.attacker.equals(player.getUniqueId().toString())) {
+                                        challenge = listChallenge;
+                                        break;
+                                    }
+                                }
+                            } else {
+                                player.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Could not find valid challenge!");
+                            }
+
+                            if (challenge == null) {
+                                // The challenge was not found
+                                // Should not happen
+                                player.sendMessage(EyeOfOnyx.EOO + net.md_5.bungee.api.ChatColor.RED + "You chose a date for a challenge, but it couldn't be found! Contact staff for help.");
+                                return true;
+                            }
+
+                            // Set date
+                            List<LocalDateTime> dates = challenge.time;
+
+                            int dateIndex = Integer.parseInt(args[1]);
+
+                            if (dateIndex < dates.size()) {
+
+                                // Clear all other dates
+                                LocalDateTime chosenDate = dates.get(dateIndex);
+                                dates.clear();
+                                dates.add(chosenDate);
+                                try {
+                                    challenge.save();
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+
+                                // Send notification to defender
+                                new Notification(challenge.defender, "Your challenge has been scheduled!", "Your challenge is scheduled for " + chosenDate.format(DateTimeFormatter.ofPattern("MM dd uuuu hh:mm a")), NotificationType.GENERIC).create();
+
+                            } else {
+
+                                // Should not happen
+                                sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You selected an invalid date!");
+
+                            }
+
+                            // Remove notification
+                            try {
+                                Notification.getNotificationsOfPlayer(player.getUniqueId().toString()).removeIf(notification -> notification.type == NotificationType.CHALLENGE_ACCEPTED);
+                            } catch (IOException | InvalidConfigurationException e) {
+                                e.printStackTrace();
+                            }
+
+                        } else {
+                            sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Missing arguments!");
+                        }
+
+                    }
+                    */
+                    case "start" -> {
+
+                        player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
+                        for (Competition activeChallenge : Competition.activeChallenges) {
+                            if (activeChallenge.defender.equals(player.getUniqueId().toString()) || activeChallenge.attacker.equals(player.getUniqueId().toString())) {
+
+                                List<Location> waitingRooms = (List<Location>) EyeOfOnyx.getPlugin().getConfig().getList("waiting-rooms");
+                                if (waitingRooms != null) {
+                                    if (waitingRooms.get(activeChallenge.tribe) != null) {
+                                        player.teleport(waitingRooms.get(activeChallenge.tribe));
+                                    } else sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "No waiting room set! Contact an admin.");
+                                } else sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "No waiting room set! Contact an admin.");
+
+                            }
+                        }
+
+                    }
                     default ->
                             sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Incorrect arguments! Use the text GUI with /challenge");
                 }
-            } else {
-                sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Too many arguments! Use the text GUI with /challenge");
             }
         } else {
             sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "That command is only available for players!");

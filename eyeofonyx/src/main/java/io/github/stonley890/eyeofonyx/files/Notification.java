@@ -103,7 +103,7 @@ public class Notification {
 
         yamlNotification.add(notification.title);
         yamlNotification.add(notification.content);
-        yamlNotification.add(notification.type.name());
+        yamlNotification.add(notification.type.toString());
         yamlNotification.add(notification.time.toString());
 
         // Add given notifications
@@ -142,7 +142,7 @@ public class Notification {
                 NotificationType type = NotificationType.valueOf(yamlNotification.get(2));
                 LocalDateTime time = LocalDateTime.parse(yamlNotification.get(3));
 
-                // Add to Notification object
+                // Add to a Notification object
                 Notification notification = new Notification(uuid, title, content, type);
                 notification.time = time;
 
@@ -232,7 +232,49 @@ public class Notification {
                 buttons.add(accept);
                 buttons.add(deny);
 
-            } else if (type == NotificationType.GENERIC) {
+            } else if (type == NotificationType.CHALLENGE_ACCEPTED) {
+
+                // Add buttons for dates
+
+                // Get challenge
+                List<Challenge> challenges = Challenge.getChallenges();
+                Challenge challenge = null;
+                for (Challenge listChallenge : challenges) {
+                    if (listChallenge.attacker.equals(player)) {
+                        challenge = listChallenge;
+                        break;
+                    }
+                }
+
+                if (challenge == null) {
+                    // The challenge was not found
+                    // Should not happen
+                    onlinePlayer.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You had a challenge accepted, but it couldn't be found! Contact staff for help.");
+                    return true;
+                }
+
+                List<LocalDateTime> dates = challenge.time;
+
+                // Create button for each date
+                for (int i = 0; i < dates.size(); i++) {
+                    TextComponent button = new TextComponent();
+                    button.setText("[" + dates.get(i).format(DateTimeFormatter.ofPattern("MM dd uuuu hh:mm a")) + "]");
+                    button.setColor(ChatColor.YELLOW);
+                    button.setUnderlined(true);
+                    button.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/challenge date " + i));
+
+                    buttons.add(button);
+                }
+
+                // Button for no matching availabilities
+
+                TextComponent deny = new TextComponent();
+                deny.setText("[I can't make these times]");
+                deny.setColor(ChatColor.RED);
+                deny.setUnderlined(true);
+                deny.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/challenge ignore"));
+
+            }   else if (type == NotificationType.GENERIC) {
 
                 // Do not show notification again
                 Notification.getNotificationsOfPlayer(player).remove(this);
@@ -247,7 +289,7 @@ public class Notification {
                 message.append("\n");
             }
 
-            // Send message to player
+            // Send the message to player
             onlinePlayer.spigot().sendMessage(message.create());
 
             return true;
