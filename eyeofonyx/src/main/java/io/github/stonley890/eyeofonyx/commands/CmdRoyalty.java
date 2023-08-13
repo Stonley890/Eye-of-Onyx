@@ -1,11 +1,7 @@
 package io.github.stonley890.eyeofonyx.commands;
 
-import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.Objects;
-import java.util.UUID;
-
-import io.github.stonley890.dreamvisitor.Dreamvisitor;
+import io.github.stonley890.eyeofonyx.EyeOfOnyx;
+import io.github.stonley890.eyeofonyx.files.RoyaltyBoard;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -16,8 +12,10 @@ import org.bukkit.scoreboard.Scoreboard;
 import org.jetbrains.annotations.NotNull;
 import org.shanerx.mojang.Mojang;
 
-import io.github.stonley890.eyeofonyx.EyeOfOnyx;
-import io.github.stonley890.eyeofonyx.files.RoyaltyBoard;
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.Objects;
+import java.util.UUID;
 
 public class CmdRoyalty implements CommandExecutor {
 

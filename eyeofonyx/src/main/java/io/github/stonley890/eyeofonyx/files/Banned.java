@@ -8,7 +8,6 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 public class Banned {
@@ -43,8 +42,7 @@ public class Banned {
         try {
             fileConfig.save(file);
         } catch (Exception e) {
-            Bukkit.getLogger().severe("Error saving banned.yml file:");
-            e.printStackTrace();
+            Bukkit.getLogger().severe("Error saving banned.yml file.");
         }
     }
 
@@ -54,9 +52,6 @@ public class Banned {
      */
     public static void addPlayer(String uuid) {
         List<String> banlist = fileConfig.getStringList("banned");
-        if (banlist == null) {
-            banlist = new ArrayList<>();
-        }
         banlist.add(uuid);
         fileConfig.set("banned", banlist);
     }
@@ -67,10 +62,8 @@ public class Banned {
      */
     public static void removePlayer(String uuid) {
         List<String> banlist = fileConfig.getStringList("banned");
-        if (banlist != null) {
-            banlist.remove(uuid);
-            fileConfig.set("banned", banlist);
-        }
+        banlist.remove(uuid);
+        fileConfig.set("banned", banlist);
     }
 
     /**
@@ -80,10 +73,8 @@ public class Banned {
      */
     public static boolean isPlayerBanned(String uuid) {
         List<String> banlist = fileConfig.getStringList("banned");
-        boolean isBanned = false;
-        if (banlist != null) {
-            isBanned = banlist.contains(uuid);
-        }
+        boolean isBanned;
+        isBanned = banlist.contains(uuid);
         return isBanned;
     }
 

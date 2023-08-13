@@ -49,9 +49,7 @@ public class TabRoyalty implements TabCompleter {
                         suggestions.add(player.getName());
                     }
                 }
-                case "manage" -> {
-                    suggestions.addAll(Arrays.asList(RoyaltyBoard.getTribes()));
-                }
+                case "manage" -> suggestions.addAll(Arrays.asList(RoyaltyBoard.getTribes()));
             }
 
         } else if (args.length == 3) {

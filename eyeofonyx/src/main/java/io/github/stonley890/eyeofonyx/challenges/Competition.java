@@ -5,7 +5,6 @@ import io.github.stonley890.eyeofonyx.files.Challenge;
 import io.github.stonley890.eyeofonyx.files.ChallengeType;
 import io.github.stonley890.eyeofonyx.files.RoyaltyBoard;
 import net.md_5.bungee.api.ChatColor;
-import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -15,6 +14,7 @@ import org.bukkit.configuration.InvalidConfigurationException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class Competition {
 
@@ -54,12 +54,11 @@ public class Competition {
         message.append("\n");
 
         if (Bukkit.getPlayer(attacker) != null) {
-            Bukkit.getPlayer(attacker).spigot().sendMessage(message.create());
+            Objects.requireNonNull(Bukkit.getPlayer(attacker)).spigot().sendMessage(message.create());
         }
         if (Bukkit.getPlayer(defender) != null) {
-            Bukkit.getPlayer(defender).spigot().sendMessage(message.create());
+            Objects.requireNonNull(Bukkit.getPlayer(defender)).spigot().sendMessage(message.create());
         }
-
     }
 
 }

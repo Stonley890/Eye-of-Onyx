@@ -2,6 +2,7 @@ package io.github.stonley890.eyeofonyx.listeners;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Objects;
 
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -17,7 +18,7 @@ import io.github.stonley890.eyeofonyx.files.RoyaltyBoard;
 public class ListenLeave implements Listener {
 
     private final FileConfiguration board = RoyaltyBoard.get();
-    private final Scoreboard scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
+    private final Scoreboard scoreboard = Objects.requireNonNull(Bukkit.getScoreboardManager()).getMainScoreboard();
 
 
     private final Mojang mojang = new Mojang().connect();
@@ -32,7 +33,7 @@ public class ListenLeave implements Listener {
         Player player = event.getPlayer();
 
         try {
-            String playerTeam = scoreboard.getEntryTeam(player.getName()).getName();
+            String playerTeam = Objects.requireNonNull(scoreboard.getEntryTeam(player.getName())).getName();
             int playerTribe = Arrays.binarySearch(teamNames, playerTeam);
             String playerUUID = mojang.getUUIDOfUsername(player.getName()).replaceFirst(
                     "(\\p{XDigit}{8})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}+)",

@@ -9,7 +9,6 @@ import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import io.github.stonley890.eyeofonyx.files.Notification;
 import io.github.stonley890.eyeofonyx.files.NotificationType;
 import io.github.stonley890.eyeofonyx.files.RoyaltyBoard;
-import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
 import org.bukkit.Bukkit;
@@ -26,7 +25,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.List;
+import java.util.Objects;
 
 public class CmdTribeUpdate implements CommandExecutor {
     @Override
@@ -56,7 +55,7 @@ public class CmdTribeUpdate implements CommandExecutor {
 
                     User user = Bot.getUser(discordId);
 
-                    Scoreboard scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
+                    Scoreboard scoreboard = Objects.requireNonNull(Bukkit.getScoreboardManager()).getMainScoreboard();
                     Team playerTeam = scoreboard.getEntryTeam(closest.getName());
 
                     if (playerTeam != null) {
@@ -67,12 +66,15 @@ public class CmdTribeUpdate implements CommandExecutor {
 
                                 // Remove roles
                                 for (String roleId : Dreamvisitor.getPlugin().getConfig().getStringList("tribeRoles")) {
-                                    DiscCommandsManager.gameLogChannel.getGuild().removeRoleFromMember(user, Bot.getJda().getRoleById(roleId)).queue();
+                                    DiscCommandsManager.gameLogChannel.getGuild().removeRoleFromMember(user, Objects.requireNonNull(Bot.getJda().getRoleById(roleId))).queue();
                                 }
 
                                 Role targetRole = Bot.getJda().getRoleById(Dreamvisitor.getPlugin().getConfig().getStringList("tribeRoles").get(i));
-                                Dreamvisitor.debug("Role to apply: " + targetRole.getName());
-                                Dreamvisitor.debug("User to apply to: " + user.getName());
+
+                                if (targetRole == null) {
+                                    sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Could not find role for " + playerTeam.getName());
+                                    return true;
+                                }
 
                                 // Add role
                                 DiscCommandsManager.gameLogChannel.getGuild().addRoleToMember(user, targetRole).queue();
@@ -81,7 +83,7 @@ public class CmdTribeUpdate implements CommandExecutor {
                                 try {
                                     UserTracker.updateTribe(uuid, i);
                                 } catch (GeneralSecurityException | IOException e) {
-                                    e.printStackTrace();
+                                    Bukkit.getLogger().warning("Eye of Onyx failed to access Google Sheets!");
                                 }
 
                                 // Position is 5 by default (citizen)
@@ -138,7 +140,7 @@ public class CmdTribeUpdate implements CommandExecutor {
 
                 User user = Bot.getUser(discordId);
 
-                Scoreboard scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
+                Scoreboard scoreboard = Objects.requireNonNull(Bukkit.getScoreboardManager()).getMainScoreboard();
                 Team playerTeam = scoreboard.getEntryTeam(target.getName());
 
                 if (playerTeam != null) {
@@ -149,12 +151,15 @@ public class CmdTribeUpdate implements CommandExecutor {
 
                             // Remove roles
                             for (String roleId : Dreamvisitor.getPlugin().getConfig().getStringList("tribeRoles")) {
-                                DiscCommandsManager.gameLogChannel.getGuild().removeRoleFromMember(user, Bot.getJda().getRoleById(roleId)).queue();
+                                DiscCommandsManager.gameLogChannel.getGuild().removeRoleFromMember(user, Objects.requireNonNull(Bot.getJda().getRoleById(roleId))).queue();
                             }
 
                             Role targetRole = Bot.getJda().getRoleById(Dreamvisitor.getPlugin().getConfig().getStringList("tribeRoles").get(i));
-                            Dreamvisitor.debug("Role to apply: " + targetRole.getName());
-                            Dreamvisitor.debug("User to apply to: " + user.getName());
+
+                            if (targetRole == null) {
+                                sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Could not find role for " + playerTeam.getName());
+                                return true;
+                            }
 
                             // Add role
                             DiscCommandsManager.gameLogChannel.getGuild().addRoleToMember(user, targetRole).queue();
@@ -163,7 +168,7 @@ public class CmdTribeUpdate implements CommandExecutor {
                             try {
                                 UserTracker.updateTribe(uuid, i);
                             } catch (GeneralSecurityException | IOException e) {
-                                e.printStackTrace();
+                                Bukkit.getLogger().warning("Eye of Onyx failed to access Google Sheets!");
                             }
 
                         }
@@ -176,38 +181,4 @@ public class CmdTribeUpdate implements CommandExecutor {
         return true;
     }
 
-    private void teamToRole(Player player, User user, int tribeIndex) {
-
-        JDA jda = user.getJDA();
-        Dreamvisitor plugin = Dreamvisitor.getPlugin();
-
-        // Get list of role IDs from config.yml
-        List<String> tribeRoleIDs = plugin.getConfig().getStringList("tribeRoles");
-
-        // Init tribeRoleIDs if empty
-        if (tribeRoleIDs.isEmpty()) {
-            for (int i = 0; i < 10; i++) {
-                tribeRoleIDs.add("none");
-            }
-        }
-
-        // Iterate through tribeRoleIDs
-        for (int i = 0; i < tribeRoleIDs.size(); i++) {
-
-            if (tribeRoleIDs.get(i).equals("none")) {
-                // If role is not set, notify as logger
-                Bukkit.getLogger().warning(DiscCommandsManager.TRIBE_NAMES[i] + "does not have a set role! Use /setrole in Discord!");
-            } else if (tribeIndex == i) {
-                // Add role if matching index
-                DiscCommandsManager.gameLogChannel.getGuild().addRoleToMember(user, jda.getRoleById(tribeRoleIDs.get(i)));
-            }
-        }
-
-        // Add data to User Tracker
-        try {
-            UserTracker.updateTribe(player.getUniqueId().toString(), tribeIndex);
-        } catch (GeneralSecurityException | IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
 }

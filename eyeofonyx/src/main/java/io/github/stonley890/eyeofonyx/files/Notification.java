@@ -13,12 +13,10 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -62,7 +60,6 @@ public class Notification {
             fileConfig.save(file);
         } catch (Exception e) {
             Bukkit.getLogger().severe("Error saving notifications.yml file:");
-            e.printStackTrace();
         }
     }
 
@@ -180,7 +177,7 @@ public class Notification {
                 sendMessage();
             }
         } catch (IOException | InvalidConfigurationException e) {
-            e.printStackTrace();
+            Bukkit.getLogger().warning(EyeOfOnyx.EOO + ChatColor.RED + "Error saving to notification.yml");
         }
     }
 

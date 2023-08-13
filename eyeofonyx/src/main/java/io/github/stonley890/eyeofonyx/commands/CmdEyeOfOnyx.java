@@ -24,6 +24,7 @@ import org.shanerx.mojang.Mojang;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 public class CmdEyeOfOnyx implements CommandExecutor {
 
@@ -58,6 +59,10 @@ public class CmdEyeOfOnyx implements CommandExecutor {
                                 Banned.addPlayer(uuid);
                                 int tribe = RoyaltyBoard.getTribeIndexOfUUID(uuid);
                                 int pos = RoyaltyBoard.getPositionIndexOfUUID(uuid);
+                                if (pos != RoyaltyBoard.CIVILIAN) {
+                                    RoyaltyBoard.setValue(tribe, pos, RoyaltyBoard.LAST_ONLINE, "none");
+                                    RoyaltyBoard.updateBoard();
+                                }
                                 new Notification(uuid, "Royalty Ban", "You are no longer allowed to participate in royalty. Contact staff if you think this is a mistake.", NotificationType.GENERIC).create();
                                 sender.sendMessage(EyeOfOnyx.EOO + args[1] + " has been banned.");
 
@@ -119,7 +124,7 @@ public class CmdEyeOfOnyx implements CommandExecutor {
             case "config" -> {
 
                 if (args.length < 2) {
-
+                    sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Missing arguments! /eyeofonyx config <key> <value>");
                 } else {
 
                     String key = args[1];
@@ -204,11 +209,20 @@ public class CmdEyeOfOnyx implements CommandExecutor {
 
                                         if (args.length > 6) {
                                             world = Bukkit.getWorld(args[6]);
+                                            if (world == null) {
+                                                world = Bukkit.getWorlds().get(0);
+                                            }
                                         }
+
 
                                         if (tribeIndex > -1) {
 
                                             List<Location> waitingRooms = (List<Location>) main.getConfig().getList(key);
+
+                                            if (waitingRooms == null) {
+                                                waitingRooms = new ArrayList<>();
+                                            }
+
                                             waitingRooms.set(tribeIndex, new Location(world, x, y, z));
 
                                             main.getConfig().set("waiting-rooms", waitingRooms);
@@ -238,7 +252,7 @@ public class CmdEyeOfOnyx implements CommandExecutor {
 
     @NotNull
     private static TextComponent getTeleport(Location waitingRoom) {
-        TextComponent teleport = new TextComponent("[" + waitingRoom.getWorld().getName() + waitingRoom.getX() + ", " + waitingRoom.getY() + ", " + waitingRoom.getZ() + "]");
+        TextComponent teleport = new TextComponent("[" + Objects.requireNonNull(waitingRoom.getWorld()).getName() + waitingRoom.getX() + ", " + waitingRoom.getY() + ", " + waitingRoom.getZ() + "]");
         teleport.setUnderlined(true);
         teleport.setColor(ChatColor.GREEN);
         teleport.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/tp " + waitingRoom.getX() + " " + waitingRoom.getY() + " " + waitingRoom.getZ()));

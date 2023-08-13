@@ -2,20 +2,22 @@ package io.github.stonley890.eyeofonyx.commands;
 
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import io.github.stonley890.eyeofonyx.challenges.Competition;
-import io.github.stonley890.eyeofonyx.files.*;
+import io.github.stonley890.eyeofonyx.files.Banned;
+import io.github.stonley890.eyeofonyx.files.Notification;
+import io.github.stonley890.eyeofonyx.files.NotificationType;
+import io.github.stonley890.eyeofonyx.files.RoyaltyBoard;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.InvalidConfigurationException;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.shanerx.mojang.Mojang;
@@ -25,20 +27,16 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Random;
 
 import static io.github.stonley890.eyeofonyx.files.RoyaltyBoard.*;
 
 public class CmdChallenge implements CommandExecutor {
 
-    String[] tribes = RoyaltyBoard.getTribes();
     String[] teams = RoyaltyBoard.getTeamNames();
     String[] positions = RoyaltyBoard.getValidPositions();
 
     Mojang mojang = new Mojang().connect();
-
-    FileConfiguration board = RoyaltyBoard.get();
 
     public static List<Player> playersOnForm = new ArrayList<>();
     public static List<String> codesOnForm = new ArrayList<>();
@@ -389,7 +387,9 @@ public class CmdChallenge implements CommandExecutor {
                         try {
                             Notification.getNotificationsOfPlayer(player.getUniqueId().toString()).removeIf(notification -> notification.type == NotificationType.CHALLENGE_REQUESTED);
                         } catch (IOException | InvalidConfigurationException e) {
-                            e.printStackTrace();
+                            Bukkit.getLogger().warning("Eye of Onyx could not read from disk!");
+                            sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Error: Eye of Onyx could not read from disk!");
+                            return true;
                         }
 
                         // Remove from royalty board
@@ -397,79 +397,6 @@ public class CmdChallenge implements CommandExecutor {
                         RoyaltyBoard.updateBoard();
                         sender.sendMessage(EyeOfOnyx.EOO + "You have been removed from the royalty board.");
                     }
-                    /*
-                    case "date" -> {
-
-                        if (args.length > 1) {
-
-                            // Get challenge
-                            List<Challenge> challenges = null;
-                            try {
-                                challenges = Challenge.getChallenges();
-                            } catch (IOException | InvalidConfigurationException e) {
-                                e.printStackTrace();
-                            }
-
-                            Challenge challenge = null;
-
-                            if (challenges != null) {
-                                for (Challenge listChallenge : challenges) {
-                                    if (listChallenge.attacker.equals(player.getUniqueId().toString())) {
-                                        challenge = listChallenge;
-                                        break;
-                                    }
-                                }
-                            } else {
-                                player.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Could not find valid challenge!");
-                            }
-
-                            if (challenge == null) {
-                                // The challenge was not found
-                                // Should not happen
-                                player.sendMessage(EyeOfOnyx.EOO + net.md_5.bungee.api.ChatColor.RED + "You chose a date for a challenge, but it couldn't be found! Contact staff for help.");
-                                return true;
-                            }
-
-                            // Set date
-                            List<LocalDateTime> dates = challenge.time;
-
-                            int dateIndex = Integer.parseInt(args[1]);
-
-                            if (dateIndex < dates.size()) {
-
-                                // Clear all other dates
-                                LocalDateTime chosenDate = dates.get(dateIndex);
-                                dates.clear();
-                                dates.add(chosenDate);
-                                try {
-                                    challenge.save();
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
-
-                                // Send notification to defender
-                                new Notification(challenge.defender, "Your challenge has been scheduled!", "Your challenge is scheduled for " + chosenDate.format(DateTimeFormatter.ofPattern("MM dd uuuu hh:mm a")), NotificationType.GENERIC).create();
-
-                            } else {
-
-                                // Should not happen
-                                sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You selected an invalid date!");
-
-                            }
-
-                            // Remove notification
-                            try {
-                                Notification.getNotificationsOfPlayer(player.getUniqueId().toString()).removeIf(notification -> notification.type == NotificationType.CHALLENGE_ACCEPTED);
-                            } catch (IOException | InvalidConfigurationException e) {
-                                e.printStackTrace();
-                            }
-
-                        } else {
-                            sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Missing arguments!");
-                        }
-
-                    }
-                    */
                     case "start" -> {
 
                         player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);

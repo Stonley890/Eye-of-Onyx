@@ -21,7 +21,7 @@ import io.github.stonley890.eyeofonyx.files.RoyaltyBoard;
 public class ListenJoin implements Listener {
 
     private final FileConfiguration board = RoyaltyBoard.get();
-    private final Scoreboard scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
+    private final Scoreboard scoreboard = Objects.requireNonNull(Bukkit.getScoreboardManager()).getMainScoreboard();
 
     private final Mojang mojang = new Mojang().connect();
 

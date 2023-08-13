@@ -15,7 +15,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 public class Challenge {
 
@@ -44,9 +43,8 @@ public class Challenge {
 
      /**
      * Saves the challenge to challenge.yml on disk
-     * @throws IOException If file could not be accessed.
-     */
-    public void save() throws IOException {
+      */
+    public void save() {
 
         /* Challenges in challenges.yml are saved as a list of string lists
 
@@ -173,8 +171,7 @@ public class Challenge {
         try {
             fileConfig.save(file);
         } catch (Exception e) {
-            Bukkit.getLogger().severe("Error saving challenges.yml file:");
-            e.printStackTrace();
+            Bukkit.getLogger().severe("Error saving challenges.yml file.");
         }
     }
 

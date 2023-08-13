@@ -4,12 +4,14 @@ import com.sun.net.httpserver.HttpServer;
 import io.github.stonley890.dreamvisitor.Bot;
 import io.github.stonley890.dreamvisitor.commands.discord.DiscCommandsManager;
 import io.github.stonley890.eyeofonyx.challenges.Competition;
-import io.github.stonley890.eyeofonyx.commands.CmdChallenge;
-import io.github.stonley890.eyeofonyx.commands.CmdEyeOfOnyx;
-import io.github.stonley890.eyeofonyx.commands.CmdRoyalty;
-import io.github.stonley890.eyeofonyx.commands.CmdTribeUpdate;
+import io.github.stonley890.eyeofonyx.commands.*;
+import io.github.stonley890.eyeofonyx.commands.tabcomplete.TabCompetition;
+import io.github.stonley890.eyeofonyx.commands.tabcomplete.TabEyeOfOnyx;
 import io.github.stonley890.eyeofonyx.commands.tabcomplete.TabRoyalty;
-import io.github.stonley890.eyeofonyx.files.*;
+import io.github.stonley890.eyeofonyx.files.Banned;
+import io.github.stonley890.eyeofonyx.files.Challenge;
+import io.github.stonley890.eyeofonyx.files.Notification;
+import io.github.stonley890.eyeofonyx.files.RoyaltyBoard;
 import io.github.stonley890.eyeofonyx.listeners.ListenJoin;
 import io.github.stonley890.eyeofonyx.listeners.ListenLeave;
 import io.github.stonley890.eyeofonyx.web.AvailabilityHandler;
@@ -18,7 +20,6 @@ import net.md_5.bungee.api.ChatColor;
 import openrp.OpenRP;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.InvalidConfigurationException;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -26,6 +27,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.logging.Level;
 
 /*
@@ -50,7 +52,6 @@ public class EyeOfOnyx extends JavaPlugin {
         // Create config if needed
         saveDefaultConfig();
 
-
         // Set up files
         try {
             RoyaltyBoard.setup();
@@ -58,17 +59,21 @@ public class EyeOfOnyx extends JavaPlugin {
             Notification.setup();
             Challenge.setup();
         } catch (IOException e) {
-            e.printStackTrace();
+            Bukkit.getLogger().warning("An I/O exception of some sort has occurred. Eye of Onyx could not initialize files. Does the server have write access?");
+            Bukkit.getPluginManager().disablePlugin(this);
         }
 
         // Initialize command executors
-        getCommand("eyeofonyx").setExecutor(new CmdEyeOfOnyx());
-        getCommand("royalty").setExecutor(new CmdRoyalty());
-        getCommand("challenge").setExecutor(new CmdChallenge());
-        getCommand("tribeupdate").setExecutor(new CmdTribeUpdate());
+        Objects.requireNonNull(getCommand("eyeofonyx")).setExecutor(new CmdEyeOfOnyx());
+        Objects.requireNonNull(getCommand("royalty")).setExecutor(new CmdRoyalty());
+        Objects.requireNonNull(getCommand("challenge")).setExecutor(new CmdChallenge());
+        Objects.requireNonNull(getCommand("tribeupdate")).setExecutor(new CmdTribeUpdate());
+        Objects.requireNonNull(getCommand("competition")).setExecutor(new CmdCompetition());
 
         // Initialize tab completer
-        getCommand("royalty").setTabCompleter(new TabRoyalty());
+        Objects.requireNonNull(getCommand("royalty")).setTabCompleter(new TabRoyalty());
+        Objects.requireNonNull(getCommand("eyeofonyx")).setTabCompleter(new TabEyeOfOnyx());
+        Objects.requireNonNull(getCommand("competition")).setTabCompleter(new TabCompetition());
 
         // Initialize listeners
         getServer().getPluginManager().registerEvents(new ListenJoin(), this);
@@ -84,7 +89,8 @@ public class EyeOfOnyx extends JavaPlugin {
             server.start();
 
         } catch (IOException e) {
-            e.printStackTrace();
+            Bukkit.getLogger().warning("An I/O exception of some sort has occurred. Eye of Onyx could not initialize files. Does the server have write access?");
+            Bukkit.getPluginManager().disablePlugin(this);
         }
 
         // OpenRP API
@@ -113,15 +119,13 @@ public class EyeOfOnyx extends JavaPlugin {
                     }
 
                 } catch (IOException | InvalidConfigurationException e) {
-                    e.printStackTrace();
+                    Bukkit.getLogger().warning("An I/O exception of some sort has occurred. Eye of Onyx could not initialize files. Does the server have write access?");
                 }
 
             }
         };
 
         Bukkit.getScheduler().runTaskTimer(this, tick1200Run, 20, 1200);
-
-
 
         // Start message
         Bukkit.getLogger().log(Level.INFO, "Eye of Onyx {0}: A plugin that manages the royalty board on Wings of Fire: The New World", version);

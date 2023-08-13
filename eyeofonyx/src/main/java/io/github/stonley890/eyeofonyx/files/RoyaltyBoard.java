@@ -21,7 +21,7 @@ public class RoyaltyBoard {
     private static FileConfiguration boardFile;
     private static final EyeOfOnyx plugin = EyeOfOnyx.getPlugin();
     private static final Mojang mojang = new org.shanerx.mojang.Mojang().connect();
-    private static final Scoreboard scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
+    private static final Scoreboard scoreboard = Objects.requireNonNull(Bukkit.getScoreboardManager()).getMainScoreboard();
 
     // Team names
     private static final String[] teamNames = {
@@ -112,7 +112,6 @@ public class RoyaltyBoard {
             boardFile.save(file);
         } catch (Exception e) {
             Bukkit.getLogger().severe("Eye of Onyx could not save board.yml! If this persists after a restart, report this error!");
-            e.printStackTrace();
         }
     }
 
@@ -138,7 +137,7 @@ public class RoyaltyBoard {
         // Track current position
         String currentPath;
         // Count the number of empty positions
-        int positionsEmpty = 0;
+        int positionsEmpty;
 
         // For each tribe
         for (int tribe = 0; tribe < tribes.length; tribe++) {
