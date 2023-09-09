@@ -1,5 +1,6 @@
 io/github/stonley890/eyeofonyx/EyeOfOnyx.class
 io/github/stonley890/eyeofonyx/files/RoyaltyBoard.class
+io/github/stonley890/eyeofonyx/challenges/util/Countdown.class
 io/github/stonley890/eyeofonyx/listeners/ListenCmdPreprocess.class
 io/github/stonley890/eyeofonyx/commands/tabcomplete/TabRoyalty.class
 io/github/stonley890/eyeofonyx/listeners/ListenJoin.class
@@ -7,12 +8,16 @@ io/github/stonley890/eyeofonyx/EyeOfOnyx$1.class
 io/github/stonley890/eyeofonyx/commands/CmdTribeUpdate.class
 io/github/stonley890/eyeofonyx/web/AvailabilityHandler.class
 io/github/stonley890/eyeofonyx/files/Banned.class
+io/github/stonley890/eyeofonyx/commands/tabcomplete/TabCompetition.class
 io/github/stonley890/eyeofonyx/commands/CmdEyeOfOnyx$1.class
 io/github/stonley890/eyeofonyx/commands/CmdRoyalty.class
 io/github/stonley890/eyeofonyx/commands/tabcomplete/TabEyeOfOnyx.class
 io/github/stonley890/eyeofonyx/files/ChallengeType.class
+io/github/stonley890/eyeofonyx/commands/CmdCompetition.class
+io/github/stonley890/eyeofonyx/challenges/util/Countdown$1.class
 io/github/stonley890/eyeofonyx/commands/CmdChallenge.class
 io/github/stonley890/eyeofonyx/commands/CmdEyeOfOnyx.class
+io/github/stonley890/eyeofonyx/challenges/Competition.class
 io/github/stonley890/eyeofonyx/files/NotificationType.class
 io/github/stonley890/eyeofonyx/listeners/ListenLeave.class
 io/github/stonley890/eyeofonyx/files/Notification.class

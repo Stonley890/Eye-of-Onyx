@@ -31,7 +31,7 @@ public class Notification {
     private final String title;
     private final String content;
     public final NotificationType type;
-    private LocalDateTime time;
+    public LocalDateTime time;
 
     /**
      * Initializes the notification storage.

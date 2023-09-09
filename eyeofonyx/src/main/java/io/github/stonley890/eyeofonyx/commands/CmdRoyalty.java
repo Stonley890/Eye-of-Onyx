@@ -8,6 +8,8 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.Scoreboard;
 import org.jetbrains.annotations.NotNull;
 import org.shanerx.mojang.Mojang;
@@ -47,6 +49,14 @@ public class CmdRoyalty implements CommandExecutor {
                 scoreboard.registerNewTeam(teamName);
                 sender.sendMessage(EyeOfOnyx.EOO + "Created missing " + teamName + " team.");
             }
+        }
+        if (scoreboard.getTeam("Attacker") == null) {
+            scoreboard.registerNewTeam("Attacker");
+            sender.sendMessage(EyeOfOnyx.EOO + "Created missing " + "Attacker" + " team.");
+        }
+        if (scoreboard.getTeam("Defender") == null) {
+            scoreboard.registerNewTeam("Defender");
+            sender.sendMessage(EyeOfOnyx.EOO + "Created missing " + "Defender" + " team.");
         }
 
         sender.sendMessage(EyeOfOnyx.EOO + "Please wait...");
@@ -90,14 +100,22 @@ public class CmdRoyalty implements CommandExecutor {
 
         UUID targetPlayerUUID;
 
-        try {
-            // Try to get online Player, otherwise lookup OfflinePlayer
-            targetPlayerUUID = UUID.fromString(mojang.getUUIDOfUsername(args[1]).replaceFirst(
-                    "(\\p{XDigit}{8})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}+)",
-                    "$1-$2-$3-$4-$5"));
-        } catch (NullPointerException e) {
-            sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Player not found.");
-            return;
+        // Get @p if specified
+        if (args[1].equals("@p")) {
+            Entity nearest = Bukkit.selectEntities(sender, "@p").get(0);
+            if (nearest instanceof Player player) {
+                targetPlayerUUID = player.getUniqueId();
+            }
+        } else {
+            try {
+                // Try to get online Player, otherwise lookup OfflinePlayer
+                targetPlayerUUID = UUID.fromString(mojang.getUUIDOfUsername(args[1]).replaceFirst(
+                        "(\\p{XDigit}{8})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}+)",
+                        "$1-$2-$3-$4-$5"));
+            } catch (NullPointerException e) {
+                sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Player not found.");
+                return;
+            }
         }
 
         // Get tribe from scoreboard team

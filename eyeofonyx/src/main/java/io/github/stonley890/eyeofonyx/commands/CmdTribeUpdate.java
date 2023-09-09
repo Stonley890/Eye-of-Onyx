@@ -9,6 +9,7 @@ import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import io.github.stonley890.eyeofonyx.files.Notification;
 import io.github.stonley890.eyeofonyx.files.NotificationType;
 import io.github.stonley890.eyeofonyx.files.RoyaltyBoard;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
 import org.bukkit.Bukkit;
@@ -70,14 +71,25 @@ public class CmdTribeUpdate implements CommandExecutor {
                                 }
 
                                 Role targetRole = Bot.getJda().getRoleById(Dreamvisitor.getPlugin().getConfig().getStringList("tribeRoles").get(i));
+                                Role sisterRole = Bot.getJda().getRoleById(Dreamvisitor.getPlugin().getConfig().getStringList("sisterTribeRoles").get(i));
 
                                 if (targetRole == null) {
                                     sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Could not find role for " + playerTeam.getName());
                                     return true;
                                 }
 
+                                if (sisterRole == null) {
+                                    sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Could not find sister role for " + playerTeam.getName());
+                                    return true;
+                                }
+
                                 // Add role
                                 DiscCommandsManager.gameLogChannel.getGuild().addRoleToMember(user, targetRole).queue();
+                                Guild sisterGuild = Bot.getJda().getGuildById(Dreamvisitor.getPlugin().getConfig().getInt("tribeGuildID"));
+                                if (sisterGuild != null) {
+                                    sisterGuild.addRoleToMember(user, targetRole).queue();
+                                }
+
 
                                 // Edit User Tracker
                                 try {

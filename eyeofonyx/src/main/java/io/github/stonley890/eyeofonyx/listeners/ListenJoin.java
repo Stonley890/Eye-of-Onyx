@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Objects;
 
+import io.github.stonley890.eyeofonyx.challenges.Competition;
 import io.github.stonley890.eyeofonyx.files.Notification;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.InvalidConfigurationException;
@@ -33,6 +34,11 @@ public class ListenJoin implements Listener {
     public void onPlayerJoin(PlayerJoinEvent event) {
 
         Player player = event.getPlayer();
+
+        // Call to join challenge if active
+        if (Competition.activeChallenge != null) {
+            Competition.activeChallenge.callToJoin();
+        }
 
         try {
             for (Notification notification : Notification.getNotificationsOfPlayer(player.getUniqueId().toString())) {

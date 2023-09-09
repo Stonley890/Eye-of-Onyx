@@ -8,10 +8,7 @@ import io.github.stonley890.eyeofonyx.commands.*;
 import io.github.stonley890.eyeofonyx.commands.tabcomplete.TabCompetition;
 import io.github.stonley890.eyeofonyx.commands.tabcomplete.TabEyeOfOnyx;
 import io.github.stonley890.eyeofonyx.commands.tabcomplete.TabRoyalty;
-import io.github.stonley890.eyeofonyx.files.Banned;
-import io.github.stonley890.eyeofonyx.files.Challenge;
-import io.github.stonley890.eyeofonyx.files.Notification;
-import io.github.stonley890.eyeofonyx.files.RoyaltyBoard;
+import io.github.stonley890.eyeofonyx.files.*;
 import io.github.stonley890.eyeofonyx.listeners.ListenJoin;
 import io.github.stonley890.eyeofonyx.listeners.ListenLeave;
 import io.github.stonley890.eyeofonyx.web.AvailabilityHandler;
@@ -105,6 +102,7 @@ public class EyeOfOnyx extends JavaPlugin {
                 // Update board
                 RoyaltyBoard.updateBoard();
 
+                // Call challenge
                 try {
                     List<Challenge> challenges = Challenge.getChallenges();
 
@@ -121,6 +119,37 @@ public class EyeOfOnyx extends JavaPlugin {
                 } catch (IOException | InvalidConfigurationException e) {
                     Bukkit.getLogger().warning("An I/O exception of some sort has occurred. Eye of Onyx could not initialize files. Does the server have write access?");
                 }
+
+                // Check for unnoticed challenges
+                for (int i = 0; i < 10; i++) {
+                    for (int j = 0; j < 5; j++) {
+                        String uuid = RoyaltyBoard.getUuid(i, j);
+                        try {
+                            List<Notification> notifications = Notification.getNotificationsOfPlayer(uuid);
+
+                            for (Notification notification : notifications) {
+                                // If notification is CHALLENGE_REQUESTED and time is beyond challenge-acknowledgement-time
+                                if (notification.type == NotificationType.CHALLENGE_REQUESTED && notification.time.isBefore(LocalDateTime.now().minusDays(getConfig().getInt("challenge-acknowledgement-time")))) {
+
+                                    // Remove all notifications that are CHALLENGE_REQUESTED
+                                    Notification.getNotificationsOfPlayer(uuid).removeIf(challenge_notification -> challenge_notification.type.equals(NotificationType.CHALLENGE_REQUESTED));
+
+                                    new Notification(uuid, "You were removed from the royalty board!", "You did not acknowledge a challenge request within the allowed time.", NotificationType.GENERIC).create();
+
+                                    RoyaltyBoard.removePlayer(i, j);
+                                    RoyaltyBoard.updateBoard();
+
+                                    break;
+                                }
+                            }
+
+                        } catch (IOException | InvalidConfigurationException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                }
+
+
 
             }
         };

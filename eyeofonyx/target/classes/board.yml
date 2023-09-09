@@ -4,7 +4,6 @@ hive:
 
   ruler:
     uuid: none
-    title: none
     name: user
     joined_time: none
     last_online: none
@@ -51,7 +50,6 @@ ice:
 
   ruler:
     uuid: none
-    title: none
     name: user
     joined_time: none
     last_online: none
@@ -98,7 +96,6 @@ leaf:
 
   ruler:
     uuid: none
-    title: none
     name: user
     joined_time: none
     last_online: none
@@ -145,7 +142,6 @@ mud:
 
   ruler:
     uuid: none
-    title: none
     name: none
     joined_time: none
     last_online: none
@@ -192,7 +188,6 @@ night:
 
   ruler:
     uuid: none
-    title: none
     name: user
     joined_time: none
     last_online: none
@@ -239,7 +234,6 @@ rain:
 
   ruler:
     uuid: none
-    title: none
     name: user
     joined_time: none
     last_online: none
@@ -286,7 +280,6 @@ sand:
 
   ruler:
     uuid: none
-    title: none
     name: user
     joined_time: none
     last_online: none
@@ -333,7 +326,6 @@ sea:
 
   ruler:
     uuid: none
-    title: none
     name: user
     joined_time: none
     last_online: none
@@ -380,7 +372,6 @@ silk:
 
   ruler:
     uuid: none
-    title: none
     name: user
     joined_time: none
     last_online: none
@@ -427,7 +418,6 @@ sky:
 
   ruler:
     uuid: none
-    title: none
     name: user
     joined_time: none
     last_online: none

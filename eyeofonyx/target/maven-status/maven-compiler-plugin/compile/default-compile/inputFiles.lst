@@ -1,6 +1,8 @@
 /home/stonley890/Documents/GitHub/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/commands/tabcomplete/TabEyeOfOnyx.java
+/home/stonley890/Documents/GitHub/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/commands/CmdCompetition.java
 /home/stonley890/Documents/GitHub/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/commands/tabcomplete/TabRoyalty.java
 /home/stonley890/Documents/GitHub/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/files/Notification.java
+/home/stonley890/Documents/GitHub/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/challenges/Competition.java
 /home/stonley890/Documents/GitHub/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/files/ChallengeType.java
 /home/stonley890/Documents/GitHub/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/listeners/ListenLeave.java
 /home/stonley890/Documents/GitHub/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/web/AvailabilityHandler.java
@@ -8,10 +10,12 @@
 /home/stonley890/Documents/GitHub/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/files/RoyaltyBoard.java
 /home/stonley890/Documents/GitHub/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/commands/CmdChallenge.java
 /home/stonley890/Documents/GitHub/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/web/SubmitHandler.java
+/home/stonley890/Documents/GitHub/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/challenges/util/Countdown.java
 /home/stonley890/Documents/GitHub/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/commands/CmdRoyalty.java
 /home/stonley890/Documents/GitHub/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/commands/CmdTribeUpdate.java
 /home/stonley890/Documents/GitHub/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/files/NotificationType.java
 /home/stonley890/Documents/GitHub/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/listeners/ListenCmdPreprocess.java
+/home/stonley890/Documents/GitHub/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/commands/tabcomplete/TabCompetition.java
 /home/stonley890/Documents/GitHub/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/listeners/ListenJoin.java
 /home/stonley890/Documents/GitHub/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/files/Challenge.java
 /home/stonley890/Documents/GitHub/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/files/Banned.java

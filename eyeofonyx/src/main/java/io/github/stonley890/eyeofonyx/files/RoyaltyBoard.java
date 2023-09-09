@@ -159,7 +159,7 @@ public class RoyaltyBoard {
                     }
                 }
 
-                // If last_online is before 30 days ago, set to empty
+                // If last_online is before 30 days ago, clear position
                 last_online = getLastOnline(tribe, pos);
                 if (last_online != null && !last_online.equals("none")) {
                     if (LocalDateTime.parse(last_online).isBefore(LocalDateTime.now().minusDays(30))) {
@@ -180,9 +180,7 @@ public class RoyaltyBoard {
                     boardFile.set(currentPath + ".last_online", "none");
 
                     // If position is ruler, change 'title.' Else, change 'challenging'
-                    if (validPositions[pos].equals(validPositions[RULER])) {
-                        boardFile.set(currentPath + ".title", "none");
-                    } else {
+                    if (!validPositions[pos].equals(validPositions[RULER])) {
                         boardFile.set(currentPath + ".challenging", "none");
                     }
 
@@ -260,7 +258,7 @@ public class RoyaltyBoard {
      */
     public static int getTribeIndexOfUsername(String playerUsername) {
 
-        // Search for valid team from player scoreboard team
+        // Search for a valid team from player scoreboard team
         Team team = scoreboard.getEntryTeam(playerUsername);
         if (team != null) {
             return Arrays.binarySearch(teamNames, team.getName());
@@ -321,6 +319,24 @@ public class RoyaltyBoard {
         }
 
         return playerPosition;
+    }
+
+    /**
+     * Remove an entry from board.yml. This does not update the board. Use updateBoard() to update the board.
+     * @param tribeIndex The tribe.
+     * @param positionIndex The position.
+     */
+    public static void removePlayer(int tribeIndex, int positionIndex) {
+        setValue(tribeIndex, positionIndex, "uuid", "none");
+        setValue(tribeIndex, positionIndex, "name", "none");
+        setValue(tribeIndex, positionIndex, "joined_time", "none");
+        setValue(tribeIndex, positionIndex, "last_online", "none");
+        setValue(tribeIndex, positionIndex, "last_challenge_time", "none");
+        setValue(tribeIndex, positionIndex, "challenger", "none");
+        if (tribeIndex != RULER) {
+            setValue(tribeIndex, positionIndex, "challenging", "none");
+        }
+
     }
 
     /**

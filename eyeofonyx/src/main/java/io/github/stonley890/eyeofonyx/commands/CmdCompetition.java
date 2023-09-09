@@ -7,9 +7,12 @@ import io.github.stonley890.eyeofonyx.files.RoyaltyBoard;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.command.BlockCommandSender;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.shanerx.mojang.Mojang;
 
@@ -24,7 +27,7 @@ public class CmdCompetition implements CommandExecutor {
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String s, @NotNull String[] args) {
 
         if (args.length == 0) {
-            sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Missing arguments! /competition <create <attacker> <defender> | modify <player> <action> [value]>");
+            sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Missing arguments! /competition <create> <attacker> <defender> | modify <player> <action> [value]>");
         } else if (args.length == 1) {
             switch (args[0]) {
                 case "create" -> sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Missing arguments! /competition create <attacker> <defender>");
@@ -47,7 +50,16 @@ public class CmdCompetition implements CommandExecutor {
 
                 String playerUuid;
 
-                if (Bukkit.getPlayer(args[1]) != null) {
+                if (args[1].equals("@p")) {
+                    Entity nearest = Bukkit.selectEntities(sender, "@p").get(0);
+
+                    if (nearest instanceof Player player) {
+                        playerUuid = player.getUniqueId().toString();
+                    } else {
+                        sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Unable to locate a player");
+                        return true;
+                    }
+                } else if (Bukkit.getPlayer(args[1]) != null) {
                     playerUuid = Objects.requireNonNull(Bukkit.getPlayer(args[1])).getUniqueId().toString();
                 } else {
                     if (mojang.getUUIDOfUsername(args[1]) != null) {
@@ -65,15 +77,12 @@ public class CmdCompetition implements CommandExecutor {
                 if (args[0].equals("modify")) {
                     Competition competition = null;
 
-                    for (Competition activeChallenge : Competition.activeChallenges) {
-                        if (activeChallenge.attacker.equals(playerUuid)) {
-                            competition = activeChallenge;
-                            break;
-                        } else if (activeChallenge.defender.equals(playerUuid)) {
-                            competition = activeChallenge;
-                            break;
+                        if (Competition.activeChallenge.attacker.equals(playerUuid)) {
+                            competition = Competition.activeChallenge;
+                        } else if (Competition.activeChallenge.defender.equals(playerUuid)) {
+                            competition = Competition.activeChallenge;
                         }
-                    }
+
 
                     if (competition == null) {
                         sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "That player is not in an active competition.");
@@ -113,10 +122,26 @@ public class CmdCompetition implements CommandExecutor {
                                     return true;
                                 }
 
-
+                                Competition.activeChallenge.started = true;
+                                sender.sendMessage(EyeOfOnyx.EOO + "Competition is now started.");
 
                             }
                             case "cancel" -> {
+
+                                // Clear values in board.yml and delete competition
+
+                                int tribe = competition.tribe;
+
+                                int attackerPos = RoyaltyBoard.getPositionIndexOfUUID(competition.attacker);
+                                int defenderPos = RoyaltyBoard.getPositionIndexOfUUID(competition.defender);
+
+                                RoyaltyBoard.setAttacker(tribe, defenderPos, "none");
+                                RoyaltyBoard.setAttacking(tribe, attackerPos, "none");
+
+                                Competition.activeChallenge = null;
+                            }
+                            case ""
+                            case "end" -> {
 
                             }
                             default -> sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Incorrect arguments! /competition modify <player> <action> [value]");

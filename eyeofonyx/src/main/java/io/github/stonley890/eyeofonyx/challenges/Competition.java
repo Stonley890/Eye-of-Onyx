@@ -18,17 +18,18 @@ import java.util.Objects;
 
 public class Competition {
 
-    public static List<Competition> activeChallenges = new ArrayList<>();
+    public static Competition activeChallenge;
 
     public String attacker;
     public String defender;
     public int tribe;
     public ChallengeType type;
+    public boolean started = false;
 
     public static void call(Challenge challenge) throws IOException, InvalidConfigurationException {
 
         // Add to activeChallenges list
-        activeChallenges.add(new Competition(challenge));
+        activeChallenge = new Competition(challenge);
 
         // Remove from saved challenges
         Challenge.getChallenges().remove(challenge);
@@ -40,6 +41,8 @@ public class Competition {
         defender = challenge.defender;
         tribe = RoyaltyBoard.getTribeIndexOfUUID(attacker);
         type = challenge.type;
+
+        callToJoin();
     }
 
     public void callToJoin() {

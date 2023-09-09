@@ -48,8 +48,8 @@ public class TabCompetition implements TabCompleter {
             suggestions.add("attacker");
             suggestions.add("defender");
             suggestions.add("type");
-            suggestions.add("start");
             suggestions.add("cancel");
+            suggestions.add("end");
 
         }
 

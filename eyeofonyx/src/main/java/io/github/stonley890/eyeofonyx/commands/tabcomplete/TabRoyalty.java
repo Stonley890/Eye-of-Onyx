@@ -45,6 +45,7 @@ public class TabRoyalty implements TabCompleter {
             switch (args[0]) {
                 case "clear", "list" -> suggestions.addAll(List.of(tribes));
                 case "set" -> {
+                    suggestions.add("@p");
                     for (Player player : Bukkit.getOnlinePlayers()) {
                         suggestions.add(player.getName());
                     }

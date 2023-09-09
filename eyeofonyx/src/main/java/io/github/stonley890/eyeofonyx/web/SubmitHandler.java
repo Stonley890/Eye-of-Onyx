@@ -61,7 +61,37 @@ public class SubmitHandler implements HttpHandler {
                     if (CmdChallenge.codesOnForm.get(i).equals(code)) {
 
                         player = CmdChallenge.playersOnForm.get(i);
-                        Bukkit.getLogger().info("Found match.");
+
+                        for (LocalDateTime availability : availabilities) {
+                            if (availability.isBefore(LocalDateTime.now())) {
+                                // Time is before now: invalid
+                                player.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Invalid time! You cannot schedule a time before now!");
+
+                                sendInvalid(httpExchange);
+
+                                return;
+
+                            } else {
+
+                                // Time cannot be within 15 minutes of another challenge
+                                try {
+                                    for (Challenge challenge : Challenge.getChallenges()) {
+                                        for (LocalDateTime time : challenge.time) {
+                                            if (availability.isBefore(time.plusMinutes(15)) || availability.isAfter((time.minusMinutes(15)))) {
+                                                player.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Invalid time! " + availability.format(DateTimeFormatter.ofPattern("MM/dd hh:mm a")) + " is within 15 minutes of a challenge at " + time.format(DateTimeFormatter.ofPattern("hh:mm a")));
+
+                                                sendInvalid(httpExchange);
+
+                                                return;
+                                            }
+                                        }
+                                    }
+                                } catch (InvalidConfigurationException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            }
+                        }
+
 
                         // Remove notification
                         try {
@@ -94,25 +124,7 @@ public class SubmitHandler implements HttpHandler {
                             Bukkit.getLogger().warning("Could not find attacker of player " + player.getUniqueId() + "\nTribe: " + playerTribe + "\n");
                             player.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "There was a problem finding your challenger. Please contact a staff member.");
 
-                            // Send a response to the client
-                            InputStream inputStream = EyeOfOnyx.getPlugin().getResource("availability_invalid.html");
-                            if (inputStream == null) {
-                                // Handle the case where the resource is not found
-                                sendResponse(httpExchange, 404, "Resource not found.");
-                                return;
-                            }
-                            // Read the contents of availability_form.html from the InputStream
-                            StringBuilder responseBuilder = new StringBuilder();
-                            byte[] buffer = new byte[1024];
-                            int bytesRead;
-                            while ((bytesRead = inputStream.read(buffer)) != -1) {
-                                responseBuilder.append(new String(buffer, 0, bytesRead));
-                            }
-
-                            // Close the InputStream after reading
-                            inputStream.close();
-
-                            sendResponse(httpExchange, 200, responseBuilder.toString());
+                            sendInvalid(httpExchange);
 
                             // Set attacker in board.yml
                             RoyaltyBoard.setAttacker(playerTribe, RoyaltyBoard.getPositionIndexOfUUID(player.getUniqueId().toString()), attackerUuid);
@@ -138,25 +150,8 @@ public class SubmitHandler implements HttpHandler {
                 // Player was not found
                 if (player == null) {
                     Bukkit.getLogger().warning("Could not find player from code.");
-                    // Send a response to the client
-                    InputStream inputStream = EyeOfOnyx.getPlugin().getResource("availability_invalid.html");
-                    if (inputStream == null) {
-                        // Handle the case where the resource is not found
-                        sendResponse(httpExchange, 404, "Resource not found.");
-                        return;
-                    }
-                    // Read the contents of availability_form.html from the InputStream
-                    StringBuilder responseBuilder = new StringBuilder();
-                    byte[] buffer = new byte[1024];
-                    int bytesRead;
-                    while ((bytesRead = inputStream.read(buffer)) != -1) {
-                        responseBuilder.append(new String(buffer, 0, bytesRead));
-                    }
 
-                    // Close the InputStream after reading
-                    inputStream.close();
-
-                    sendResponse(httpExchange, 200, responseBuilder.toString());
+                    sendInvalid(httpExchange);
 
                     return;
                 }
@@ -165,25 +160,7 @@ public class SubmitHandler implements HttpHandler {
                 // No codes exist
                 Bukkit.getLogger().warning("No codes exist.");
 
-                // Send a response to the client
-                InputStream inputStream = EyeOfOnyx.getPlugin().getResource("availability_invalid.html");
-                if (inputStream == null) {
-                    // Handle the case where the resource is not found
-                    sendResponse(httpExchange, 404, "Resource not found.");
-                    return;
-                }
-                // Read the contents of availability_form.html from the InputStream
-                StringBuilder responseBuilder = new StringBuilder();
-                byte[] buffer = new byte[1024];
-                int bytesRead;
-                while ((bytesRead = inputStream.read(buffer)) != -1) {
-                    responseBuilder.append(new String(buffer, 0, bytesRead));
-                }
-
-                // Close the InputStream after reading
-                inputStream.close();
-
-                sendResponse(httpExchange, 200, responseBuilder.toString());
+                sendInvalid(httpExchange);
 
                 return;
 
@@ -224,6 +201,32 @@ public class SubmitHandler implements HttpHandler {
             // If the request method is not POST, send an error response
             sendResponse(httpExchange, 405, "Method not allowed.");
         }
+    }
+
+    //
+    //
+    //
+
+    private void sendInvalid(HttpExchange httpExchange) throws IOException {
+        // Send a response to the client
+        InputStream inputStream = EyeOfOnyx.getPlugin().getResource("availability_invalid.html");
+        if (inputStream == null) {
+            // Handle the case where the resource is not found
+            sendResponse(httpExchange, 404, "Resource not found.");
+            return;
+        }
+        // Read the contents of availability_form.html from the InputStream
+        StringBuilder responseBuilder = new StringBuilder();
+        byte[] buffer = new byte[1024];
+        int bytesRead;
+        while ((bytesRead = inputStream.read(buffer)) != -1) {
+            responseBuilder.append(new String(buffer, 0, bytesRead));
+        }
+
+        // Close the InputStream after reading
+        inputStream.close();
+
+        sendResponse(httpExchange, 200, responseBuilder.toString());
     }
 
     private void sendResponse(HttpExchange httpExchange, int statusCode, String response) throws IOException {

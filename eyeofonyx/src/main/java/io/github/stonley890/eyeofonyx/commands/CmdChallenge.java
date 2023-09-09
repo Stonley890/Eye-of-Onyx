@@ -1,5 +1,6 @@
 package io.github.stonley890.eyeofonyx.commands;
 
+import io.github.stonley890.dreamvisitor.data.AccountLink;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import io.github.stonley890.eyeofonyx.challenges.Competition;
 import io.github.stonley890.eyeofonyx.files.Banned;
@@ -48,6 +49,7 @@ public class CmdChallenge implements CommandExecutor {
 
             sender.sendMessage(EyeOfOnyx.EOO + "Please wait...");
 
+            // Ensure player is part of a team
             int playerTribe;
             try {
                 playerTribe = RoyaltyBoard.getTribeIndexOfUsername(player.getName());
@@ -60,7 +62,13 @@ public class CmdChallenge implements CommandExecutor {
                 return true;
             }
 
+            // Ensure player has a linked Discord account
+            if (AccountLink.getDiscordId(player.getUniqueId().toString()) == null) {
+                sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You do not have a linked Discord account! Contact a staff member for help.");
+            }
+
             int playerPosition = RoyaltyBoard.getPositionIndexOfUsername(player.getName());
+
 
             if (Banned.isPlayerBanned(player.getUniqueId().toString())) {
 
@@ -400,18 +408,17 @@ public class CmdChallenge implements CommandExecutor {
                     case "start" -> {
 
                         player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
-                        for (Competition activeChallenge : Competition.activeChallenges) {
-                            if (activeChallenge.defender.equals(player.getUniqueId().toString()) || activeChallenge.attacker.equals(player.getUniqueId().toString())) {
+                            if ((Competition.activeChallenge.defender.equals(player.getUniqueId().toString()) || Competition.activeChallenge.attacker.equals(player.getUniqueId().toString())) && !Competition.activeChallenge.started) {
 
                                 List<Location> waitingRooms = (List<Location>) EyeOfOnyx.getPlugin().getConfig().getList("waiting-rooms");
                                 if (waitingRooms != null) {
-                                    if (waitingRooms.get(activeChallenge.tribe) != null) {
-                                        player.teleport(waitingRooms.get(activeChallenge.tribe));
+                                    if (waitingRooms.get(Competition.activeChallenge.tribe) != null) {
+                                        player.teleport(waitingRooms.get(Competition.activeChallenge.tribe));
                                     } else sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "No waiting room set! Contact an admin.");
                                 } else sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "No waiting room set! Contact an admin.");
 
                             }
-                        }
+
 
                     }
                     default ->
