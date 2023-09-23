@@ -138,16 +138,28 @@
         <div class="bg">
             <div class="banner">
                 <h1>Something went wrong!</h1>
-                <p>Something went wrong. Double check that your code is correct and your dates are valid. Contact a staff member if you need assistance.</p>
+                <p>Something went wrong. Check the details below for the error. Contact a staff member if you need assistance.</p>
             </div>
         </div>
 
         <div class="maintext">
 
-
+            <p id="error"></p>
 
         </div>
     </main>
+
+    <script th:inline="javascript">
+
+        const errorExplanation = /*[[${errorExplanation}]]*/ + 0;
+
+        window.onload = function showError() {
+            const errorP = document.getElementById("error");
+
+            errorP.innerHTML = errorExplanation;
+        }
+
+    </script>
 
 </body>
 

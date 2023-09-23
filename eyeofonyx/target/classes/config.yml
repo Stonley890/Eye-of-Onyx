@@ -1,9 +1,15 @@
 # The address to use for the challenge availability web interface.
-# "localhost" makes the page address "localhost:8000/challenge"
+# "localhost" makes the page address "localhost:<port>/challenge"
 # "http://bogthemudwing.ddns.net" will NOT WORK because you must NOT prepend "http://"
-# "woftnw.duckdns.org" will work and redirect to "http://woftnw.duckdns.org:8000/challenge"
-# Default: "localhost"
-address: "localhost"
+# "woftnw.duckdns.org" will work and redirect to "http://woftnw.duckdns.org:<port>/challenge"
+# Default: "woftnw.duckdns.org"
+address: "woftnw.duckdns.org"
+
+# The port to use for the challenge availability web interface.
+# You'll need to forward this on your network.
+# If not set, it will fall back to the default 8000.
+# Default: 8000
+port: 8000
 
 # Whether the royalty board is frozen.
 # This prevents players from leaving the royalty board or initiating challenges.
@@ -17,8 +23,46 @@ frozen: false
 # Default: "name"
 character-name-field: "name"
 
+# The channel ID for the Discord channel where the royalty board should be stored.
+# Default: 913509632348139591
+royalty-board-channel: 913509632348139591
+
+# The message IDs for the messages containing the royalty board.
+# This is set automatically by Eye of Onyx.
+royalty-board-message:
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+
+# The royalty role IDs for the main server
+main-royalty-roles: {
+  ruler: 685296904741191778,
+  heir: 796072595798622279,
+  noble: 916438547232325642
+}
+
+# The royalty role IDs for the sister server.
+sister-royalty-roles:
+  - 1103731972058124400
+  - 1103732364640800808
+  - 1103732387252289677
+  - 1103732404360859763
+  - 1103732420131426404
+  - 1103735040795480105
+  - 1103732436631822509
+  - 1103732455812382720
+  - 1103732474330222592
+  - 1103732497340190800
+
 # Cool down period:
-# The number of DAYS that a user is unable to participate in a challenge after they have completed one.
+# The number of DAYS that a user is unable to participate in a challenge after they have moved.
 # Default: 7
 challenge-cool-down: 7
 
@@ -57,3 +101,69 @@ waiting-rooms:
   - null
   - null
   - null
+
+# Below are the permission groups for LuckPerms.
+# This can be set in-game with /eyeofonyx config lp.<position> <name>
+# The defaults match with the current names (as of release).
+ruler: {
+  hive: "hivewing_ruler",
+  ice: "icewing_ruler",
+  leaf: "leafwing_ruler",
+  mud: "mudwing_ruler",
+  night: "nightwing_ruler",
+  rain: "rainwing_ruler",
+  sand: "sandwing_ruler",
+  sea: "seawing_ruler",
+  silk: "silkwing_ruler",
+  sky: "skywing_ruler"
+}
+heir: {
+  hive: "hivewing_heir",
+  ice: "icewing_heir",
+  leaf: "leafwing_heir",
+  mud: "mudwing_heir",
+  night: "nightwing_heir",
+  rain: "rainwing_heir",
+  sand: "sandwing_heir",
+  sea: "seawing_heir",
+  silk: "silkwing_heir",
+  sky: "skywing_heir"
+}
+noble: {
+  hive: "hivewing_noble",
+  ice: "icewing_noble",
+  leaf: "leafwing_noble",
+  mud: "mudwing_noble",
+  night: "nightwing_noble",
+  rain: "rainwing_noble",
+  sand: "sandwing_noble",
+  sea: "seawing_noble",
+  silk: "silkwing_noble",
+  sky: "skywing_noble"
+}
+citizen: {
+  hive: "hivewing_citizen",
+  ice: "icewing_citizen",
+  leaf: "leafwing_citizen",
+  mud: "mudwing_citizen",
+  night: "nightwing_citizen",
+  rain: "rainwing_citizen",
+  sand: "sandwing_citizen",
+  sea: "seawing_citizen",
+  silk: "silkwing_citizen",
+  sky: "skywing_citizen"
+}
+
+# Emojis for each of the tribes.
+# Optionally available for Discord royalty board.
+tribe-emblems:
+    - ":hivewing:"
+    - ":icewing:"
+    - ":leafwing:"
+    - ":mudwing:"
+    - ":nightwing:"
+    - ":rainwing:"
+    - ":sandwing:"
+    - ":seawing:"
+    - ":silkwing:"
+    - ":skywing:"

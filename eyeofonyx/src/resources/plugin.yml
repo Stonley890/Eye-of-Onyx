@@ -8,6 +8,7 @@ website: https://github.com/Stonley890/EyeOfOnyx
 depend: [Dreamvisitor]
 softdepend:
   - OpenRP
+  - LuckPerms
 
 commands:
   eyeofonyx:
@@ -25,8 +26,15 @@ commands:
     permission: minecraft.command.op
   competition:
     description: Control challenges.
-    usage: /competition <player> type <challenge type>
+    usage: /<command> <player> type <challenge type>
     permission: eyeofonyx.managechallenge
+  updateplayer:
+    description: Update stored player tribes in Eye of Onyx.
+    usage: /<command> <targets>
+    permission: eyeofonyx.op
+  forfeit:
+    description: Remove yourself from the royalty board.
+    usage: /<command>
 
 permissions:
   eyeofonyx.manageboard:

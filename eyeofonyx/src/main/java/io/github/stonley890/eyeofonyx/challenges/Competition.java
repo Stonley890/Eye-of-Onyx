@@ -1,9 +1,12 @@
 package io.github.stonley890.eyeofonyx.challenges;
 
+import io.github.stonley890.dreamvisitor.Dreamvisitor;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import io.github.stonley890.eyeofonyx.files.Challenge;
 import io.github.stonley890.eyeofonyx.files.ChallengeType;
+import io.github.stonley890.eyeofonyx.files.PlayerTribe;
 import io.github.stonley890.eyeofonyx.files.RoyaltyBoard;
+import javassist.NotFoundException;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
@@ -15,6 +18,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 public class Competition {
 
@@ -28,24 +32,31 @@ public class Competition {
 
     public static void call(Challenge challenge) throws IOException, InvalidConfigurationException {
 
+        Dreamvisitor.debug("Challenge " + challenge.attacker + " vs " + challenge.defender + " is getting ready to start.");
         // Add to activeChallenges list
-        activeChallenge = new Competition(challenge);
+        try {
+            activeChallenge = new Competition(challenge);
+            activeChallenge.callToJoin();
+        } catch (NotFoundException e) {
+            // No associate tribe (should not happen)
+            Bukkit.getLogger().warning("Tried to create a challenge, but could not find the tribe associated with the attacker!");
+        }
 
         // Remove from saved challenges
-        Challenge.getChallenges().remove(challenge);
+        Challenge.remove(challenge);
 
     }
 
-    private Competition(Challenge challenge) {
+    private Competition(Challenge challenge) throws NotFoundException {
         attacker = challenge.attacker;
         defender = challenge.defender;
-        tribe = RoyaltyBoard.getTribeIndexOfUUID(attacker);
+        tribe = PlayerTribe.getTribeOfPlayer(attacker);
         type = challenge.type;
-
-        callToJoin();
     }
 
     public void callToJoin() {
+
+        Dreamvisitor.debug("Calling to join...");
 
         ComponentBuilder message = new ComponentBuilder(EyeOfOnyx.EOO);
         message.append("Your challenge is starting!\n");
@@ -56,11 +67,15 @@ public class Competition {
         message.append(button);
         message.append("\n");
 
-        if (Bukkit.getPlayer(attacker) != null) {
-            Objects.requireNonNull(Bukkit.getPlayer(attacker)).spigot().sendMessage(message.create());
+        Dreamvisitor.debug("Message built. Sending to " + this.attacker + " and " + this.defender + ".");
+
+        if (Bukkit.getPlayer(UUID.fromString(this.attacker)) != null) {
+            Bukkit.getPlayer(UUID.fromString(this.attacker)).spigot().sendMessage(message.create());
+            Dreamvisitor.debug("Send message to attacker.");
         }
-        if (Bukkit.getPlayer(defender) != null) {
-            Objects.requireNonNull(Bukkit.getPlayer(defender)).spigot().sendMessage(message.create());
+        if (Bukkit.getPlayer(UUID.fromString(this.defender)) != null) {
+            Bukkit.getPlayer(UUID.fromString(this.defender)).spigot().sendMessage(message.create());
+            Dreamvisitor.debug("Send message to defender.");
         }
     }
 

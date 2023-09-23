@@ -2,6 +2,8 @@ package io.github.stonley890.eyeofonyx.files;
 
 import io.github.stonley890.dreamvisitor.Dreamvisitor;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
+import io.github.stonley890.eyeofonyx.Utils;
+import io.github.stonley890.eyeofonyx.web.IpUtils;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
@@ -12,10 +14,14 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import org.joml.Matrix2d;
 
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +38,7 @@ public class Notification {
     private final String content;
     public final NotificationType type;
     public LocalDateTime time;
+    public boolean seen = false;
 
     /**
      * Initializes the notification storage.
@@ -68,7 +75,7 @@ public class Notification {
      * @param notification The notification to save.
      * @throws IOException If file could not be accessed.
      */
-    public static void saveNotification(Notification notification) throws IOException {
+    public static void saveNotification(Notification notification) throws IOException, InvalidConfigurationException {
 
         /* Notifications in notification.yml are saved as a list of string lists for each player
 
@@ -77,15 +84,19 @@ public class Notification {
                 - Content
                 - TYPE
                 - 'uuuu-MM-dd'
+                - false
 
             -   - Title
                 - Content
                 - TYPE
                 - 'uuuu-MM-dd'
+                - true
 
         ...and so on
 
          */
+
+        fileConfig.load(file);
 
         // Get list of notifications of given player
         List<List<String>> notifications = (List<List<String>>) fileConfig.getList(notification.player);
@@ -102,6 +113,7 @@ public class Notification {
         yamlNotification.add(notification.content);
         yamlNotification.add(notification.type.toString());
         yamlNotification.add(notification.time.toString());
+        yamlNotification.add(String.valueOf(notification.seen));
 
         // Add given notifications
         notifications.add(yamlNotification);
@@ -124,8 +136,6 @@ public class Notification {
         // Get list of notifications of given player
         List<List<String>> yamlNotifications = (List<List<String>>) fileConfig.getList(uuid);
 
-        Dreamvisitor.debug("Number of notifications for " + uuid + ": " + (yamlNotifications != null ? yamlNotifications.size() : 0));
-
         List<Notification> notifications = new ArrayList<>();
 
         if (yamlNotifications == null || yamlNotifications.isEmpty()) {
@@ -138,10 +148,12 @@ public class Notification {
                 String content = yamlNotification.get(1);
                 NotificationType type = NotificationType.valueOf(yamlNotification.get(2));
                 LocalDateTime time = LocalDateTime.parse(yamlNotification.get(3));
+                boolean seen = Boolean.parseBoolean(yamlNotification.get(4));
 
                 // Add to a Notification object
                 Notification notification = new Notification(uuid, title, content, type);
                 notification.time = time;
+                notification.seen = seen;
 
                 // Add to list
                 notifications.add(notification);
@@ -150,6 +162,41 @@ public class Notification {
 
         // Return List<Notification> that was built
         return notifications;
+    }
+
+    public static void removeNotification(Notification notification) throws IOException, InvalidConfigurationException {
+        fileConfig.load(file);
+
+        // Get list of notifications of given player
+        List<Notification> notifications = getNotificationsOfPlayer(notification.player);
+
+        // Init if null or empty
+        if (notifications.isEmpty()) {
+            return;
+        }
+
+        // Remove given notification
+        notifications.removeIf(notification1 -> (notification1.player.equals(notification.player)) && (notification1.type.equals(notification.type)) && (notification1.content.equals(notification.content)));
+
+        // Notification -> List
+        List<List<String>> yamlNotifications = new ArrayList<>();
+
+        for (Notification notification1 : notifications) {
+            List<String> yamlNotification = new ArrayList<>();
+
+            yamlNotification.add(notification1.title);
+            yamlNotification.add(notification1.content);
+            yamlNotification.add(notification1.type.toString());
+            yamlNotification.add(notification1.time.toString());
+            yamlNotification.add(String.valueOf(notification1.seen));
+
+            // Add given notifications
+            yamlNotifications = new ArrayList<>();
+            yamlNotifications.add(yamlNotification);
+        }
+
+        fileConfig.set(notification.player, yamlNotifications);
+        save(fileConfig);
     }
 
     /**
@@ -173,7 +220,7 @@ public class Notification {
     public void create() {
         try {
             saveNotification(this);
-            if (Bukkit.getPlayer(UUID.fromString(this.player)) != null) {
+            if (Bukkit.getPlayer(UUID.fromString(Utils.formatUuid(this.player))) != null) {
                 sendMessage();
             }
         } catch (IOException | InvalidConfigurationException e) {
@@ -188,7 +235,7 @@ public class Notification {
      * @throws InvalidConfigurationException If the configuration is invalid.
      */
     public boolean sendMessage() throws IOException, InvalidConfigurationException {
-        Player onlinePlayer = Bukkit.getPlayer(UUID.fromString(player));
+        Player onlinePlayer = Bukkit.getPlayer(UUID.fromString(Utils.formatUuid(player)));
         if (onlinePlayer != null) {
 
             /*
@@ -197,6 +244,11 @@ public class Notification {
             $Content$
 
              */
+
+            // Mark notification as seen
+            removeNotification(this);
+            this.seen = true;
+            Notification.saveNotification(this);
 
             // Create message
             ComponentBuilder message = new ComponentBuilder();
@@ -247,15 +299,30 @@ public class Notification {
                     // The challenge was not found
                     // Should not happen
                     onlinePlayer.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You had a challenge accepted, but it couldn't be found! Contact staff for help.");
+                    removeNotification(this);
                     return true;
                 }
 
                 List<LocalDateTime> dates = challenge.time;
+                List<ZonedDateTime> offsetDates = new ArrayList<>();
+
+                ZonedDateTime playerTime =  IpUtils.ipToTime(onlinePlayer.getAddress().getAddress().getHostAddress());
+                if (playerTime != null) {
+                    ZoneId playerOffset = playerTime.getZone();
+
+                    for (LocalDateTime localDate : dates) {
+                        offsetDates.add(ZonedDateTime.of(localDate, playerOffset));
+                    }
+                }
+
 
                 // Create button for each date
                 for (int i = 0; i < dates.size(); i++) {
                     TextComponent button = new TextComponent();
-                    button.setText("[" + dates.get(i).format(DateTimeFormatter.ofPattern("MM dd uuuu hh:mm a")) + "]");
+
+                    if (playerTime == null) button.setText("[" + dates.get(i).format(DateTimeFormatter.ofPattern("MM dd uuuu hh:mm a ")) + ZoneOffset.systemDefault().getId() + "]\n");
+                    else button.setText("[" + offsetDates.get(i).format(DateTimeFormatter.ofPattern("MM dd uuuu hh:mm a z")) + "]\n");
+
                     button.setColor(ChatColor.YELLOW);
                     button.setUnderlined(true);
                     button.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/challenge date " + i));
@@ -271,10 +338,12 @@ public class Notification {
                 deny.setUnderlined(true);
                 deny.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/challenge ignore"));
 
+                buttons.add(deny);
+
             }   else if (type == NotificationType.GENERIC) {
 
                 // Do not show notification again
-                Notification.getNotificationsOfPlayer(player).remove(this);
+                removeNotification(this);
 
             }
 

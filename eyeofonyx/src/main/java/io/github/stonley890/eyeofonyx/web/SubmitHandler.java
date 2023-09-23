@@ -6,15 +6,22 @@ import io.github.stonley890.dreamvisitor.Dreamvisitor;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import io.github.stonley890.eyeofonyx.commands.CmdChallenge;
 import io.github.stonley890.eyeofonyx.files.*;
+import javassist.NotFoundException;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.entity.Player;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
+import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 
 import java.io.*;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,57 +37,91 @@ public class SubmitHandler implements HttpHandler {
             BufferedReader br = new BufferedReader(isr);
             String formData = br.readLine();
 
+            Dreamvisitor.debug("FORM DATA: " + formData);
+
             // Parse the code
             String encodedCode = formData.split("code=")[1].split("&availability=")[0]; // Extracting code value from the form data
             String code = URLDecoder.decode(encodedCode, StandardCharsets.UTF_8.name());
 
+            Dreamvisitor.debug(encodedCode + "AND" + code);
+
             // Parse the availability dates and times
             List<LocalDateTime> availabilities = new ArrayList<>();
-            String[] availabilityParams = formData.split("&availability=");
+            String[] availabilityParams = formData.split("availability=");
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
             try {
+                if (availabilityParams.length == 0) {
+                    Dreamvisitor.debug("No dates.");
+                    sendInvalid(httpExchange, "You did not send any dates! Go back and add at least one availability.");
+                    return;
+                }
                 for (int i = 1; i < availabilityParams.length; i++) {
                     // Extract only the date and time part from the availability string
-                    String dateTimeString = availabilityParams[i].split("&")[0]; // Get the part before the "&"
-                    dateTimeString = URLDecoder.decode(dateTimeString, StandardCharsets.UTF_8.name());
-                    LocalDateTime dateTime = LocalDateTime.parse(dateTimeString, formatter);
-                    availabilities.add(dateTime);
+                    Dreamvisitor.debug("Processing string: " + availabilityParams[i]);
+                    String[] splitAvailabilities = availabilityParams[i].split("&");
+                    if (splitAvailabilities.length == 0) {
+                        break;
+                    }
+                    String dateTimeString = splitAvailabilities[0]; // Get the part before the "&"
+                    dateTimeString = URLDecoder.decode(dateTimeString, StandardCharsets.UTF_8);
+                    Dreamvisitor.debug("Processed string: " + dateTimeString);
+                    if (!dateTimeString.isEmpty() && !dateTimeString.equals("&")) {
+                        Dreamvisitor.debug("Added time " + dateTimeString);
+
+                        // Parse
+                        LocalDateTime parsedTime = LocalDateTime.parse(dateTimeString, formatter);
+                        // Get as UTC
+                        ZonedDateTime zDateTime = ZonedDateTime.of(parsedTime, ZoneId.of("UTC"));
+                        // Convert to LocalDateTime
+                        LocalDateTime lDateTime = zDateTime.toLocalDateTime();
+                        // Add to list
+                        availabilities.add(lDateTime);
+                    }
+
                 }
             } catch (Exception e) {
                 e.printStackTrace();
             }
 
+            Dreamvisitor.debug("Values obtained.");
             // Now you have the code and the list of LocalDateTime objects representing availabilities.
             // You can further process or store this data as needed.
 
             Player player = null;
+
+            Dreamvisitor.debug("Checking code match.");
 
             // Check code match
             if (!CmdChallenge.codesOnForm.isEmpty()) {
                 for (int i = 0; i < CmdChallenge.codesOnForm.size(); i++) {
                     if (CmdChallenge.codesOnForm.get(i).equals(code)) {
 
+                        Dreamvisitor.debug("Found code match.");
+
                         player = CmdChallenge.playersOnForm.get(i);
 
                         for (LocalDateTime availability : availabilities) {
                             if (availability.isBefore(LocalDateTime.now())) {
+                                Dreamvisitor.debug("Invalid; time is before now.");
                                 // Time is before now: invalid
                                 player.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Invalid time! You cannot schedule a time before now!");
 
-                                sendInvalid(httpExchange);
+                                sendInvalid(httpExchange, "One of your times was invalid! You submitted a date that is before now!");
 
                                 return;
 
                             } else {
 
-                                // Time cannot be within 15 minutes of another challenge
+                                // Time cannot be within 30 minutes of another challenge
                                 try {
                                     for (Challenge challenge : Challenge.getChallenges()) {
                                         for (LocalDateTime time : challenge.time) {
-                                            if (availability.isBefore(time.plusMinutes(15)) || availability.isAfter((time.minusMinutes(15)))) {
-                                                player.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Invalid time! " + availability.format(DateTimeFormatter.ofPattern("MM/dd hh:mm a")) + " is within 15 minutes of a challenge at " + time.format(DateTimeFormatter.ofPattern("hh:mm a")));
+                                            if (availability.isBefore(time.plusMinutes(30)) || availability.isAfter((time.minusMinutes(30)))) {
+                                                Dreamvisitor.debug("Invalid; time is within 30 mins of another");
 
-                                                sendInvalid(httpExchange);
+                                                player.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Invalid time! " + availability.format(DateTimeFormatter.ofPattern("MM/dd hh:mm a")) + " is within 30 minutes of a challenge at " + time.format(DateTimeFormatter.ofPattern("hh:mm a")));
+
+                                                sendInvalid(httpExchange, "One of your times was invalid! " + availability.format(DateTimeFormatter.ofPattern("MM/dd hh:mm a")) + " is within 30 minutes of a challenge at " + time.format(DateTimeFormatter.ofPattern("hh:mm a")));
 
                                                 return;
                                             }
@@ -92,28 +133,38 @@ public class SubmitHandler implements HttpHandler {
                             }
                         }
 
+                        Dreamvisitor.debug("No availability issues");
 
                         // Remove notification
                         try {
                             for (Notification notification : Notification.getNotificationsOfPlayer(player.getUniqueId().toString())) {
                                 if (notification.type == NotificationType.CHALLENGE_REQUESTED) {
-                                    Notification.getNotificationsOfPlayer(player.getUniqueId().toString()).remove(notification);
+                                    Notification.removeNotification(notification);
+                                    Dreamvisitor.debug("Removed notification.");
                                 }
                             }
                         } catch (IOException | InvalidConfigurationException e) {
                             e.printStackTrace();
                         }
 
-                        // Notify attacker
-                        // Get their uuid from "challenging" key on board.yml
-                        int playerTribe = RoyaltyBoard.getTribeIndexOfUsername(player.getName());
-                        String attackerUuid = null;
+                        int playerTribe = 0;
+                        try {
+                            playerTribe = PlayerTribe.getTribeOfPlayer(player.getUniqueId().toString());
+                        } catch (NotFoundException e) {
+                            // Player has no associated tribe (should not happen)
+                            sendInvalid(httpExchange, "You do not have an associated tribe! Contact a staff member.");
+                            player.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You do not have an associated tribe! Contact a staff member.");
+                        }
 
-                        for (int j = 1; j < RoyaltyBoard.getValidPositions().length; j++) {
-                            String attacking = RoyaltyBoard.getAttacking(playerTribe, j);
-                            if (attacking.equals(player.getUniqueId().toString())) {
-                                attackerUuid = RoyaltyBoard.getUuid(playerTribe, j);
-                            }
+                        Dreamvisitor.debug("Finding attacker.");
+                        // Notify attacker
+                        String attackerUuid = null;
+                        try {
+                            attackerUuid = RoyaltyBoard.getAttacker(playerTribe, RoyaltyBoard.getPositionIndexOfUUID(player.getUniqueId().toString()));
+                        } catch (NotFoundException e) {
+                            // Player has no associated tribe (should not happen)
+                            sendInvalid(httpExchange, "You do not have an associated tribe! Contact a staff member.");
+                            player.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You do not have an associated tribe! Contact a staff member.");
                         }
 
                         if (attackerUuid == null) {
@@ -124,22 +175,35 @@ public class SubmitHandler implements HttpHandler {
                             Bukkit.getLogger().warning("Could not find attacker of player " + player.getUniqueId() + "\nTribe: " + playerTribe + "\n");
                             player.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "There was a problem finding your challenger. Please contact a staff member.");
 
-                            sendInvalid(httpExchange);
-
-                            // Set attacker in board.yml
-                            RoyaltyBoard.setAttacker(playerTribe, RoyaltyBoard.getPositionIndexOfUUID(player.getUniqueId().toString()), attackerUuid);
-
-                            // Create challenge
-                            new Challenge(attackerUuid, player.getUniqueId().toString(), ChallengeType.UNKNOWN, availabilities).save();
-
-                            // Remove code
-                            CmdChallenge.codesOnForm.remove(i);
-                            CmdChallenge.playersOnForm.remove(i);
-
+                            sendInvalid(httpExchange, "There was a problem finding your challenger. Please contact a staff member.");
                             return;
                         }
 
-                        new Notification(attackerUuid, "Challenge Accepted!", player.getName() + " has accepted your challenge. Choose one of the times below.", NotificationType.CHALLENGE_ACCEPTED).create();
+                        // Set attacker in board.yml
+                        try {
+                            RoyaltyBoard.setAttacker(playerTribe, RoyaltyBoard.getPositionIndexOfUUID(player.getUniqueId().toString()), attackerUuid);
+                        } catch (NotFoundException e) {
+                            // Player has no associated tribe (should not happen)
+                            sendInvalid(httpExchange, "You do not have an associated tribe! Contact a staff member.");
+                            player.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You do not have an associated tribe! Contact a staff member.");
+                        }
+                        Dreamvisitor.debug("Set data in board.yml");
+
+                        // Create challenge
+                        String finalAttackerUuid = attackerUuid;
+                        Player finalPlayer = player;
+                        Bukkit.getScheduler().runTaskAsynchronously(EyeOfOnyx.getPlugin(), new Runnable() {
+                            @Override
+                            public void run() {
+                                new Challenge(finalAttackerUuid, finalPlayer.getUniqueId().toString(), ChallengeType.UNKNOWN, availabilities).save();
+                            }
+                        });
+
+                        Dreamvisitor.debug("Created the challenge");
+
+                        // Remove code
+                        CmdChallenge.codesOnForm.remove(i);
+                        CmdChallenge.playersOnForm.remove(i);
 
                         player.sendMessage(EyeOfOnyx.EOO + "Your availabilities have been recorded!");
 
@@ -151,7 +215,7 @@ public class SubmitHandler implements HttpHandler {
                 if (player == null) {
                     Bukkit.getLogger().warning("Could not find player from code.");
 
-                    sendInvalid(httpExchange);
+                    sendInvalid(httpExchange, "Your code is invalid or expired.");
 
                     return;
                 }
@@ -160,13 +224,14 @@ public class SubmitHandler implements HttpHandler {
                 // No codes exist
                 Bukkit.getLogger().warning("No codes exist.");
 
-                sendInvalid(httpExchange);
+                sendInvalid(httpExchange, "Your code is invalid or expired.");
 
                 return;
 
             }
 
             // Success
+            Dreamvisitor.debug("Success");
 
             // Send a response to the client
             InputStream inputStream = EyeOfOnyx.getPlugin().getResource("availability_done.html");
@@ -207,7 +272,26 @@ public class SubmitHandler implements HttpHandler {
     //
     //
 
-    private void sendInvalid(HttpExchange httpExchange) throws IOException {
+    private void sendInvalid(HttpExchange httpExchange, String errorExplanation) throws IOException {
+
+        // Load the Thymeleaf template engine with the correct template resolver
+        String renderedHTML = getHtml(errorExplanation);
+
+        // Set the response headers with the content type
+        // httpExchange.getResponseHeaders().clear();
+        // httpExchange.getResponseHeaders().add("Content-Type", "text/html; charset=" + StandardCharsets.UTF_8.name());
+
+        // Get the response body and write the HTML content to it
+        // try (OutputStream outputStream = httpExchange.getResponseBody()) {
+        //    outputStream.write(renderedHTML.getBytes(StandardCharsets.UTF_8));
+        // }
+
+
+        // httpExchange.sendResponseHeaders(200, renderedHTML.getBytes(StandardCharsets.UTF_8).length);
+
+        sendResponse(httpExchange, 200, renderedHTML);
+
+        /*
         // Send a response to the client
         InputStream inputStream = EyeOfOnyx.getPlugin().getResource("availability_invalid.html");
         if (inputStream == null) {
@@ -227,6 +311,24 @@ public class SubmitHandler implements HttpHandler {
         inputStream.close();
 
         sendResponse(httpExchange, 200, responseBuilder.toString());
+
+         */
+    }
+
+    private static String getHtml(String errorExplanation) {
+        TemplateEngine templateEngine = new TemplateEngine();
+        ClassLoaderTemplateResolver templateResolver = new ClassLoaderTemplateResolver();
+        templateResolver.setPrefix("/"); // This sets the path to the resources directory
+        templateResolver.setSuffix(".html");
+        templateResolver.setCharacterEncoding(StandardCharsets.UTF_8.name());
+        templateEngine.setTemplateResolver(templateResolver);
+
+        // Create a Thymeleaf context and add the maxDaysConfigValue as a variable
+        Context context = new Context();
+        context.setVariable("errorExplanation", errorExplanation);
+
+        // Render the HTML template with Thymeleaf and get the final HTML content
+        return templateEngine.process("availability_invalid", context);
     }
 
     private void sendResponse(HttpExchange httpExchange, int statusCode, String response) throws IOException {

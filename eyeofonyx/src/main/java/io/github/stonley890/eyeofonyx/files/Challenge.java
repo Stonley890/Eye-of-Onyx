@@ -26,6 +26,7 @@ public class Challenge {
     public final String defender;
     public final ChallengeType type;
     public final List<LocalDateTime> time;
+    public boolean finalized = false;
 
     /**
      * Create a new challenge.
@@ -41,10 +42,48 @@ public class Challenge {
         time = challengeTimes;
     }
 
-     /**
+    public static void remove(Challenge challenge) throws IOException, InvalidConfigurationException {
+        List<Challenge> challenges = getChallenges();
+
+        challenges.removeIf(challenge1 -> challenge1.defender.equals(challenge.defender));
+
+        List<List<Object>> yamlChallenges = new ArrayList<>();
+
+        for (Challenge challenge1 : challenges) {
+            // Challenge -> List
+            List<Object> yamlChallenge = new ArrayList<>();
+
+            Dreamvisitor.debug("Converting to YAML...");
+            yamlChallenge.add(challenge1.attacker);
+            yamlChallenge.add(challenge1.defender);
+            yamlChallenge.add(challenge1.type.toString());
+
+            List<String> dateTimes = new ArrayList<>();
+
+            for (LocalDateTime dateTime : challenge1.time) {
+                dateTimes.add(dateTime.format(DateTimeFormatter.ISO_DATE_TIME));
+            }
+            yamlChallenge.add(dateTimes);
+            yamlChallenge.add(challenge1.finalized);
+
+            // Add the given challenge
+            yamlChallenges.add(yamlChallenge);
+        }
+
+        Dreamvisitor.debug("Added to List");
+
+        fileConfig.set("challenges", yamlChallenges);
+
+        Dreamvisitor.debug("Saving to file");
+        saveFile(fileConfig);
+    }
+
+    /**
      * Saves the challenge to challenge.yml on disk
       */
     public void save() {
+
+        Dreamvisitor.debug("Creating new challenge...");
 
         /* Challenges in challenges.yml are saved as a list of string lists
 
@@ -67,15 +106,18 @@ public class Challenge {
 
         // Get the list of challenges
         List<List<Object>> challenges = (List<List<Object>>) fileConfig.getList("challenges");
+        Dreamvisitor.debug("Got list of challenges.");
 
         // Init if null or empty
         if (challenges == null || challenges.isEmpty()) {
+            Dreamvisitor.debug("No challenges; creating a new list");
             challenges = new ArrayList<>();
         }
 
         // Challenge -> List
         List<Object> yamlChallenge = new ArrayList<>();
 
+        Dreamvisitor.debug("Converting to YAML...");
         yamlChallenge.add(this.attacker);
         yamlChallenge.add(this.defender);
         yamlChallenge.add(this.type.toString());
@@ -86,21 +128,25 @@ public class Challenge {
             dateTimes.add(dateTime.format(DateTimeFormatter.ISO_DATE_TIME));
         }
         yamlChallenge.add(dateTimes);
+        yamlChallenge.add(finalized);
 
         // Add the given challenge
         challenges.add(yamlChallenge);
+        Dreamvisitor.debug("Added to List");
 
         fileConfig.set("challenges", challenges);
 
+        Dreamvisitor.debug("Creating notification...");
         Mojang mojang = new Mojang().connect();
 
         String defenderUsername = mojang.getPlayerProfile(defender).getUsername();
         String content = defenderUsername + " accepted your challenge! Please select from one of the following times:";
 
+        Dreamvisitor.debug("Saving to file");
+        saveFile(fileConfig);
+
         // Create notification
         new Notification(attacker, "Your challenge was accepted!", content, NotificationType.CHALLENGE_ACCEPTED).create();
-
-        saveFile(fileConfig);
     }
 
     /**
@@ -133,8 +179,11 @@ public class Challenge {
                     parsedTimes.add(LocalDateTime.parse(dateTime));
                 }
 
+                boolean finalized = (boolean) yamlChallenge.get(4);
+
                 // Add to a Challenge object
                 Challenge challenge = new Challenge(attacker, defender, type, parsedTimes);
+                challenge.finalized = finalized;
 
                 // Add to list
                 challenges.add(challenge);
@@ -164,10 +213,9 @@ public class Challenge {
 
     /**
      * Saves the current file configuration to disk.
-     * @param board The file configuration to save.
+     * @param fileConfig The file configuration to save.
      */
-    private static void saveFile(FileConfiguration board) {
-        fileConfig = board;
+    private static void saveFile(FileConfiguration fileConfig) {
         try {
             fileConfig.save(file);
         } catch (Exception e) {
@@ -175,4 +223,39 @@ public class Challenge {
         }
     }
 
+    public void passiveSave() {
+        // Get the list of challenges
+        List<List<Object>> challenges = (List<List<Object>>) fileConfig.getList("challenges");
+        Dreamvisitor.debug("Got list of challenges.");
+
+        // Init if null or empty
+        if (challenges == null || challenges.isEmpty()) {
+            Dreamvisitor.debug("No challenges; creating a new list");
+            challenges = new ArrayList<>();
+        }
+
+        // Challenge -> List
+        List<Object> yamlChallenge = new ArrayList<>();
+
+        Dreamvisitor.debug("Converting to YAML...");
+        yamlChallenge.add(this.attacker);
+        yamlChallenge.add(this.defender);
+        yamlChallenge.add(this.type.toString());
+
+        List<String> dateTimes = new ArrayList<>();
+
+        for (LocalDateTime dateTime : this.time) {
+            dateTimes.add(dateTime.format(DateTimeFormatter.ISO_DATE_TIME));
+        }
+        yamlChallenge.add(dateTimes);
+        yamlChallenge.add(finalized);
+
+        // Add the given challenge
+        challenges.add(yamlChallenge);
+        Dreamvisitor.debug("Added to List");
+
+        fileConfig.set("challenges", challenges);
+        Dreamvisitor.debug("Saving to file");
+        saveFile(fileConfig);
+    }
 }

@@ -1,9 +1,9 @@
 package io.github.stonley890.eyeofonyx.commands;
 
-import io.github.stonley890.eyeofonyx.files.Banned;
-import io.github.stonley890.eyeofonyx.files.Notification;
-import io.github.stonley890.eyeofonyx.files.NotificationType;
-import io.github.stonley890.eyeofonyx.files.RoyaltyBoard;
+import io.github.stonley890.eyeofonyx.EyeOfOnyx;
+import io.github.stonley890.eyeofonyx.files.*;
+import javassist.NotFoundException;
+import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -13,14 +13,12 @@ import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
-
-import io.github.stonley890.eyeofonyx.EyeOfOnyx;
-import net.md_5.bungee.api.ChatColor;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
 import org.shanerx.mojang.Mojang;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -59,10 +57,58 @@ public class CmdEyeOfOnyx implements CommandExecutor {
 
                                     // Add player to ban list, remove them from the royalty board, and send them a notification.
                                     Banned.addPlayer(uuid);
-                                    int tribe = RoyaltyBoard.getTribeIndexOfUUID(uuid);
-                                    int pos = RoyaltyBoard.getPositionIndexOfUUID(uuid);
-                                    if (pos != RoyaltyBoard.CIVILIAN) {
-                                        RoyaltyBoard.setValue(tribe, pos, RoyaltyBoard.LAST_ONLINE, "none");
+                                    int tribe = 0;
+                                    try {
+                                        tribe = PlayerTribe.getTribeOfPlayer(uuid);
+                                    } catch (NotFoundException e) {
+                                        // Player does not have a tribe.
+                                        sender.sendMessage(EyeOfOnyx.EOO + "This player does not have an associated tribe.");
+                                    }
+                                    int pos = 0;
+                                    try {
+                                        pos = RoyaltyBoard.getPositionIndexOfUUID(uuid);
+                                    } catch (NotFoundException e) {
+                                        // Player does not have a tribe.
+                                        sender.sendMessage(EyeOfOnyx.EOO + "This player does not have an associated tribe.");
+                                    }
+
+                                    try {
+
+                                        // Notify attacker if exists
+                                        String attacker = RoyaltyBoard.getAttacker(tribe,pos);
+                                        if (!attacker.equals("none")) {
+                                            int attackerPos = RoyaltyBoard.getPositionIndexOfUUID(attacker);
+                                            RoyaltyBoard.setAttacking(tribe, attackerPos, "none");
+                                            new Notification(attacker, "Your challenge was canceled.", "The player you were challenging was removed from the royalty board, so your challenge was canceled.", NotificationType.GENERIC).create();
+                                        }
+
+                                        // Notify defender if exists
+                                        if (pos != RoyaltyBoard.RULER) {
+                                            String attacking = RoyaltyBoard.getAttacking(tribe,pos);
+                                            if (!attacking.equals("none")) {
+                                                int defenderPos = RoyaltyBoard.getPositionIndexOfUUID(attacking);
+                                                RoyaltyBoard.setAttacker(tribe, defenderPos, "none");
+                                                new Notification(attacker, "Your challenge was canceled.", "The player who was challenging you was removed from the royalty board, so your challenge was canceled.", NotificationType.GENERIC).create();
+                                            }
+                                        }
+
+                                        // Remove any challenges
+                                        for (Challenge challenge : Challenge.getChallenges()) {
+                                            if (challenge.defender.equals(uuid) || challenge.attacker.equals(uuid)) Challenge.remove(challenge);
+                                        }
+
+                                        // Remove any challenge notifications
+                                        for (Notification notification : Notification.getNotificationsOfPlayer(uuid)) {
+                                            if (notification.type == NotificationType.CHALLENGE_ACCEPTED || notification.type == NotificationType.CHALLENGE_REQUESTED) Notification.removeNotification(notification);
+                                        }
+                                    } catch (IOException | InvalidConfigurationException e) {
+                                        e.printStackTrace();
+                                    } catch (NotFoundException e) {
+                                        throw new RuntimeException(e);
+                                    }
+
+                                    if (pos != -1 && pos != RoyaltyBoard.CIVILIAN) {
+                                        RoyaltyBoard.removePlayer(tribe, pos);
                                         RoyaltyBoard.updateBoard();
                                     }
                                     new Notification(uuid, "Royalty Ban", "You are no longer allowed to participate in royalty. Contact staff if you think this is a mistake.", NotificationType.GENERIC).create();
@@ -132,47 +178,73 @@ public class CmdEyeOfOnyx implements CommandExecutor {
 
                         String key = args[1];
                         String value = null;
-                        if (args.length > 3) value = args[2];
+                        if (args.length > 2) value = args[2];
 
                         switch (key) {
 
                             case "challenge-cool-down" -> {
-                                if (args.length == 3) {
+                                if (args.length == 2) {
                                     sender.sendMessage(EyeOfOnyx.EOO + "The number of DAYS that a user is unable to participate in a challenge after they have completed one. Default: 7. Current: " + main.getConfig().get(key));
                                 } else {
-                                    main.getConfig().set(key, Integer.valueOf(value));
+                                    try {
+                                        main.getConfig().set(key, Integer.valueOf(value));
+                                        sender.sendMessage(EyeOfOnyx.EOO + "Set " + key + " to " + value + ".");
+                                    } catch (NumberFormatException e) {
+                                        sender.sendMessage(EyeOfOnyx.EOO + "That is not a valid int.");
+                                    }
                                 }
                             }
                             case "challenge-acknowledgement-time" -> {
-                                if (args.length == 3) {
+                                if (args.length == 2) {
                                     sender.sendMessage(EyeOfOnyx.EOO + "The number of DAYS that a user has to acknowledge a challenge that has been issued to them. Default: 7. Current: " + main.getConfig().get(key));
                                 } else {
-                                    main.getConfig().set(key, Integer.valueOf(value));
+                                    try {
+                                        main.getConfig().set(key, Integer.valueOf(value));
+                                        sender.sendMessage(EyeOfOnyx.EOO + "Set " + key + " to " + value + ".");
+                                    } catch (NumberFormatException e) {
+                                        sender.sendMessage(EyeOfOnyx.EOO + "That is not a valid int.");
+                                    }
                                 }
                             }
                             case "challenge-time-period" -> {
-                                if (args.length == 3) {
+                                if (args.length == 2) {
                                     sender.sendMessage(EyeOfOnyx.EOO + "The maximum number of DAYS from challenge acknowledgement that a challenge can be scheduled. Default: 7. Current: " + main.getConfig().get(key));
                                 } else {
-                                    main.getConfig().set(key, Integer.valueOf(value));
+                                    try {
+                                        main.getConfig().set(key, Integer.valueOf(value));
+                                        sender.sendMessage(EyeOfOnyx.EOO + "Set " + key + " to " + value + ".");
+                                    } catch (NumberFormatException e) {
+                                        sender.sendMessage(EyeOfOnyx.EOO + "That is not a valid int.");
+                                    }
                                 }
                             }
                             case "time-selection-period" -> {
-                                if (args.length == 3) {
+                                if (args.length == 2) {
                                     sender.sendMessage(EyeOfOnyx.EOO + "The number of DAYS a challenger is allotted to select one of the provided times. Default: 3. Current: " + main.getConfig().get(key));
                                 } else {
-                                    main.getConfig().set(key, Integer.valueOf(value));
+                                    try {
+                                        main.getConfig().set(key, Integer.valueOf(value));
+                                        sender.sendMessage(EyeOfOnyx.EOO + "Set " + key + " to " + value + ".");
+                                    } catch (NumberFormatException e) {
+                                        sender.sendMessage(EyeOfOnyx.EOO + "That is not a valid int.");
+                                    }
                                 }
                             }
                             case "inactivity-timer" -> {
-                                if (args.length == 3) {
+                                if (args.length == 2) {
                                     sender.sendMessage(EyeOfOnyx.EOO + "The number of DAYS that a user can be offline before they are removed from the royalty board. Default: 30. Current: " + main.getConfig().get(key));
                                 } else {
-                                    main.getConfig().set(key, Integer.valueOf(value));
+                                    try {
+                                        main.getConfig().set(key, Integer.valueOf(value));
+                                        sender.sendMessage(EyeOfOnyx.EOO + "Set " + key + " to " + value + ".");
+                                    } catch (NumberFormatException e) {
+                                        sender.sendMessage(EyeOfOnyx.EOO + "That is not a valid int.");
+                                    }
+
                                 }
                             }
                             case "waiting-rooms" -> {
-                                if (args.length == 3) {
+                                if (args.length == 2) {
 
                                     List<Location> waitingRooms = (List<Location>) main.getConfig().getList(key);
                                     ComponentBuilder message = new ComponentBuilder(EyeOfOnyx.EOO);
@@ -246,10 +318,34 @@ public class CmdEyeOfOnyx implements CommandExecutor {
                                     }
                                 }
                             }
+                            case "royalty-board-channel" -> {
+                                if (args.length == 2) {
+                                    sender.sendMessage(EyeOfOnyx.EOO + "The channel ID for the Discord channel where the royalty board should be stored. Default: 913509632348139591. Current: " + main.getConfig().get(key));
+                                } else {
+                                    try {
+                                        main.getConfig().set(key, Long.valueOf(value));
+                                        sender.sendMessage(EyeOfOnyx.EOO + "Set " + key + " to " + value + ".");
+                                    } catch (NumberFormatException e) {
+                                        sender.sendMessage(EyeOfOnyx.EOO + "That is not a valid long.");
+                                    }
+
+                                }
+                            }
                         }
                     }
+
+                    EyeOfOnyx.getPlugin().saveConfig();
+
                 } case "freeze" -> {
-                    sender.sendMessage(EyeOfOnyx.EOO + "TODO");
+
+                    if (RoyaltyBoard.isFrozen()) {
+                        RoyaltyBoard.setFrozen(false);
+                        sender.sendMessage(EyeOfOnyx.EOO + "The royalty board is now unfrozen.");
+                    } else {
+                        RoyaltyBoard.setFrozen(true);
+                        sender.sendMessage(EyeOfOnyx.EOO + "The royalty board is now frozen.");
+                    }
+
                 }
             }
         }
@@ -260,10 +356,17 @@ public class CmdEyeOfOnyx implements CommandExecutor {
 
     @NotNull
     private static TextComponent getTeleport(Location waitingRoom) {
-        TextComponent teleport = new TextComponent("[" + Objects.requireNonNull(waitingRoom.getWorld()).getName() + waitingRoom.getX() + ", " + waitingRoom.getY() + ", " + waitingRoom.getZ() + "]");
-        teleport.setUnderlined(true);
-        teleport.setColor(ChatColor.GREEN);
-        teleport.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/tp " + waitingRoom.getX() + " " + waitingRoom.getY() + " " + waitingRoom.getZ()));
+        TextComponent teleport = new TextComponent();
+        if (waitingRoom != null) {
+            teleport.setText("[" + Objects.requireNonNull(waitingRoom.getWorld()).getName() + waitingRoom.getX() + ", " + waitingRoom.getY() + ", " + waitingRoom.getZ() + "]");
+            teleport.setUnderlined(true);
+            teleport.setColor(ChatColor.GREEN);
+            teleport.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/tp " + waitingRoom.getX() + " " + waitingRoom.getY() + " " + waitingRoom.getZ()));
+        } else {
+            teleport.setText("Unset");
+            teleport.setColor(ChatColor.YELLOW);
+        }
+
         return teleport;
     }
 }

@@ -4,6 +4,9 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Objects;
 
+import io.github.stonley890.eyeofonyx.files.PlayerTribe;
+import io.github.stonley890.eyeofonyx.web.IpUtils;
+import javassist.NotFoundException;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
@@ -32,9 +35,11 @@ public class ListenLeave implements Listener {
 
         Player player = event.getPlayer();
 
+        // Clear stored IP address data
+        IpUtils.clearCache(player.getAddress().getAddress().getHostAddress());
+
         try {
-            String playerTeam = Objects.requireNonNull(scoreboard.getEntryTeam(player.getName())).getName();
-            int playerTribe = Arrays.binarySearch(teamNames, playerTeam);
+            int playerTribe = PlayerTribe.getTribeOfPlayer(player.getUniqueId().toString());
             String playerUUID = mojang.getUUIDOfUsername(player.getName()).replaceFirst(
                     "(\\p{XDigit}{8})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}+)",
                     "$1-$2-$3-$4-$5");
@@ -50,7 +55,7 @@ public class ListenLeave implements Listener {
                     RoyaltyBoard.save(board);
                 }
             }
-        } catch (NullPointerException e) {
+        } catch (NullPointerException | NotFoundException e) {
             // Player is not part of a team
         }
 

@@ -1,12 +1,11 @@
 package io.github.stonley890.eyeofonyx.commands;
 
+import io.github.stonley890.dreamvisitor.Dreamvisitor;
 import io.github.stonley890.dreamvisitor.data.AccountLink;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import io.github.stonley890.eyeofonyx.challenges.Competition;
-import io.github.stonley890.eyeofonyx.files.Banned;
-import io.github.stonley890.eyeofonyx.files.Notification;
-import io.github.stonley890.eyeofonyx.files.NotificationType;
-import io.github.stonley890.eyeofonyx.files.RoyaltyBoard;
+import io.github.stonley890.eyeofonyx.files.*;
+import javassist.NotFoundException;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
@@ -19,8 +18,11 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.shanerx.mojang.Mojang;
 
 import java.io.IOException;
@@ -28,6 +30,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 
 import static io.github.stonley890.eyeofonyx.files.RoyaltyBoard.*;
@@ -49,26 +52,34 @@ public class CmdChallenge implements CommandExecutor {
 
             sender.sendMessage(EyeOfOnyx.EOO + "Please wait...");
 
+            // Check if board is frozen
+            if (RoyaltyBoard.isFrozen()) {
+                sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "The royalty board is currently frozen.");
+                return true;
+            }
+
             // Ensure player is part of a team
             int playerTribe;
             try {
-                playerTribe = RoyaltyBoard.getTribeIndexOfUsername(player.getName());
-                if (playerTribe > 6 || playerTribe < 1) {
-                    sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You are not part of a team!");
-                    return true;
-                }
-            } catch (RuntimeException e) {
+                playerTribe = PlayerTribe.getTribeOfPlayer(player.getUniqueId().toString());
+            } catch (NotFoundException e) {
                 sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You are not part of a team!");
                 return true;
             }
 
             // Ensure player has a linked Discord account
-            if (AccountLink.getDiscordId(player.getUniqueId().toString()) == null) {
+            if (AccountLink.getDiscordId(player.getUniqueId().toString().replaceAll("-", "")) == null) {
                 sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You do not have a linked Discord account! Contact a staff member for help.");
+                return true;
             }
 
-            int playerPosition = RoyaltyBoard.getPositionIndexOfUsername(player.getName());
-
+            int playerPosition = 0;
+            try {
+                playerPosition = RoyaltyBoard.getPositionIndexOfUUID(player.getUniqueId().toString());
+            } catch (NotFoundException e) {
+                sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You are not part of a team!");
+                return true;
+            }
 
             if (Banned.isPlayerBanned(player.getUniqueId().toString())) {
 
@@ -93,13 +104,13 @@ public class CmdChallenge implements CommandExecutor {
 
                 return true;
 
-            } else if (playerPosition != RULER && !RoyaltyBoard.getAttacking(playerTribe, playerPosition).equals("none")) {
+            } else if (playerPosition != CIVILIAN && playerPosition != RULER && !RoyaltyBoard.getAttacking(playerTribe, playerPosition).equals("none")) {
 
-                // Player has already initiated a challenge
-                sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You have already initiated a challenge!");
-
-                return true;
-
+                if (args.length == 0 || (!args[0].equals("date") && !args[0].equals("start"))) {
+                    // Player has already initiated a challenge
+                    sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You have already initiated a challenge!");
+                    return true;
+                }
             }
             if (args.length == 0) {
 
@@ -114,8 +125,10 @@ public class CmdChallenge implements CommandExecutor {
                  */
 
                 builder.append(EyeOfOnyx.EOO + "CHALLENGE MENU")
-                        .append("\nYou are currently ")
-                        .append(positions[playerPosition].replace('_', ' ')).color(net.md_5.bungee.api.ChatColor.YELLOW)
+                        .append("\nYou are currently ");
+                String position = "CIVILIAN";
+                if (playerPosition != 5) position = positions[playerPosition];
+                builder.append(position.replace('_', ' ')).color(net.md_5.bungee.api.ChatColor.YELLOW)
                         .append(" of the ").color(net.md_5.bungee.api.ChatColor.WHITE)
                         .append(teams[playerTribe]).color(net.md_5.bungee.api.ChatColor.YELLOW).append("s").color(net.md_5.bungee.api.ChatColor.YELLOW)
                         .append(".\nSelect a position:\n \n").color(net.md_5.bungee.api.ChatColor.WHITE);
@@ -240,13 +253,63 @@ public class CmdChallenge implements CommandExecutor {
                 switch (args[0]) {
                     case "position1", "position2" -> {
 
+                        Dreamvisitor.debug("Initiating challenge");
+
                         ComponentBuilder builder = new ComponentBuilder();
                         builder.append(EyeOfOnyx.EOO);
 
                         int targetPosition;
 
+                        Dreamvisitor.debug("Checking for validity");
+
+                        // Check for active challenge
+                        if (Competition.activeChallenge != null) {
+                            sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You cannot initiate a challenge while one is in progress!");
+                            return true;
+                        }
+
                         // Make sure challenge is valid
                         if (playerPosition == CIVILIAN) {
+
+                            Dreamvisitor.debug("Player is civilian");
+
+                            // Check for any empty positions
+                            int nextEmptyPosition = CIVILIAN;
+
+                            // Iterate through positions (start at ruler)
+                            for (int i = 0; i < positions.length; i++) {
+                                nextEmptyPosition = i;
+                                Dreamvisitor.debug("Next empty position: " + i);
+                                // If position is empty, break
+                                if (getUuid(playerTribe, i).equals("none")) {
+                                    Dreamvisitor.debug("Position " + i + "is empty");
+                                    break;
+                                }
+                            }
+
+                            // If a position is available, do that
+                            if (nextEmptyPosition < CIVILIAN) {
+                                Dreamvisitor.debug("Position available. Skipping challenge process.");
+
+                                FileConfiguration board = RoyaltyBoard.get();
+
+                                board.set(getTribes()[playerTribe] + "." + getValidPositions()[nextEmptyPosition] + ".uuid", player.getUniqueId().toString());
+                                board.set(getTribes()[playerTribe] + "." + getValidPositions()[nextEmptyPosition] + ".joined_time", LocalDateTime.now().toString());
+                                board.set(getTribes()[playerTribe] + "." + getValidPositions()[nextEmptyPosition] + ".last_online", LocalDateTime.now().toString());
+                                board.set(getTribes()[playerTribe] + "." + getValidPositions()[nextEmptyPosition] + ".last_challenge_time", LocalDateTime.now().toString());
+                                RoyaltyBoard.save(board);
+
+                                // setValue(playerTribe, nextEmptyPosition, "uuid", player.getUniqueId().toString());
+                                // setValue(playerTribe, nextEmptyPosition, "joined_time", LocalDateTime.now().toString());
+                                // setValue(playerTribe, nextEmptyPosition, "last_online", LocalDateTime.now().toString());
+                                // setValue(playerTribe, nextEmptyPosition, "last_challenge_time", LocalDateTime.now().toString());
+                                updateBoard();
+                                Dreamvisitor.debug("Board updated.");
+                                sender.sendMessage(EyeOfOnyx.EOO + "You are now " + getValidPositions()[nextEmptyPosition].toUpperCase().replace("_", " ") + " of the " + getTeamNames()[playerTribe].toUpperCase() + "s!");
+                                return true;
+                            }
+
+                            Dreamvisitor.debug("No extra positions available.");
 
                             // Determine which position is being targeted
                             if (args[0].equals("position1")) {
@@ -287,7 +350,7 @@ public class CmdChallenge implements CommandExecutor {
                         }
 
                         // Check that target is not being challenged
-                        if (!(RoyaltyBoard.getAttacker(playerTribe, targetPosition).equals("none") || (RoyaltyBoard.getAttacking(playerTribe, targetPosition).equals("none") && targetPosition != 0))) {
+                        if (!(RoyaltyBoard.getAttacker(playerTribe, targetPosition).equals("none") || (targetPosition != 0 && !RoyaltyBoard.getAttacking(playerTribe, targetPosition).equals("none")))) {
 
                             player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
                             builder.append("That player is already in a challenge!");
@@ -298,31 +361,37 @@ public class CmdChallenge implements CommandExecutor {
 
                             // Check for cooldown
                             player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
-                            LocalDateTime targetChallenge = LocalDateTime.parse(RoyaltyBoard.getLastChallengeDate(playerTribe, targetPosition));
-                            targetChallenge = targetChallenge.plusDays(EyeOfOnyx.getPlugin().getConfig().getInt("challenge-cool-down"));
-                            if (RoyaltyBoard.isOnCoolDown(playerTribe, targetPosition)) {
-                                builder.append("That player is on movement cooldown until ")
-                                        .append(targetChallenge.format(DateTimeFormatter.ISO_DATE));
+                            // Unless position is empty...
+                            if (!RoyaltyBoard.positionEmpty(playerTribe, targetPosition)) {
 
-                                sender.spigot().sendMessage(builder.create());
+                                // Get last challenge
+                                LocalDateTime targetChallenge = LocalDateTime.parse(RoyaltyBoard.getLastChallengeDate(playerTribe, targetPosition));
+                                // Compare with cooldown time
+                                targetChallenge = targetChallenge.plusDays(EyeOfOnyx.getPlugin().getConfig().getInt("challenge-cool-down"));
+                                if (RoyaltyBoard.isOnCoolDown(playerTribe, targetPosition)) {
+                                    builder.append("That player is on movement cooldown until ")
+                                            .append(targetChallenge.format(DateTimeFormatter.ISO_DATE));
 
-                                return true;
-                            } else {
-                                player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
-                                String targetUuid = RoyaltyBoard.getUuid(playerTribe, targetPosition);
+                                    sender.spigot().sendMessage(builder.create());
 
-                                // set values in board.yml
-                                // RoyaltyBoard.setAttacker(playerTribe, targetPosition, player.getUniqueId().toString());
-                                RoyaltyBoard.setAttacking(playerTribe, playerPosition, targetUuid);
-
-                                // create notification for target
-                                String title = "You've been challenged!";
-                                String content = player.getName() + " has challenged your position for " + positions[targetPosition].replace('_', ' ') + ".";
-                                new Notification(targetUuid, title, content, NotificationType.CHALLENGE_REQUESTED).create();
-
-                                builder.append("Challenge initiated!");
-                                sender.spigot().sendMessage(builder.create());
+                                    return true;
+                                }
                             }
+
+                            player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
+                            String targetUuid = RoyaltyBoard.getUuid(playerTribe, targetPosition);
+
+                            // set values in board.yml
+                            RoyaltyBoard.setAttacker(playerTribe, targetPosition, player.getUniqueId().toString());
+                            if (playerPosition != 5) RoyaltyBoard.setAttacking(playerTribe, playerPosition, targetUuid);
+
+                            // create notification for target
+                            String title = "You've been challenged!";
+                            String content = player.getName() + " has challenged your position for " + positions[targetPosition].replace('_', ' ') + ".";
+                            new Notification(targetUuid, title, content, NotificationType.CHALLENGE_REQUESTED).create();
+
+                            builder.append("Challenge initiated!");
+                            sender.spigot().sendMessage(builder.create());
                         }
 
 
@@ -360,11 +429,11 @@ public class CmdChallenge implements CommandExecutor {
                     }
                     case "deny" -> {
 
-                    /*
-                    [EoO] Are you sure you want to forfeit your role and remove yourself from the royalty board? This action cannot be undone.
-                    [Accept Challenge] [Forfeit]
+                        /*
+                        [EoO] Are you sure you want to forfeit your role and remove yourself from the royalty board? This action cannot be undone.
+                        [Accept Challenge] [Forfeit]
 
-                     */
+                         */
 
                         player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
                         ComponentBuilder builder = new ComponentBuilder();
@@ -386,6 +455,8 @@ public class CmdChallenge implements CommandExecutor {
 
                         builder.append(accept).append(" ").reset().append(deny).append("\n");
 
+                        sender.spigot().sendMessage(builder.create());
+
                     }
                     case "denyconfirm" -> {
 
@@ -393,7 +464,11 @@ public class CmdChallenge implements CommandExecutor {
 
                         // Remove notification
                         try {
-                            Notification.getNotificationsOfPlayer(player.getUniqueId().toString()).removeIf(notification -> notification.type == NotificationType.CHALLENGE_REQUESTED);
+                            List<Notification> notificationList = Notification.getNotificationsOfPlayer(player.getUniqueId().toString());
+                            for (Notification notification : notificationList) {
+                                if (notification.type == NotificationType.CHALLENGE_REQUESTED)
+                                    Notification.removeNotification(notification);
+                            }
                         } catch (IOException | InvalidConfigurationException e) {
                             Bukkit.getLogger().warning("Eye of Onyx could not read from disk!");
                             sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Error: Eye of Onyx could not read from disk!");
@@ -401,25 +476,81 @@ public class CmdChallenge implements CommandExecutor {
                         }
 
                         // Remove from royalty board
-                        RoyaltyBoard.setValue(playerTribe, playerPosition, LAST_ONLINE, "none");
+                        RoyaltyBoard.removePlayer(playerTribe, playerPosition);
                         RoyaltyBoard.updateBoard();
                         sender.sendMessage(EyeOfOnyx.EOO + "You have been removed from the royalty board.");
                     }
                     case "start" -> {
 
                         player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
-                            if ((Competition.activeChallenge.defender.equals(player.getUniqueId().toString()) || Competition.activeChallenge.attacker.equals(player.getUniqueId().toString())) && !Competition.activeChallenge.started) {
+                        if ((Competition.activeChallenge.defender.equals(player.getUniqueId().toString()) || Competition.activeChallenge.attacker.equals(player.getUniqueId().toString())) && !Competition.activeChallenge.started) {
 
-                                List<Location> waitingRooms = (List<Location>) EyeOfOnyx.getPlugin().getConfig().getList("waiting-rooms");
-                                if (waitingRooms != null) {
-                                    if (waitingRooms.get(Competition.activeChallenge.tribe) != null) {
-                                        player.teleport(waitingRooms.get(Competition.activeChallenge.tribe));
-                                    } else sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "No waiting room set! Contact an admin.");
-                                } else sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "No waiting room set! Contact an admin.");
+                            List<Location> waitingRooms = (List<Location>) EyeOfOnyx.getPlugin().getConfig().getList("waiting-rooms");
+                            if (waitingRooms != null) {
+                                if (waitingRooms.get(Competition.activeChallenge.tribe) != null) {
+                                    player.teleport(waitingRooms.get(Competition.activeChallenge.tribe));
+                                } else
+                                    sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "No waiting room set! Contact an admin.");
+                            } else
+                                sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "No waiting room set! Contact an admin.");
 
+                        }
+
+
+                    }
+                    case "date" -> {
+
+                        Challenge playerChallenge = getChallenge(player);
+
+                        if (playerChallenge == null) {
+                            sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You are not in any scheduled challenges!");
+                            return true;
+                        }
+
+                        if (playerChallenge.finalized) {
+                            sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "This challenge is already finalized!");
+                            return true;
+                        }
+
+                        if (args.length < 2) {
+                            sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Missing arguments!");
+                            return true;
+                        }
+
+                        int selectedTimeIndex;
+
+                        try {
+                            selectedTimeIndex = Integer.parseInt(args[1]);
+                        } catch (NumberFormatException e) {
+                            sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Incorrect arguments!");
+                            return true;
+                        }
+
+                        try {
+                            Challenge.remove(playerChallenge);
+                        } catch (IOException | InvalidConfigurationException e) {
+                            throw new RuntimeException(e);
+                        }
+
+                        LocalDateTime selectedTime = playerChallenge.time.get(selectedTimeIndex);
+                        playerChallenge.time.clear();
+                        playerChallenge.time.add(selectedTime);
+                        playerChallenge.finalized = true;
+
+                        playerChallenge.passiveSave();
+
+                        sender.sendMessage(EyeOfOnyx.EOO + "Time confirmed! Your challenge will take place " + selectedTime.format(DateTimeFormatter.ofPattern("MM/dd hh:mm a")) + "!");
+                        new Notification(playerChallenge.defender, "Challenge date confirmed!", "The time of your challenge with " + mojang.getPlayerProfile(playerChallenge.attacker).getUsername() + " will be " + selectedTime.format(DateTimeFormatter.ofPattern("MM/dd hh:mm a")) + ".", NotificationType.GENERIC).create();
+
+                        // Remove CHALLENGE_ACCEPTED notification
+                        try {
+                            for (Notification notification : Notification.getNotificationsOfPlayer(player.getUniqueId().toString())) {
+                                if (notification.type == NotificationType.CHALLENGE_ACCEPTED)
+                                    Notification.removeNotification(notification);
                             }
-
-
+                        } catch (IOException | InvalidConfigurationException e) {
+                            throw new RuntimeException(e);
+                        }
                     }
                     default ->
                             sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Incorrect arguments! Use the text GUI with /challenge");
@@ -430,6 +561,23 @@ public class CmdChallenge implements CommandExecutor {
         }
 
         return true;
+    }
+
+    @Nullable
+    private static Challenge getChallenge(Player player) {
+        Challenge playerChallenge = null;
+
+        try {
+            for (Challenge challenge : Challenge.getChallenges()) {
+                if (Objects.equals(challenge.attacker, player.getUniqueId().toString())) {
+                    playerChallenge = challenge;
+                    break;
+                }
+            }
+        } catch (IOException | InvalidConfigurationException e) {
+            throw new RuntimeException(e);
+        }
+        return playerChallenge;
     }
 
 }

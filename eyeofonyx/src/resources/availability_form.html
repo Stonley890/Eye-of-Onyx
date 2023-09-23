@@ -183,12 +183,12 @@
                 <div style="grid-column: 1;">
                     <div class="contentbox">
                         <div id="additionalDateTimes">
-                            <input type="datetime-local" id="availability" name="availability" required="true"
-                                class="datebutton" min="2023-07-21T09:00" max="2023-07-28T18:00"><br>
-                            <input type="datetime-local" id="availability" name="availability" class="datebutton"
+                            <input type="datetime-local" name="availability" required="true" class="datebutton"
                                 min="2023-07-21T09:00" max="2023-07-28T18:00"><br>
-                            <input type="datetime-local" id="availability" name="availability" class="datebutton"
-                                min="2023-07-21T09:00" max="2023-07-28T18:00">
+                            <input type="datetime-local" name="availability" class="datebutton" min="2023-07-21T09:00"
+                                max="2023-07-28T18:00"><br>
+                            <input type="datetime-local" name="availability" class="datebutton" min="2023-07-21T09:00"
+                                max="2023-07-28T18:00">
                         </div>
                     </div>
 
@@ -222,44 +222,47 @@
 
             <script th:inline="javascript">
 
-                const encodedDateTime = encodeURIComponent(dateTime);
-                const url = "/submit?dateTime=" + encodedDateTime;
-
                 // Replace maxDaysConfigValue with the actual value from config.yml
-                const maxDays = /*[[${maxDaysConfigValue}]]*/;
+                const maxDays = /*[[${maxDaysConfigValue}]]*/ + 0;
+
+                const minDateTime = getCurrentDateTime();
+                const maxDateTime = new Date();
 
                 function addDateTimeField() {
                     const br = document.createElement("br");
                     const input = document.createElement("input");
                     input.type = "datetime-local";
-                    input.name = "availability[]";
+                    input.name = "availability";
                     input.className = "datebutton";
                     input.min = minDateTime;
-                    input.max = maxDateTime.toISOString().slice(0, 16);
-                    document.querySelector("#additionalDateTimes").appendChild(br);
-                    document.querySelector("#additionalDateTimes").appendChild(input);
+                    input.max = maxDateTime.toISOString().split("T")[0];
+                    document.getElementById("additionalDateTimes").appendChild(br);
+                    document.getElementById("additionalDateTimes").appendChild(input);
                 }
 
                 function getCurrentDateTime() {
                     const now = new Date();
-                    return now.toISOString().slice(0, 16);
+                    return now.toISOString().split("T")[0];
                 }
 
-                function setDateTimeLimits() {
-                    const minDateTime = getCurrentDateTime();
-                    const maxDateTime = new Date();
+                window.onload = function setDateTimeLimits() {
                     maxDateTime.setDate(maxDateTime.getDate() + maxDays);
-                    document.getElementById('availability').min = minDateTime;
-                    document.getElementById('availability').max = maxDateTime.toISOString().slice(0, 16);
+                    document.getElementsByName('availability').forEach((element) => element.min = minDateTime);
+                    document.getElementsByName('availability').forEach((element) => element.max = maxDateTime.toISOString().split("T")[0]);
                 }
-
-                document.addEventListener('DOMContentLoaded', setDateTimeLimits);
 
                 // The following code constructs the URL for the form submission
                 function submitForm() {
                     const form = document.getElementById('availabilityForm');
                     const formValues = new FormData(form);
+                    const availabilities_local = formValues.getAll('availability');
                     const availabilities = formValues.getAll('availability');
+                    formValues.forEach(date => {
+                        date = Date.UTC(date.getUTCFullYear(), date.getUTCMonth(),
+                        date.getUTCDate(), date.getUTCHours(),
+                        date.getUTCMinutes(), date.getUTCSeconds()).toISOString().split("T")[0];;
+                    }) 
+
                     const code = formValues.get('code');
                     const encodedAvailabilities = availabilities.map(avail => encodeURIComponent(avail));
                     const encodedCode = encodeURIComponent(code); // Properly encode the code parameter

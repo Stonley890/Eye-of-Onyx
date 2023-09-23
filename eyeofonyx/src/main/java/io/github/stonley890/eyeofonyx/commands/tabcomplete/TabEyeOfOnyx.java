@@ -17,16 +17,15 @@ import java.util.List;
 
 public class TabEyeOfOnyx implements TabCompleter {
 
-    List<String> suggestions = new ArrayList<>();
+
 
     Mojang mojang = new Mojang().connect();
 
     @Nullable
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-        // Clear previous suggestions or create a new ArrayList
-        if (suggestions != null)  suggestions.clear();
-        else suggestions = new ArrayList<>();
+
+        List<String> suggestions = new ArrayList<>();
 
         if (args.length == 1) {
 
@@ -64,6 +63,7 @@ public class TabEyeOfOnyx implements TabCompleter {
                         suggestions.add("time-selection-period");
                         suggestions.add("inactivity-timer");
                         suggestions.add("waiting-rooms");
+                        suggestions.add("royalty-board-channel");
                     }
                 }
             }

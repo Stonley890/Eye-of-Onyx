@@ -1,10 +1,13 @@
 package io.github.stonley890.eyeofonyx.commands.tabcomplete;
 
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 
+import io.github.stonley890.eyeofonyx.web.IpUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -16,20 +19,13 @@ import org.jetbrains.annotations.NotNull;
 
 public class TabRoyalty implements TabCompleter {
 
-    String[] tribes = RoyaltyBoard.getTribes();
-    String[] positions = RoyaltyBoard.getValidPositions();
-
-    List<String> suggestions = new ArrayList<>();
+    static String[] tribes = RoyaltyBoard.getTribes();
+    static String[] positions = RoyaltyBoard.getValidPositions();
 
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
 
-        // Clear previous suggestions or create a new ArrayList
-        if (suggestions != null) {
-            suggestions.clear();
-        } else {
-            suggestions = new ArrayList<>();
-        }
+        List<String> suggestions = new ArrayList<>();
 
         if (args.length == 1) {
             
@@ -63,11 +59,25 @@ public class TabRoyalty implements TabCompleter {
             if (args[0].equals("manage")) {
                 suggestions.add("name");
                 suggestions.add("joined_time");
-                suggestions.add("last_online");
                 suggestions.add("last_challenge_time");
                 suggestions.add("challenger");
                 if (!args[2].equals("ruler")) {
                     suggestions.add("challenging");
+                }
+            }
+        } else if (args.length == 5) {
+            if (args[0].equals("manage")) {
+                if (args[3].equals("joined_time") || args[3].equals("last_challenge_time")) {
+                    suggestions.add("now");
+                    suggestions.add("never");
+                } else if (args[3].equals("challenger") || args[3].equals("challenging")) {
+                    for (Player player : Bukkit.getOnlinePlayers()) {
+                        suggestions.add("@a");
+                        suggestions.add("@p");
+                        suggestions.add("@r");
+                        suggestions.add("@s");
+                        suggestions.add(player.getName());
+                    }
                 }
             }
         }

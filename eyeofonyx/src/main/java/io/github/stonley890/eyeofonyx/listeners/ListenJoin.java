@@ -1,12 +1,22 @@
 package io.github.stonley890.eyeofonyx.listeners;
 
 import java.io.IOException;
+import java.io.InvalidObjectException;
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 
+import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import io.github.stonley890.eyeofonyx.challenges.Competition;
 import io.github.stonley890.eyeofonyx.files.Notification;
+import io.github.stonley890.eyeofonyx.files.PlayerTribe;
+import io.github.stonley890.eyeofonyx.web.IpUtils;
+import javassist.NotFoundException;
+import net.luckperms.api.model.user.User;
+import net.luckperms.api.model.user.UserManager;
+import net.luckperms.api.node.Node;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -21,19 +31,63 @@ import io.github.stonley890.eyeofonyx.files.RoyaltyBoard;
 
 public class ListenJoin implements Listener {
 
-    private final FileConfiguration board = RoyaltyBoard.get();
-    private final Scoreboard scoreboard = Objects.requireNonNull(Bukkit.getScoreboardManager()).getMainScoreboard();
+    private static final FileConfiguration board = RoyaltyBoard.get();
+    private static final Scoreboard scoreboard = Objects.requireNonNull(Bukkit.getScoreboardManager()).getMainScoreboard();
 
-    private final Mojang mojang = new Mojang().connect();
+    private static final Mojang mojang = new Mojang().connect();
 
-    private final String[] teamNames = RoyaltyBoard.getTeamNames();
-    private final String[] tribes = RoyaltyBoard.getTribes();
-    private final String[] validPositions = RoyaltyBoard.getValidPositions();
+    private static final String[] teamNames = RoyaltyBoard.getTeamNames();
+    private static final String[] tribes = RoyaltyBoard.getTribes();
+    private static final String[] validPositions = RoyaltyBoard.getValidPositions();
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
 
         Player player = event.getPlayer();
+
+        // Update tribe
+        try {
+            PlayerTribe.updateTribeOfPlayer(player);
+        } catch (InvalidObjectException | NotFoundException e) {
+            // Player does not have a tribe.
+        }
+
+        // Update LuckPerms group (just in case)
+        UserManager userManager = EyeOfOnyx.luckperms.getUserManager();
+
+        CompletableFuture<User> userFuture = userManager.loadUser(player.getUniqueId());
+
+        userFuture.thenAcceptAsync(user -> {
+
+            int tribeIndex;
+            int posIndex;
+
+            try {
+                tribeIndex = PlayerTribe.getTribeOfPlayer(player.getUniqueId().toString());
+                posIndex = RoyaltyBoard.getPositionIndexOfUUID(player.getUniqueId().toString());
+            } catch (NotFoundException e) {
+                return;
+            }
+
+            if (posIndex == RoyaltyBoard.CIVILIAN) {
+
+                String groupName = EyeOfOnyx.getPlugin().getConfig().getString("citizen." + tribes[tribeIndex]);
+
+                user.data().add(Node.builder("group." + groupName).build());
+                userManager.saveUser(user);
+
+            }
+
+        });
+
+        // Get and cache timezone
+        Bukkit.getScheduler().runTaskAsynchronously(EyeOfOnyx.getPlugin(), new Runnable() {
+            @Override
+            public void run() {
+                // Cache player IP data
+                IpUtils.ipToTime(player.getAddress().getAddress().getHostAddress());
+            }
+        });
 
         // Call to join challenge if active
         if (Competition.activeChallenge != null) {
