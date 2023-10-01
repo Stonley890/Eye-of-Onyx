@@ -109,7 +109,7 @@ public class RoyaltyBoard {
         file = new File(plugin.getDataFolder(), "board.yml");
 
         if (!file.exists()) {
-            Dreamvisitor.debug("board.yml does not exist. Creating one...");
+            Bukkit.getLogger().info("board.yml does not exist. Creating one...");
             file.getParentFile().mkdirs();
             plugin.saveResource("board.yml", false);
         }
@@ -118,7 +118,13 @@ public class RoyaltyBoard {
         save(boardFile);
 
         long channelID = plugin.getConfig().getLong("royalty-board-channel");
-        boardChannel = Bot.getJda().getTextChannelById(channelID);
+        Bukkit.getScheduler().runTaskLater(EyeOfOnyx.getPlugin(), new Runnable() {
+            @Override
+            public void run() {
+                boardChannel = Bot.getJda().getTextChannelById(channelID);
+            }
+        }, 100L);
+
     }
 
     /**
@@ -132,7 +138,6 @@ public class RoyaltyBoard {
 
     public static void save(FileConfiguration board) {
         boardFile = board;
-        Dreamvisitor.debug("Saving.");
         try {
             boardFile.save(file);
         } catch (Exception e) {

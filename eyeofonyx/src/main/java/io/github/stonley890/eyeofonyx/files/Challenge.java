@@ -203,7 +203,7 @@ public class Challenge {
         file = new File(plugin.getDataFolder(), "challenges.yml");
 
         if (!file.exists()) {
-            Dreamvisitor.debug("challenges.yml does not exist. Creating one...");
+            Bukkit.getLogger().info("challenges.yml does not exist. Creating one...");
             file.createNewFile();
         }
 

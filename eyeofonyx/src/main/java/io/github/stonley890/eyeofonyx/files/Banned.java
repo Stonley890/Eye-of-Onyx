@@ -25,7 +25,7 @@ public class Banned {
         file = new File(plugin.getDataFolder(), "banned.yml");
 
         if (!file.exists()) {
-            Dreamvisitor.debug("banned.yml does not exist. Creating one...");
+            Bukkit.getLogger().info("banned.yml does not exist. Creating one...");
             file.createNewFile();
         }
 

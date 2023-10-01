@@ -49,7 +49,7 @@ public class Notification {
         file = new File(plugin.getDataFolder(), "notifications.yml");
 
         if (!file.exists()) {
-            Dreamvisitor.debug("notifications.yml does not exist. Creating one...");
+            Bukkit.getLogger().info("notifications.yml does not exist. Creating one...");
             file.createNewFile();
         }
 

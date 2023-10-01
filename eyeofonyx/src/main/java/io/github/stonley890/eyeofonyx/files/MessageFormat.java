@@ -2,6 +2,7 @@ package io.github.stonley890.eyeofonyx.files;
 
 import io.github.stonley890.dreamvisitor.Dreamvisitor;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
+import org.bukkit.Bukkit;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,11 +25,9 @@ public class MessageFormat {
         file = new File(plugin.getDataFolder(), "messageformat.txt");
 
         if (!file.exists()) {
-            Dreamvisitor.debug("banned.yml does not exist. Creating one...");
+            Bukkit.getLogger().info("banned.yml does not exist. Creating one...");
             Files.copy(Objects.requireNonNull(EyeOfOnyx.getPlugin().getResource("messageformat.txt")), file.toPath());
         }
-
-
 
     }
 

@@ -61,6 +61,8 @@ public class EyeOfOnyx extends JavaPlugin {
         // Initialize variables
         plugin = this;
 
+        Bukkit.getPluginManager().enablePlugin(Bukkit.getPluginManager().getPlugin("Dreamvisitor"));
+
         // Create config if needed
         saveDefaultConfig();
 
@@ -75,7 +77,7 @@ public class EyeOfOnyx extends JavaPlugin {
         } catch (IOException e) {
             e.printStackTrace();
             Bukkit.getLogger().warning("An I/O exception of some sort has occurred. Eye of Onyx could not initialize files. Does the server have write access?");
-            Bukkit.getPluginManager().disablePlugin(this);
+            // Bukkit.getPluginManager().disablePlugin(this);
         }
 
         // Restore frozen state

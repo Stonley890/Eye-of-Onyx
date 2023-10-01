@@ -38,7 +38,7 @@ public class PlayerTribe {
         file = new File(plugin.getDataFolder(), "player-tribes.yml");
 
         if (!file.exists()) {
-            Dreamvisitor.debug("player-tribes.yml does not exist. Creating one...");
+            Bukkit.getLogger().info("player-tribes.yml does not exist. Creating one...");
             file.createNewFile();
         }
 
