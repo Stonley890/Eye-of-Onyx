@@ -1,5 +1,6 @@
 package io.github.stonley890.eyeofonyx.commands;
 
+import io.github.stonley890.dreamvisitor.Dreamvisitor;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import io.github.stonley890.eyeofonyx.files.*;
 import javassist.NotFoundException;
@@ -344,6 +345,24 @@ public class CmdEyeOfOnyx implements CommandExecutor {
                     } else {
                         RoyaltyBoard.setFrozen(true);
                         sender.sendMessage(EyeOfOnyx.EOO + "The royalty board is now frozen.");
+                    }
+
+                } case "senddiscord" -> {
+
+                    // Clear list of recorded messages
+                    List<Long> messages = Dreamvisitor.getPlugin().getConfig().getLongList("royalty-board-message");
+                    messages.clear();
+                    EyeOfOnyx.getPlugin().getConfig().set("royalty-board-message", messages);
+                    EyeOfOnyx.getPlugin().saveConfig();
+
+                    // Send
+                    try {
+                        RoyaltyBoard.updateDiscordBoard();
+                        sender.sendMessage(EyeOfOnyx.EOO + "Success!");
+                    } catch (IOException e) {
+                        Bukkit.getLogger().severe("Could not get message file!");
+                        sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Could not get message file! Check logs for more information.");
+                        throw new RuntimeException(e);
                     }
 
                 }

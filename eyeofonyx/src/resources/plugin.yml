@@ -1,6 +1,6 @@
 main: io.github.stonley890.eyeofonyx.EyeOfOnyx
 name: EyeOfOnyx
-version: 1.0.3
+version: 1.0.6
 api-version: 1.19
 description: A plugin that manages the royalty board on Wings of Fire The New World
 authors: [Stonley890, iHeron]
@@ -14,17 +14,13 @@ softdepend:
 commands:
   eyeofonyx:
     description: Manage Eye of Onyx.
-    usage: /<command> <ban|unban|freeze|disable|config>
+    usage: /<command> <ban|unban|freeze|disable|config|senddiscord>
   royalty:
     description: Access or manage the royalty board.
     usage: /<command> <set|list|clear|update|manage>
   challenge:
     description: Initiate a challenge.
     usage: /<command>
-  tribeupdate:
-    description: Update Discord role based on in-game team
-    usage: /<command> [player]
-    permission: minecraft.command.op
   competition:
     description: Control challenges.
     usage: /<command> <player> type <challenge type>

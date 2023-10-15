@@ -38,6 +38,7 @@ public class TabEyeOfOnyx implements TabCompleter {
                 suggestions.add("freeze");
                 suggestions.add("disable");
                 suggestions.add("config");
+                suggestions.add("senddiscord");
             }
 
         } else if (args.length == 2) {

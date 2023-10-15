@@ -2,16 +2,18 @@ package io.github.stonley890.eyeofonyx.files;
 
 import io.github.stonley890.dreamvisitor.Bot;
 import io.github.stonley890.dreamvisitor.Dreamvisitor;
-import io.github.stonley890.dreamvisitor.commands.discord.DiscCommandsManager;
 import io.github.stonley890.dreamvisitor.data.AccountLink;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import io.github.stonley890.eyeofonyx.Utils;
 import javassist.NotFoundException;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.exceptions.ErrorHandler;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
-import net.luckperms.api.model.group.Group;
+import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
+import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.luckperms.api.model.user.User;
 import net.luckperms.api.model.user.UserManager;
 import net.luckperms.api.node.Node;
@@ -25,10 +27,12 @@ import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+
+import static java.lang.Thread.sleep;
 
 public class RoyaltyBoard {
 
@@ -75,8 +79,6 @@ public class RoyaltyBoard {
     public static final int NOBLE_APPARENT = 3;
     public static final int NOBLE_PRESUMPTIVE = 4;
     public static final int CIVILIAN = 5;
-    private static String finalMessage;
-
 
     public static String[] getTeamNames() {
         return teamNames;
@@ -118,12 +120,7 @@ public class RoyaltyBoard {
         save(boardFile);
 
         long channelID = plugin.getConfig().getLong("royalty-board-channel");
-        Bukkit.getScheduler().runTaskLater(EyeOfOnyx.getPlugin(), new Runnable() {
-            @Override
-            public void run() {
-                boardChannel = Bot.getJda().getTextChannelById(channelID);
-            }
-        }, 100L);
+        boardChannel = Bot.getJda().getTextChannelById(channelID);
 
     }
 
@@ -299,7 +296,10 @@ public class RoyaltyBoard {
         } else {
 
             // Build message
-            long delay = 0;
+
+            if (messageIDs.size() != 10) messageIDs = new ArrayList<>(10);
+            // Create message list
+            List<String> messages = new ArrayList<>();
 
             // for each tribe...
             for (int i = 0; i < RoyaltyBoard.tribes.length; i++) {
@@ -347,7 +347,7 @@ public class RoyaltyBoard {
                     if (!RoyaltyBoard.getUuid(i, j).equals("none") && !Dreamvisitor.botFailed) {
 
                         // Get recorded user ID
-                        String userId = AccountLink.getDiscordId(getUuid(i,j).replaceAll("-",""));
+                        String userId = AccountLink.getDiscordId(getUuid(i, j).replaceAll("-", ""));
 
                         if (userId != null) {
                             // Get sister guild
@@ -364,12 +364,15 @@ public class RoyaltyBoard {
                             }
 
                             // Get main guild
-                            Guild mainGuild = DiscCommandsManager.gameLogChannel.getGuild();
+                            Guild mainGuild = Bot.gameLogChannel.getGuild();
                             // Get appropriate role
                             Role royaltyRole = null;
-                            if (j == 0) royaltyRole = mainGuild.getRoleById(plugin.getConfig().getLong("main-royalty-roles.ruler"));
-                            if (j == 1 || j == 2) royaltyRole = mainGuild.getRoleById(plugin.getConfig().getLong("main-royalty-roles.heir"));
-                            if (j == 3 || j == 4) royaltyRole = mainGuild.getRoleById(plugin.getConfig().getLong("main-royalty-roles.noble"));
+                            if (j == 0)
+                                royaltyRole = mainGuild.getRoleById(plugin.getConfig().getLong("main-royalty-roles.ruler"));
+                            if (j == 1 || j == 2)
+                                royaltyRole = mainGuild.getRoleById(plugin.getConfig().getLong("main-royalty-roles.heir"));
+                            if (j == 3 || j == 4)
+                                royaltyRole = mainGuild.getRoleById(plugin.getConfig().getLong("main-royalty-roles.noble"));
                             // Add to user
                             if (royaltyRole != null) {
                                 Role finalRoyaltyRole = royaltyRole;
@@ -383,27 +386,41 @@ public class RoyaltyBoard {
                     }
                 }
 
-                // Get message
-                try {
-                    String finalMessage = message;
-                    boardChannel.retrieveMessageById(messageIDs.get(i)).queueAfter(delay, TimeUnit.MILLISECONDS, targetMessage -> {
-                        targetMessage.editMessage(finalMessage).queue();
-                    });
-                } catch (ErrorResponseException e) {
-                    // If the message does not exist, create one
-                    int finalI = i;
-                    boardChannel.sendMessage(message).queue(sentMessage -> {
-                        // Save ID for editing later
-                        long messageId = sentMessage.getIdLong();
-                        messageIDs.set(finalI, messageId);
-                        plugin.getConfig().set("royalty-board-message", messageIDs);
-                        plugin.saveConfig();
-                    });
+                messages.add(message);
+
+            } // end of for loop
+
+            if (messageIDs.isEmpty() || messageIDs.size() < 10) {
+                Bukkit.getLogger().warning("Some royalty board messages are not recorded. Creating new ones.");
+
+                // send new messages
+                List<Long> newMessageIDs = new ArrayList<>();
+                for (String message : messages) {
+                    newMessageIDs.add(boardChannel.sendMessage(message).complete().getIdLong());
+                }
+                // save sent message IDs for later editing
+                plugin.getConfig().set("royalty-board-message", newMessageIDs);
+                plugin.saveConfig();
+
+            } else {
+                // Try to edit messages
+                for (int i = 0; i < messages.size(); i++) {
+                    // Get message
+                    final String finalMessage = messages.get(i);
+                    final Long targetMessageId = messageIDs.get(i);
+                    try {
+                        boardChannel.retrieveMessageById(targetMessageId).queue((targetMessage) -> {
+                            targetMessage.editMessage(finalMessage).queue();
+                        }, new ErrorHandler().handle(ErrorResponse.UNKNOWN_MESSAGE, (error) -> {
+                            Bukkit.getLogger().warning("Unknwon Message! Couldn't get message " + targetMessageId);
+                        }));
+
+                    } catch (InsufficientPermissionException e) {
+                        Bukkit.getLogger().warning("Dreamvisitor Bot does not have permission to get the royalty board message!");
+                    }
                 }
 
-                delay += 10000;
             }
-
 
         }
 
@@ -435,7 +452,7 @@ public class RoyaltyBoard {
                         int finalT = t;
                         userFuture.thenAcceptAsync(user -> {
 
-                            String[] groupPositions = {"ruler","heir","noble","citizen"};
+                            String[] groupPositions = {"ruler", "heir", "noble", "citizen"};
 
                             // For each tribe and position...
                             for (String tribe : tribes) {

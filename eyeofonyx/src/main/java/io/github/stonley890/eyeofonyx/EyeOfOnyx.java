@@ -3,7 +3,6 @@ package io.github.stonley890.eyeofonyx;
 import com.sun.net.httpserver.HttpServer;
 import io.github.stonley890.dreamvisitor.Bot;
 import io.github.stonley890.dreamvisitor.Dreamvisitor;
-import io.github.stonley890.dreamvisitor.commands.discord.DiscCommandsManager;
 import io.github.stonley890.eyeofonyx.challenges.Competition;
 import io.github.stonley890.eyeofonyx.commands.*;
 import io.github.stonley890.eyeofonyx.commands.tabcomplete.TabCompetition;
@@ -16,12 +15,6 @@ import io.github.stonley890.eyeofonyx.listeners.ListenLeave;
 import io.github.stonley890.eyeofonyx.web.AvailabilityHandler;
 import io.github.stonley890.eyeofonyx.web.SubmitHandler;
 import javassist.NotFoundException;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
-import net.dv8tion.jda.api.interactions.commands.OptionType;
-import net.dv8tion.jda.api.interactions.commands.build.CommandData;
-import net.dv8tion.jda.api.interactions.commands.build.Commands;
-import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.luckperms.api.LuckPerms;
 import net.md_5.bungee.api.ChatColor;
 import openrp.OpenRP;
@@ -36,7 +29,6 @@ import org.shanerx.mojang.Mojang;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.logging.Level;
@@ -62,6 +54,7 @@ public class EyeOfOnyx extends JavaPlugin {
         plugin = this;
 
         Bukkit.getPluginManager().enablePlugin(Bukkit.getPluginManager().getPlugin("Dreamvisitor"));
+        Bukkit.getPluginManager().enablePlugin(Bukkit.getPluginManager().getPlugin("LuckPerms"));
 
         // Create config if needed
         saveDefaultConfig();
@@ -75,9 +68,7 @@ public class EyeOfOnyx extends JavaPlugin {
             MessageFormat.setup();
             PlayerTribe.setup();
         } catch (IOException e) {
-            e.printStackTrace();
             Bukkit.getLogger().warning("An I/O exception of some sort has occurred. Eye of Onyx could not initialize files. Does the server have write access?");
-            // Bukkit.getPluginManager().disablePlugin(this);
         }
 
         // Restore frozen state
@@ -111,7 +102,7 @@ public class EyeOfOnyx extends JavaPlugin {
 
         } catch (IOException e) {
             Bukkit.getLogger().warning("An I/O exception of some sort has occurred. Eye of Onyx could not initialize files. Does the server have write access?");
-            Bukkit.getPluginManager().disablePlugin(this);
+            e.printStackTrace();
         }
 
         // OpenRP API
@@ -214,13 +205,13 @@ public class EyeOfOnyx extends JavaPlugin {
             }
         };
 
-        Bukkit.getScheduler().runTaskTimer(this, tick1200Run, 20, 1200);
-        Bukkit.getScheduler().runTaskTimer(this, tick12000Run, 40, 12000);
+        Bukkit.getScheduler().runTaskTimerAsynchronously(this, tick1200Run, 20, 1200);
+        Bukkit.getScheduler().runTaskTimerAsynchronously(this, tick12000Run, 40, /*400*/ 12000);
 
 
         // Start message
         Bukkit.getLogger().log(Level.INFO, "Eye of Onyx {0}: A plugin that manages the royalty board on Wings of Fire: The New World", version);
-        Bot.sendMessage(DiscCommandsManager.gameLogChannel, "*Eye of Onyx " + version + " enabled.*");
+        Bot.sendMessage(Bot.gameLogChannel, "*Eye of Onyx " + version + " enabled.*");
     }
 
     @Override

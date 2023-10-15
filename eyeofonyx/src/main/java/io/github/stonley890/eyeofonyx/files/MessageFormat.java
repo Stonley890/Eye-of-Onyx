@@ -25,7 +25,7 @@ public class MessageFormat {
         file = new File(plugin.getDataFolder(), "messageformat.txt");
 
         if (!file.exists()) {
-            Bukkit.getLogger().info("banned.yml does not exist. Creating one...");
+            Bukkit.getLogger().info("messageformat.txt does not exist. Creating one...");
             Files.copy(Objects.requireNonNull(EyeOfOnyx.getPlugin().getResource("messageformat.txt")), file.toPath());
         }
 
