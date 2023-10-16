@@ -359,7 +359,9 @@ public class RoyaltyBoard {
                                     // Get user and add role
                                     sisterGuild.retrieveMemberById(userId).queue(user -> {
                                         sisterGuild.addRoleToMember(user, tribeRole).queue();
-                                    });
+                                    }, new ErrorHandler().handle(ErrorResponse.UNKNOWN_MEMBER, (error) -> {
+                                        Dreamvisitor.debug("Could not get member of ID " + userId + " in sister server.");
+                                    }));
                                 }
                             }
 
@@ -378,7 +380,9 @@ public class RoyaltyBoard {
                                 Role finalRoyaltyRole = royaltyRole;
                                 mainGuild.retrieveMemberById(userId).queue(user -> {
                                     mainGuild.addRoleToMember(user, finalRoyaltyRole).queue();
-                                });
+                                }, new ErrorHandler().handle(ErrorResponse.UNKNOWN_MEMBER, (error) -> {
+                                    Dreamvisitor.debug("Could not get member of ID " + userId + " in main server.");
+                                }));
                             }
                         } else {
                             Bukkit.getLogger().warning(username + " does not have an associated Discord ID!");
