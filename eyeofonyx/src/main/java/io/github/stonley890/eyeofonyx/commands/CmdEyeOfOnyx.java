@@ -111,6 +111,11 @@ public class CmdEyeOfOnyx implements CommandExecutor {
                                     if (pos != -1 && pos != RoyaltyBoard.CIVILIAN) {
                                         RoyaltyBoard.removePlayer(tribe, pos);
                                         RoyaltyBoard.updateBoard();
+                                        try {
+                                            RoyaltyBoard.updateDiscordBoard(tribe);
+                                        } catch (IOException e) {
+                                            sender.sendMessage(EyeOfOnyx.EOO + org.bukkit.ChatColor.RED + "An I/O error occurred while attempting to update Discord board.");
+                                        }
                                     }
                                     new Notification(uuid, "Royalty Ban", "You are no longer allowed to participate in royalty. Contact staff if you think this is a mistake.", NotificationType.GENERIC).create();
                                     sender.sendMessage(EyeOfOnyx.EOO + args[1] + " has been banned.");
@@ -357,7 +362,9 @@ public class CmdEyeOfOnyx implements CommandExecutor {
 
                     // Send
                     try {
-                        RoyaltyBoard.updateDiscordBoard();
+                        for (int i = 0; i < RoyaltyBoard.getTribes().length; i++) {
+                            RoyaltyBoard.updateDiscordBoard(i);
+                        }
                         sender.sendMessage(EyeOfOnyx.EOO + "Success!");
                     } catch (IOException e) {
                         Bukkit.getLogger().severe("Could not get message file!");

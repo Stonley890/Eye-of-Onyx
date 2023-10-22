@@ -19,7 +19,7 @@ import java.util.HashMap;
 
 public class PlayerTribe {
 
-    private static HashMap<String, String> tribeStorage = new HashMap<>();
+    private static final HashMap<String, String> tribeStorage = new HashMap<>();
     /*
     These are stored as <String player-uuid, String TeamName> but returned as tribe indexes. This way, the file is human-readable, and the system can be adapted if new tribes are introduced.
      */

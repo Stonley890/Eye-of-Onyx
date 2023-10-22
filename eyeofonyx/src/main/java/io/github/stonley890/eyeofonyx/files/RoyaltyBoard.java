@@ -287,7 +287,7 @@ public class RoyaltyBoard {
 
     }
 
-    public static void updateDiscordBoard() throws IOException {
+    public static void updateDiscordBoard(int tribeIndex) throws IOException {
         // Get channel and message
         List<Long> messageIDs = plugin.getConfig().getLongList("royalty-board-message");
 
@@ -299,131 +299,111 @@ public class RoyaltyBoard {
 
             if (messageIDs.size() != 10) messageIDs = new ArrayList<>(10);
             // Create message list
-            List<String> messages = new ArrayList<>();
 
-            // for each tribe...
-            for (int i = 0; i < RoyaltyBoard.tribes.length; i++) {
+            // Get base message from messageformat.txt
+            String message = MessageFormat.get();
 
-                // Get base message from messageformat.txt
-                String message = MessageFormat.get();
+            // Replace $EMBLEM with appropriate tribe emoji
+            if (!plugin.getConfig().getStringList("tribe-emblems").isEmpty()) {
+                message = message.replace("$EMBLEM", plugin.getConfig().getStringList("tribe-emblems").get(tribeIndex));
+            }
 
-                // Replace $EMBLEM with appropriate tribe emoji
-                if (!plugin.getConfig().getStringList("tribe-emblems").isEmpty()) {
-                    message = message.replace("$EMBLEM", plugin.getConfig().getStringList("tribe-emblems").get(i));
+            // Replace $TRIBE with appropriate tribe name
+            message = message.replace("$TRIBE", RoyaltyBoard.tribes[tribeIndex].substring(0, 1).toUpperCase() + RoyaltyBoard.tribes[tribeIndex].substring(1));
+
+            // for each position...
+            String[] positions = RoyaltyBoard.getValidPositions();
+            for (int j = 0; j < positions.length; j++) {
+                final String position = positions[j];
+
+                String name = "N/A";
+                String username = "N/A";
+                String joined = "";
+
+                Dreamvisitor.debug("Getting info for tribe " + tribeIndex + " position " + j);
+
+                // Get info if not empty
+                if (!RoyaltyBoard.getUuid(tribeIndex, j).equals("none")) {
+                    Dreamvisitor.debug("Player here");
+
+                    username = mojang.getPlayerProfile(RoyaltyBoard.getUuid(tribeIndex, j)).getUsername();
+
+                    name = ChatColor.stripColor(RoyaltyBoard.getOcName(tribeIndex, j));
+                    if (name == null || name.equals("&c<No name set>")) name = username;
+
+                    joined = "<t:" + LocalDateTime.parse(RoyaltyBoard.getJoinedDate(tribeIndex, j)).toEpochSecond(ZoneOffset.UTC) + ":d>";
                 }
 
-                // Replace $TRIBE with appropriate tribe name
-                message = message.replace("$TRIBE", RoyaltyBoard.tribes[i].substring(0, 1).toUpperCase() + RoyaltyBoard.tribes[i].substring(1));
+                // Replace in message
+                message = message.replace("$" + position.toUpperCase() + "-NAME", name)
+                        .replace("$" + position.toUpperCase() + "-USERNAME", username)
+                        .replace("$" + position.toUpperCase() + "-JOINED", joined);
 
-                // for each position...
-                String[] positions = RoyaltyBoard.getValidPositions();
-                for (int j = 0; j < positions.length; j++) {
-                    final String position = positions[j];
+                // Update Discord roles
+                if (!RoyaltyBoard.getUuid(tribeIndex, j).equals("none") && !Dreamvisitor.botFailed) {
 
-                    String name = "N/A";
-                    String username = "N/A";
-                    String joined = "";
+                    // Get recorded user ID
+                    String userId = AccountLink.getDiscordId(getUuid(tribeIndex, j).replaceAll("-", ""));
 
-                    Dreamvisitor.debug("Getting info for tribe " + i + " position " + j);
-
-                    // Get info if not empty
-                    if (!RoyaltyBoard.getUuid(i, j).equals("none")) {
-                        Dreamvisitor.debug("Player here");
-
-                        username = mojang.getPlayerProfile(RoyaltyBoard.getUuid(i, j)).getUsername();
-
-                        name = ChatColor.stripColor(RoyaltyBoard.getOcName(i, j));
-                        if (name == null || name.equals("&c<No name set>")) name = username;
-
-                        joined = "<t:" + LocalDateTime.parse(RoyaltyBoard.getJoinedDate(i, j)).toEpochSecond(ZoneOffset.UTC) + ":d>";
-                    }
-
-                    // Replace in message
-                    message = message.replace("$" + position.toUpperCase() + "-NAME", name)
-                            .replace("$" + position.toUpperCase() + "-USERNAME", username)
-                            .replace("$" + position.toUpperCase() + "-JOINED", joined);
-
-                    // Update Discord roles
-                    if (!RoyaltyBoard.getUuid(i, j).equals("none") && !Dreamvisitor.botFailed) {
-
-                        // Get recorded user ID
-                        String userId = AccountLink.getDiscordId(getUuid(i, j).replaceAll("-", ""));
-
-                        if (userId != null) {
-                            // Get sister guild
-                            Guild sisterGuild = Bot.getJda().getGuildById(Dreamvisitor.getPlugin().getConfig().getLong("tribeGuildID"));
-                            if (sisterGuild != null) {
-                                // Get role
-                                Role tribeRole = sisterGuild.getRoleById(plugin.getConfig().getLongList("sister-royalty-roles").get(i));
-                                if (tribeRole != null && userId != null) {
-                                    // Get user and add role
-                                    sisterGuild.retrieveMemberById(userId).queue(user -> {
-                                        sisterGuild.addRoleToMember(user, tribeRole).queue();
-                                    }, new ErrorHandler().handle(ErrorResponse.UNKNOWN_MEMBER, (error) -> {
-                                        Dreamvisitor.debug("Could not get member of ID " + userId + " in sister server.");
-                                    }));
-                                }
-                            }
-
-                            // Get main guild
-                            Guild mainGuild = Bot.gameLogChannel.getGuild();
-                            // Get appropriate role
-                            Role royaltyRole = null;
-                            if (j == 0)
-                                royaltyRole = mainGuild.getRoleById(plugin.getConfig().getLong("main-royalty-roles.ruler"));
-                            if (j == 1 || j == 2)
-                                royaltyRole = mainGuild.getRoleById(plugin.getConfig().getLong("main-royalty-roles.heir"));
-                            if (j == 3 || j == 4)
-                                royaltyRole = mainGuild.getRoleById(plugin.getConfig().getLong("main-royalty-roles.noble"));
-                            // Add to user
-                            if (royaltyRole != null) {
-                                Role finalRoyaltyRole = royaltyRole;
-                                mainGuild.retrieveMemberById(userId).queue(user -> {
-                                    mainGuild.addRoleToMember(user, finalRoyaltyRole).queue();
+                    if (userId != null) {
+                        // Get sister guild
+                        Guild sisterGuild = Bot.getJda().getGuildById(Dreamvisitor.getPlugin().getConfig().getLong("tribeGuildID"));
+                        if (sisterGuild != null) {
+                            // Get role
+                            Role tribeRole = sisterGuild.getRoleById(plugin.getConfig().getLongList("sister-royalty-roles").get(tribeIndex));
+                            if (tribeRole != null && userId != null) {
+                                // Get user and add role
+                                sisterGuild.retrieveMemberById(userId).queue(user -> {
+                                    sisterGuild.addRoleToMember(user, tribeRole).queue();
                                 }, new ErrorHandler().handle(ErrorResponse.UNKNOWN_MEMBER, (error) -> {
-                                    Dreamvisitor.debug("Could not get member of ID " + userId + " in main server.");
+                                    Dreamvisitor.debug("Could not get member of ID " + userId + " in sister server.");
                                 }));
                             }
-                        } else {
-                            Bukkit.getLogger().warning(username + " does not have an associated Discord ID!");
                         }
+
+                        // Get main guild
+                        Guild mainGuild = Bot.gameLogChannel.getGuild();
+                        // Get appropriate role
+                        Role royaltyRole = null;
+                        if (j == 0)
+                            royaltyRole = mainGuild.getRoleById(plugin.getConfig().getLong("main-royalty-roles.ruler"));
+                        if (j == 1 || j == 2)
+                            royaltyRole = mainGuild.getRoleById(plugin.getConfig().getLong("main-royalty-roles.heir"));
+                        if (j == 3 || j == 4)
+                            royaltyRole = mainGuild.getRoleById(plugin.getConfig().getLong("main-royalty-roles.noble"));
+                        // Add to user
+                        if (royaltyRole != null) {
+                            Role finalRoyaltyRole = royaltyRole;
+                            mainGuild.retrieveMemberById(userId).queue(user -> {
+                                mainGuild.addRoleToMember(user, finalRoyaltyRole).queue();
+                            }, new ErrorHandler().handle(ErrorResponse.UNKNOWN_MEMBER, (error) -> {
+                                Dreamvisitor.debug("Could not get member of ID " + userId + " in main server.");
+                            }));
+                        }
+                    } else {
+                        Bukkit.getLogger().warning(username + " does not have an associated Discord ID!");
                     }
                 }
-
-                messages.add(message);
-
-            } // end of for loop
+            }
 
             if (messageIDs.isEmpty() || messageIDs.size() < 10) {
-                Bukkit.getLogger().warning("Some royalty board messages are not recorded. Creating new ones.");
-
-                // send new messages
-                List<Long> newMessageIDs = new ArrayList<>();
-                for (String message : messages) {
-                    newMessageIDs.add(boardChannel.sendMessage(message).complete().getIdLong());
-                }
-                // save sent message IDs for later editing
-                plugin.getConfig().set("royalty-board-message", newMessageIDs);
-                plugin.saveConfig();
-
+                Bukkit.getLogger().warning("Some royalty board messages are not recorded. Use /eyeofonyx senddiscord to resend the Discord board");
             } else {
-                // Try to edit messages
-                for (int i = 0; i < messages.size(); i++) {
-                    // Get message
-                    final String finalMessage = messages.get(i);
-                    final Long targetMessageId = messageIDs.get(i);
-                    try {
-                        boardChannel.retrieveMessageById(targetMessageId).queue((targetMessage) -> {
-                            targetMessage.editMessage(finalMessage).queue();
-                        }, new ErrorHandler().handle(ErrorResponse.UNKNOWN_MESSAGE, (error) -> {
-                            Bukkit.getLogger().warning("Unknwon Message! Couldn't get message " + targetMessageId);
-                        }));
 
-                    } catch (InsufficientPermissionException e) {
-                        Bukkit.getLogger().warning("Dreamvisitor Bot does not have permission to get the royalty board message!");
-                    }
+                // Try to edit message
+                // Get message
+                final String finalMessage = message;
+                final Long targetMessageId = messageIDs.get(tribeIndex);
+                try {
+                    boardChannel.retrieveMessageById(targetMessageId).queue((targetMessage) -> {
+                        targetMessage.editMessage(finalMessage).queue();
+                    }, new ErrorHandler().handle(ErrorResponse.UNKNOWN_MESSAGE, (error) -> {
+                        Bukkit.getLogger().warning("Unknwon Message! Couldn't get message " + targetMessageId);
+                    }));
+
+                } catch (InsufficientPermissionException e) {
+                    Bukkit.getLogger().warning("Dreamvisitor Bot does not have permission to get the royalty board message!");
                 }
-
             }
 
         }

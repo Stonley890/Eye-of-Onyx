@@ -59,6 +59,7 @@ public class EyeOfOnyx extends JavaPlugin {
         // Create config if needed
         saveDefaultConfig();
 
+        Dreamvisitor.debug("Setting up files.");
         // Set up files
         try {
             RoyaltyBoard.setup();
@@ -71,9 +72,11 @@ public class EyeOfOnyx extends JavaPlugin {
             Bukkit.getLogger().warning("An I/O exception of some sort has occurred. Eye of Onyx could not initialize files. Does the server have write access?");
         }
 
+        Dreamvisitor.debug("Restoring settings.");
         // Restore frozen state
         RoyaltyBoard.setFrozen(getConfig().getBoolean("frozen"));
 
+        Dreamvisitor.debug("Setting up commands.");
         // Initialize command executors
         Objects.requireNonNull(getCommand("eyeofonyx")).setExecutor(new CmdEyeOfOnyx());
         Objects.requireNonNull(getCommand("royalty")).setExecutor(new CmdRoyalty());
@@ -92,6 +95,11 @@ public class EyeOfOnyx extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new ListenJoin(), this);
         getServer().getPluginManager().registerEvents(new ListenLeave(), this);
 
+        Dreamvisitor.debug("Creating Discord commands.");
+        // Add commands
+        Discord.initCommands();
+
+        Dreamvisitor.debug("Starting web server.");
         // Web server
         try {
             server = HttpServer.create(new InetSocketAddress(getConfig().getInt("port")), 0);
@@ -193,21 +201,7 @@ public class EyeOfOnyx extends JavaPlugin {
             }
         };
 
-        Runnable tick12000Run = new BukkitRunnable() {
-            // Run every 10 minutes
-            @Override
-            public void run() {
-                try {
-                    RoyaltyBoard.updateDiscordBoard();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        };
-
         Bukkit.getScheduler().runTaskTimerAsynchronously(this, tick1200Run, 20, 1200);
-        Bukkit.getScheduler().runTaskTimerAsynchronously(this, tick12000Run, 40, /*400*/ 12000);
-
 
         // Start message
         Bukkit.getLogger().log(Level.INFO, "Eye of Onyx {0}: A plugin that manages the royalty board on Wings of Fire: The New World", version);

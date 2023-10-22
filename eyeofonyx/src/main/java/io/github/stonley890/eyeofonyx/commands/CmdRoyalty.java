@@ -1,5 +1,6 @@
 package io.github.stonley890.eyeofonyx.commands;
 
+import io.github.stonley890.dreamvisitor.Dreamvisitor;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import io.github.stonley890.eyeofonyx.Utils;
 import io.github.stonley890.eyeofonyx.files.*;
@@ -39,7 +40,6 @@ public class CmdRoyalty implements CommandExecutor {
     private static final Scoreboard scoreboard = Objects.requireNonNull(Bukkit.getScoreboardManager()).getMainScoreboard();
 
     // Easy access royalty board
-    // private static FileConfiguration board = RoyaltyBoard.get();
 
     // Team names
     private static final String[] teamNames = RoyaltyBoard.getTeamNames();
@@ -54,9 +54,6 @@ public class CmdRoyalty implements CommandExecutor {
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
 
         sender.sendMessage(EyeOfOnyx.EOO + "Please wait...");
-
-        // RoyaltyBoard.reload();
-        // RoyaltyBoard.updateBoard();
 
         if (args.length < 1) list(sender, args);
         else if (args[0].equalsIgnoreCase("set") && args.length > 2) {
@@ -79,6 +76,13 @@ public class CmdRoyalty implements CommandExecutor {
                 sender.sendMessage(EyeOfOnyx.EOO + "Reloading and updating the board...");
                 RoyaltyBoard.reload();
                 RoyaltyBoard.updateBoard();
+                for (int i = 0; i < RoyaltyBoard.getTribes().length; i++) {
+                    try {
+                        RoyaltyBoard.updateDiscordBoard(i);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
                 sender.sendMessage(EyeOfOnyx.EOO + ChatColor.YELLOW + "Board updated.");
             } else sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You are not permitted to use that command.");
 
@@ -88,14 +92,14 @@ public class CmdRoyalty implements CommandExecutor {
             else sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You are not permitted to use that command.");
 
         } else
-            sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Invalid arguments! /royalty <set|list|clear|update>");
+            sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Invalid arguments! /royalty <set|list|clear|update|manage>");
 
         RoyaltyBoard.save(RoyaltyBoard.get());
         return true;
     }
 
     // royalty set <player> <position> [name]
-    void set(CommandSender sender, String[] args) {
+    static void set(CommandSender sender, String[] args) {
 
         UUID targetPlayerUUID;
 
@@ -152,20 +156,28 @@ public class CmdRoyalty implements CommandExecutor {
 
                 // If no name was provided, use username
                 if (args.length == 3) {
-                    setBoard(tribes[playerTribe], args[2], "name", args[1]);
+                    RoyaltyBoard.setValue(playerTribe, targetPos, "name", args[1]);
                 }
 
                 // Canon name
                 // if ruler do title, then name
                 if (args[2].equals(validPositions[0]) && args.length > 3) {
-                    setBoard(tribes[playerTribe], args[2], "title", args[3]);
-                    setBoard(tribes[playerTribe], args[2], "name", args[4]);
-                } else if (args.length > 3) setBoard(tribes[playerTribe], args[2], "name", args[3]);
+                    RoyaltyBoard.setValue(playerTribe, targetPos, "title", args[3]);
+                    RoyaltyBoard.setValue(playerTribe, targetPos, "name", args[4]);
+                } else if (args.length > 3) RoyaltyBoard.setValue(playerTribe, targetPos, "name", args[3]);
 
 
-                setBoard(tribes[playerTribe], args[2], "joined_time", LocalDateTime.now().toString());
-                setBoard(tribes[playerTribe], args[2], "last_challenge_time", LocalDateTime.now().toString());
-                setBoard(tribes[playerTribe], args[2], "last_online", LocalDateTime.now().toString());
+                RoyaltyBoard.setValue(playerTribe, targetPos, "joined_time", LocalDateTime.now().toString());
+                RoyaltyBoard.setValue(playerTribe, targetPos, "last_challenge_time", LocalDateTime.now().toString());
+                RoyaltyBoard.setValue(playerTribe, targetPos, "last_online", LocalDateTime.now().toString());
+
+                RoyaltyBoard.save(RoyaltyBoard.get());
+                RoyaltyBoard.updateBoard();
+                try {
+                    RoyaltyBoard.updateDiscordBoard(playerTribe);
+                } catch (IOException e) {
+                    sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "An I/O error occurred while attempting to update Discord board.");
+                }
 
             } else
                 sender.sendMessage(EyeOfOnyx.EOO +
@@ -178,13 +190,12 @@ public class CmdRoyalty implements CommandExecutor {
             sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Player is not associated with a tribe!");
         }
 
-        RoyaltyBoard.save(RoyaltyBoard.get());
-        RoyaltyBoard.updateBoard();
+
 
     }
 
     // royalty list [tribe]
-    void list(CommandSender sender, String[] args) {
+    static void list(CommandSender sender, String[] args) {
 
         // If no other arguments, build and send full board
         if (args.length < 2) {
@@ -219,7 +230,7 @@ public class CmdRoyalty implements CommandExecutor {
     }
 
     // royalty clear <tribe> <position>
-    void clear(CommandSender sender, String[] args) {
+    static void clear(CommandSender sender, String[] args) {
 
         String tribe = args[1];
         String pos = args[2];
@@ -301,11 +312,16 @@ public class CmdRoyalty implements CommandExecutor {
 
         // If not ruler clear challenging
         if (!args[2].equals(validPositions[0])) {
-            setBoard(args[1], args[2], "challenging", "none");
+            RoyaltyBoard.setValue(tribeIndex, posIndex, "challenging", "none");
         }
 
         RoyaltyBoard.save(RoyaltyBoard.get());
         RoyaltyBoard.updateBoard();
+        try {
+            RoyaltyBoard.updateDiscordBoard(tribeIndex);
+        } catch (IOException e) {
+            sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "An I/O error occurred while attempting to update Discord board.");
+        }
         sender.sendMessage(EyeOfOnyx.EOO + ChatColor.YELLOW + args[1].toUpperCase() + " " + args[2].toUpperCase() + " position cleared.");
 
     }
@@ -583,7 +599,14 @@ public class CmdRoyalty implements CommandExecutor {
                         }
                     }
 
+                    try {
+                        RoyaltyBoard.updateDiscordBoard(tribeIndex);
+                    } catch (IOException e) {
+                        sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "An I/O error occurred while attempting to update Discord board.");
+                        if (Dreamvisitor.debug) e.printStackTrace();
+                    }
                     sender.sendMessage(EyeOfOnyx.EOO + "Set " + key.toUpperCase() + " for " + teamNames[tribeIndex] + " " + validPositions[posIndex].replaceAll("_", " ") + " to " + ChatColor.YELLOW + value);
+
                 } else sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Not a valid key! /royalty manage <tribe> <position> [name|joined_time|last_online|last_challenge_time|challenger|challenging]");
             }
         }
@@ -605,7 +628,7 @@ public class CmdRoyalty implements CommandExecutor {
      * 6 [ NOBLE PRESUMPTIVE: Name (Username)
      *
      */
-    StringBuilder buildBoard(int index) {
+    static StringBuilder buildBoard(int index) {
 
         // Create string builder
         StringBuilder strBuild = new StringBuilder();
@@ -642,10 +665,6 @@ public class CmdRoyalty implements CommandExecutor {
             }
         }
         return strBuild;
-    }
-
-    void setBoard(String tribe, String position, String data, Object value) {
-        RoyaltyBoard.get().set(tribe + "." + position + "." + data, value);
     }
 
 }

@@ -15,6 +15,7 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.shanerx.mojang.Mojang;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -173,6 +174,12 @@ public class CmdCompetition implements CommandExecutor {
                             }
 
                             Competition.activeChallenge = null;
+
+                            try {
+                                RoyaltyBoard.updateDiscordBoard(tribe);
+                            } catch (IOException e) {
+                                sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "An I/O error occurred while attempting to update Discord board.");
+                            }
 
                             sender.sendMessage(EyeOfOnyx.EOO + "Board updated.");
 

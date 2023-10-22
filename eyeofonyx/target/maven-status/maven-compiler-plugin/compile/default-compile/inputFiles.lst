@@ -9,6 +9,7 @@
 /home/stonley890/Documents/GitHub/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/commands/CmdRoyalty.java
 /home/stonley890/Documents/GitHub/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/files/NotificationType.java
 /home/stonley890/Documents/GitHub/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/listeners/ListenCmdPreprocess.java
+/home/stonley890/Documents/GitHub/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/Discord.java
 /home/stonley890/Documents/GitHub/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/files/MessageFormat.java
 /home/stonley890/Documents/GitHub/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/commands/tabcomplete/TabCompetition.java
 /home/stonley890/Documents/GitHub/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/files/Challenge.java
