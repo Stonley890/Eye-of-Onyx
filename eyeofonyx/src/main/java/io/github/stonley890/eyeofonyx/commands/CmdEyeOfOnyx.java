@@ -337,6 +337,19 @@ public class CmdEyeOfOnyx implements CommandExecutor {
 
                                 }
                             }
+                            case "royalty-log-channel" -> {
+                                if (args.length == 2) {
+                                    sender.sendMessage(EyeOfOnyx.EOO + "The channel ID for the Discord channel where updates to the royalty board should be recorded. Default: 660597606233276436. Current: " + main.getConfig().get(key));
+                                } else {
+                                    try {
+                                        main.getConfig().set(key, Long.valueOf(value));
+                                        sender.sendMessage(EyeOfOnyx.EOO + "Set " + key + " to " + value + ".");
+                                    } catch (NumberFormatException e) {
+                                        sender.sendMessage(EyeOfOnyx.EOO + "That is not a valid long.");
+                                    }
+
+                                }
+                            }
                         }
                     }
 

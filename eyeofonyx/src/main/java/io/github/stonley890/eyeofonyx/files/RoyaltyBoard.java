@@ -6,14 +6,16 @@ import io.github.stonley890.dreamvisitor.data.AccountLink;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import io.github.stonley890.eyeofonyx.Utils;
 import javassist.NotFoundException;
+import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.exceptions.ErrorHandler;
-import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
+import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 import net.dv8tion.jda.api.requests.ErrorResponse;
+import net.dv8tion.jda.internal.interactions.component.ButtonImpl;
 import net.luckperms.api.model.user.User;
 import net.luckperms.api.model.user.UserManager;
 import net.luckperms.api.node.Node;
@@ -29,10 +31,8 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-
-import static java.lang.Thread.sleep;
 
 public class RoyaltyBoard {
 
@@ -45,6 +45,8 @@ public class RoyaltyBoard {
      * Whether the royalty board is frozen
      */
     private static boolean frozen;
+
+    private static List<RoyaltyAction> recordedActions;
 
     // Team names
     private static final String[] teamNames = {
@@ -151,6 +153,31 @@ public class RoyaltyBoard {
         frozen = plugin.getConfig().getBoolean("frozen");
     }
 
+    public static void sendUpdate(RoyaltyAction action) {
+
+        EmbedBuilder builder = new EmbedBuilder();
+
+        String conjuction;
+        if (action.type == ActionType.SET) conjuction = "to";
+        else conjuction = "from";
+
+        long channelID = plugin.getConfig().getLong("royalty-log-channel");
+        String discordId = AccountLink.getDiscordId(action.affectedPlayer.toString());
+
+        Bot.getJda().retrieveUserById(discordId).queue(user -> {
+            builder.setAuthor("Eye of Onyx")
+                    .setTitle(action.type.toString() + " " + user.getAsMention() + " " + conjuction + " " + tribes[action.affectedTribe].toUpperCase() + " " + validPositions[action.affectedPosition].toUpperCase());
+            // Set/Removed USER to/from TRIBE POSITION
+            if (action.executor == null) builder.setDescription("This action was performed **automatically** by Eye of Onyx.");
+            else builder.setDescription("This action was performed by " + action.executor);
+
+            TextChannel logChannel = Bot.getJda().getTextChannelById(channelID);
+
+            if (logChannel != null) logChannel.sendMessageEmbeds(builder.build()).queue();
+        });
+
+    }
+
     /**
      * The first thing this method does is reload the file from disk.
      * After that, it will automatically search for and remove inactive
@@ -207,8 +234,12 @@ public class RoyaltyBoard {
                     // This position is empty, so count up positionsEmpty
                     positionsEmpty += 1;
 
-                    // Update LuckPerms
                     if (uuid != null && !uuid.equals("none")) {
+
+                        // Log this update
+                        sendUpdate(new RoyaltyAction(null, ActionType.REMOVED, java.util.UUID.fromString(uuid), tribe, pos));
+
+                        // Update LuckPerms
                         try {
                             int playerTribe = PlayerTribe.getTribeOfPlayer(uuid);
                             Utils.setPlayerPerms(uuid, playerTribe, pos);
