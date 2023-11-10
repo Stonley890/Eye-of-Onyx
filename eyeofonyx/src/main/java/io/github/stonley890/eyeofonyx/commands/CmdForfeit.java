@@ -27,8 +27,8 @@ public class CmdForfeit implements CommandExecutor {
             int posIndex;
 
             try {
-                tribeIndex = PlayerTribe.getTribeOfPlayer(player.getUniqueId().toString());
-                posIndex = RoyaltyBoard.getPositionIndexOfUUID(player.getUniqueId().toString());
+                tribeIndex = PlayerTribe.getTribeOfPlayer(player.getUniqueId());
+                posIndex = RoyaltyBoard.getPositionIndexOfUUID(player.getUniqueId());
             } catch (NotFoundException e) {
                 sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You do not have an associated tribe! Contact a staff member.");
                 return true;

@@ -25,6 +25,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class SubmitHandler implements HttpHandler {
     @Override
@@ -137,7 +138,7 @@ public class SubmitHandler implements HttpHandler {
 
                         // Remove notification
                         try {
-                            for (Notification notification : Notification.getNotificationsOfPlayer(player.getUniqueId().toString())) {
+                            for (Notification notification : Notification.getNotificationsOfPlayer(player.getUniqueId())) {
                                 if (notification.type == NotificationType.CHALLENGE_REQUESTED) {
                                     Notification.removeNotification(notification);
                                     Dreamvisitor.debug("Removed notification.");
@@ -149,7 +150,7 @@ public class SubmitHandler implements HttpHandler {
 
                         int playerTribe = 0;
                         try {
-                            playerTribe = PlayerTribe.getTribeOfPlayer(player.getUniqueId().toString());
+                            playerTribe = PlayerTribe.getTribeOfPlayer(player.getUniqueId());
                         } catch (NotFoundException e) {
                             // Player has no associated tribe (should not happen)
                             sendInvalid(httpExchange, "You do not have an associated tribe! Contact a staff member.");
@@ -158,9 +159,9 @@ public class SubmitHandler implements HttpHandler {
 
                         Dreamvisitor.debug("Finding attacker.");
                         // Notify attacker
-                        String attackerUuid = null;
+                        UUID attackerUuid = null;
                         try {
-                            attackerUuid = RoyaltyBoard.getAttacker(playerTribe, RoyaltyBoard.getPositionIndexOfUUID(player.getUniqueId().toString()));
+                            attackerUuid = RoyaltyBoard.getAttacker(playerTribe, RoyaltyBoard.getPositionIndexOfUUID(player.getUniqueId()));
                         } catch (NotFoundException e) {
                             // Player has no associated tribe (should not happen)
                             sendInvalid(httpExchange, "You do not have an associated tribe! Contact a staff member.");
@@ -181,7 +182,7 @@ public class SubmitHandler implements HttpHandler {
 
                         // Set attacker in board.yml
                         try {
-                            RoyaltyBoard.setAttacker(playerTribe, RoyaltyBoard.getPositionIndexOfUUID(player.getUniqueId().toString()), attackerUuid);
+                            RoyaltyBoard.setAttacker(playerTribe, RoyaltyBoard.getPositionIndexOfUUID(player.getUniqueId()), attackerUuid);
                         } catch (NotFoundException e) {
                             // Player has no associated tribe (should not happen)
                             sendInvalid(httpExchange, "You do not have an associated tribe! Contact a staff member.");
@@ -190,14 +191,9 @@ public class SubmitHandler implements HttpHandler {
                         Dreamvisitor.debug("Set data in board.yml");
 
                         // Create challenge
-                        String finalAttackerUuid = attackerUuid;
+                        UUID finalAttackerUuid = attackerUuid;
                         Player finalPlayer = player;
-                        Bukkit.getScheduler().runTaskAsynchronously(EyeOfOnyx.getPlugin(), new Runnable() {
-                            @Override
-                            public void run() {
-                                new Challenge(finalAttackerUuid, finalPlayer.getUniqueId().toString(), ChallengeType.UNKNOWN, availabilities).save();
-                            }
-                        });
+                        Bukkit.getScheduler().runTaskAsynchronously(EyeOfOnyx.getPlugin(), () -> new Challenge(finalAttackerUuid, finalPlayer.getUniqueId(), ChallengeType.UNKNOWN, availabilities).save());
 
                         Dreamvisitor.debug("Created the challenge");
 

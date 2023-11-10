@@ -7,7 +7,7 @@
 
   <groupId>io.github.stonley890</groupId>
   <artifactId>eyeofonyx</artifactId>
-  <version>1.1.0</version>
+  <version>1.2.0</version>
   <packaging>jar</packaging>
 
   <name>Eye of Onyx</name>
@@ -62,7 +62,7 @@
     <dependency>
       <groupId>com.github.Stonley890</groupId>
       <artifactId>Dreamvisitor</artifactId>
-      <version>main-c0e373d87c-1</version>
+      <version>main-ddd2b562b1-1</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -76,6 +76,11 @@
       <artifactId>api</artifactId>
       <version>5.4</version>
       <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.github.stonley890</groupId>
+      <artifactId>dreamvisitor</artifactId>
+      <version>main-ddd2b562b1-1</version>
     </dependency>
   </dependencies>
 

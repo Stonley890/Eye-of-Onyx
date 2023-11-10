@@ -5,6 +5,7 @@ import io.github.stonley890.dreamvisitor.Dreamvisitor;
 import io.github.stonley890.dreamvisitor.data.AccountLink;
 import io.github.stonley890.eyeofonyx.files.*;
 import javassist.NotFoundException;
+import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -18,13 +19,11 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.jetbrains.annotations.NotNull;
+import org.shanerx.mojang.Mojang;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public class Discord extends ListenerAdapter {
 
@@ -75,6 +74,7 @@ public class Discord extends ListenerAdapter {
                                 .addOption(OptionType.USER, "user", "The user to set.", true, false),
                         new SubcommandData("unban", "Allow a previously disallowed player to participate in royalty.")
                                 .addOption(OptionType.USER, "user", "The user to set.", true, false),
+                        new SubcommandData("banlist", "List all banned players."),
                         new SubcommandData("freeze", "Toggle the freezing functionality.")
                 ).setDefaultPermissions(DefaultMemberPermissions.DISABLED));
 
@@ -118,7 +118,7 @@ public class Discord extends ListenerAdapter {
                     }
 
                     // Get UUID
-                    String targetPlayerUUID = Utils.formatUuid(AccountLink.getUuid(targetUser.getId()));
+                    UUID targetPlayerUUID = AccountLink.getUuid(targetUser.getIdLong());
 
                     if (targetPlayerUUID == null) {
                         event.reply("That user is not associated with a Minecraft account.").queue();
@@ -146,22 +146,18 @@ public class Discord extends ListenerAdapter {
                                 if (position.equals(RoyaltyBoard.getValidPositions()[i])) targetPos = i;
                             }
 
+                            BoardState oldBoard = RoyaltyBoard.getBoardOf(playerTribe);
+
+                            BoardPosition newPos = new BoardPosition(targetPlayerUUID, null, LocalDateTime.now(), LocalDateTime.now(),LocalDateTime.now(), LocalDateTime.now(), null, null);
+
                             // Set value in board.yml
-                            RoyaltyBoard.setValue(playerTribe, targetPos, "uuid", targetPlayerUUID.toString());
-                            RoyaltyBoard.setValue(playerTribe, targetPos, "last_online", LocalDateTime.now().toString());
-                            RoyaltyBoard.setValue(playerTribe, targetPos, "last_challenge_time", LocalDateTime.now().toString());
-                            RoyaltyBoard.setValue(playerTribe, targetPos, "joined_time", LocalDateTime.now().toString());
-                            RoyaltyBoard.setValue(playerTribe, targetPos, "challenger", "none");
-                            if (targetPos == RoyaltyBoard.RULER)
-                                RoyaltyBoard.setValue(playerTribe, targetPos, "challenging", "none");
+                            RoyaltyBoard.set(playerTribe, targetPos, newPos);
+
+                            BoardState newBoard = RoyaltyBoard.getBoardOf(playerTribe);
+                            RoyaltyBoard.sendUpdate(new RoyaltyAction(event.getMember().getId(), playerTribe, oldBoard, newBoard));
 
                             event.reply("✅ " + user.getAsMention() + " is now " + position.toUpperCase().replace('_', ' ')).queue();
 
-                            RoyaltyBoard.setValue(playerTribe, targetPos, "joined_time", LocalDateTime.now().toString());
-                            RoyaltyBoard.setValue(playerTribe, targetPos, "last_challenge_time", LocalDateTime.now().toString());
-                            RoyaltyBoard.setValue(playerTribe, targetPos, "last_online", LocalDateTime.now().toString());
-
-                            RoyaltyBoard.save(RoyaltyBoard.get());
                             RoyaltyBoard.updateBoard();
 
                             try {
@@ -226,28 +222,30 @@ public class Discord extends ListenerAdapter {
                         return;
                     }
 
-                    String uuid = RoyaltyBoard.getUuid(tribeIndex, posIndex);
-                    if (uuid.equals("null")) {
+                    UUID uuid = RoyaltyBoard.getUuid(tribeIndex, posIndex);
+                    if (uuid == null) {
                         event.reply("That position is already empty!").queue();
                         return;
                     }
 
+                    BoardState oldBoard = RoyaltyBoard.getBoardOf(tribeIndex);
+
                     try {
 
                         // Notify attacker if exists
-                        String attacker = RoyaltyBoard.getAttacker(tribeIndex, posIndex);
-                        if (!attacker.equals("none")) {
+                        UUID attacker = RoyaltyBoard.getAttacker(tribeIndex, posIndex);
+                        if (attacker != null) {
                             int attackerPos = RoyaltyBoard.getPositionIndexOfUUID(attacker);
-                            RoyaltyBoard.setAttacking(tribeIndex, attackerPos, "none");
+                            RoyaltyBoard.setAttacking(tribeIndex, attackerPos, null);
                             new Notification(attacker, "Your challenge was canceled.", "The player you were challenging was removed from the royalty board, so your challenge was canceled.", NotificationType.GENERIC).create();
                         }
 
                         // Notify defender if exists
                         if (posIndex != RoyaltyBoard.RULER) {
-                            String attacking = RoyaltyBoard.getAttacking(tribeIndex, posIndex);
-                            if (!attacking.equals("none")) {
+                            UUID attacking = RoyaltyBoard.getAttacking(tribeIndex, posIndex);
+                            if (attacking != null) {
                                 int defenderPos = RoyaltyBoard.getPositionIndexOfUUID(attacking);
-                                RoyaltyBoard.setAttacker(tribeIndex, defenderPos, "none");
+                                RoyaltyBoard.setAttacker(tribeIndex, defenderPos, null);
                                 new Notification(attacker, "Your challenge was canceled.", "The player who was challenging you was removed from the royalty board, so your challenge was canceled.", NotificationType.GENERIC).create();
                             }
                         }
@@ -273,13 +271,9 @@ public class Discord extends ListenerAdapter {
                     new Notification(uuid, "You have been removed from the royalty board.", "You were removed from the royalty board because you changed your tribe. And pending challenges have been canceled.", NotificationType.GENERIC).create();
 
                     RoyaltyBoard.removePlayer(tribeIndex, posIndex);
+                    BoardState newBoard = RoyaltyBoard.getBoardOf(tribeIndex);
+                    RoyaltyBoard.sendUpdate(new RoyaltyAction(event.getMember().getId(), tribeIndex, oldBoard, newBoard));
 
-                    // If not ruler clear challenging
-                    if (posIndex != 0) {
-                        RoyaltyBoard.setValue(tribeIndex, posIndex, "challenging", "none");
-                    }
-
-                    RoyaltyBoard.save(RoyaltyBoard.get());
                     RoyaltyBoard.updateBoard();
                     try {
                         RoyaltyBoard.updateDiscordBoard(tribeIndex);
@@ -305,7 +299,6 @@ public class Discord extends ListenerAdapter {
                         event.reply(EyeOfOnyx.EOO + ChatColor.RED + "Invalid arguments! /royalty <set|clear|update>").queue();
             }
 
-            RoyaltyBoard.save(RoyaltyBoard.get());
         } else if (command.equals("eyeofonyx")) {
 
             if (subCommand == null) {
@@ -325,7 +318,7 @@ public class Discord extends ListenerAdapter {
                         return;
                     }
 
-                    String uuid = AccountLink.getUuid(targetUser.getId());
+                    UUID uuid = AccountLink.getUuid(targetUser.getIdLong());
 
                     if /* the username is invalid */ (uuid == null) {
                         event.reply("That user could not be found.").queue();
@@ -336,59 +329,56 @@ public class Discord extends ListenerAdapter {
 
                             // Add player to ban list, remove them from the royalty board, and send them a notification.
                             Banned.addPlayer(uuid);
-                            int tribe = 0;
+                            int tribe = -1;
                             try {
                                 tribe = PlayerTribe.getTribeOfPlayer(uuid);
                             } catch (NotFoundException e) {
                                 // Player does not have a tribe.
-                                event.reply("This player does not have an associated tribe.").queue();
-                                return;
                             }
                             int pos = 0;
                             try {
                                 pos = RoyaltyBoard.getPositionIndexOfUUID(uuid);
                             } catch (NotFoundException e) {
                                 // Player does not have a tribe.
-                                event.reply("This player does not have an associated tribe.").queue();
-                                return;
-                            }
-
-                            try {
-
-                                // Notify attacker if exists
-                                String attacker = RoyaltyBoard.getAttacker(tribe,pos);
-                                if (!attacker.equals("none")) {
-                                    int attackerPos = RoyaltyBoard.getPositionIndexOfUUID(attacker);
-                                    RoyaltyBoard.setAttacking(tribe, attackerPos, "none");
-                                    new Notification(attacker, "Your challenge was canceled.", "The player you were challenging was removed from the royalty board, so your challenge was canceled.", NotificationType.GENERIC).create();
-                                }
-
-                                // Notify defender if exists
-                                if (pos != RoyaltyBoard.RULER) {
-                                    String attacking = RoyaltyBoard.getAttacking(tribe,pos);
-                                    if (!attacking.equals("none")) {
-                                        int defenderPos = RoyaltyBoard.getPositionIndexOfUUID(attacking);
-                                        RoyaltyBoard.setAttacker(tribe, defenderPos, "none");
-                                        new Notification(attacker, "Your challenge was canceled.", "The player who was challenging you was removed from the royalty board, so your challenge was canceled.", NotificationType.GENERIC).create();
-                                    }
-                                }
-
-                                // Remove any challenges
-                                for (Challenge challenge : Challenge.getChallenges()) {
-                                    if (challenge.defender.equals(uuid) || challenge.attacker.equals(uuid)) Challenge.remove(challenge);
-                                }
-
-                                // Remove any challenge notifications
-                                for (Notification notification : Notification.getNotificationsOfPlayer(uuid)) {
-                                    if (notification.type == NotificationType.CHALLENGE_ACCEPTED || notification.type == NotificationType.CHALLENGE_REQUESTED) Notification.removeNotification(notification);
-                                }
-                            } catch (IOException | InvalidConfigurationException e) {
-                                if (Dreamvisitor.debug) e.printStackTrace();
-                            } catch (NotFoundException e) {
-                                throw new RuntimeException(e);
                             }
 
                             if (pos != -1 && pos != RoyaltyBoard.CIVILIAN) {
+
+                                try {
+
+                                    // Notify attacker if exists
+                                    UUID attacker = RoyaltyBoard.getAttacker(tribe,pos);
+                                    if (attacker != null) {
+                                        int attackerPos = RoyaltyBoard.getPositionIndexOfUUID(attacker);
+                                        RoyaltyBoard.setAttacking(tribe, attackerPos, null);
+                                        new Notification(attacker, "Your challenge was canceled.", "The player you were challenging was removed from the royalty board, so your challenge was canceled.", NotificationType.GENERIC).create();
+                                    }
+
+                                    // Notify defender if exists
+                                    if (pos != RoyaltyBoard.RULER) {
+                                        UUID attacking = RoyaltyBoard.getAttacking(tribe,pos);
+                                        if (attacking != null) {
+                                            int defenderPos = RoyaltyBoard.getPositionIndexOfUUID(attacking);
+                                            RoyaltyBoard.setAttacker(tribe, defenderPos, null);
+                                            new Notification(attacker, "Your challenge was canceled.", "The player who was challenging you was removed from the royalty board, so your challenge was canceled.", NotificationType.GENERIC).create();
+                                        }
+                                    }
+
+                                    // Remove any challenges
+                                    for (Challenge challenge : Challenge.getChallenges()) {
+                                        if (challenge.defender.equals(uuid) || challenge.attacker.equals(uuid)) Challenge.remove(challenge);
+                                    }
+
+                                    // Remove any challenge notifications
+                                    for (Notification notification : Notification.getNotificationsOfPlayer(uuid)) {
+                                        if (notification.type == NotificationType.CHALLENGE_ACCEPTED || notification.type == NotificationType.CHALLENGE_REQUESTED) Notification.removeNotification(notification);
+                                    }
+                                } catch (IOException | InvalidConfigurationException e) {
+                                    if (Dreamvisitor.debug) e.printStackTrace();
+                                } catch (NotFoundException e) {
+                                    throw new RuntimeException(e);
+                                }
+
                                 RoyaltyBoard.removePlayer(tribe, pos);
                                 RoyaltyBoard.updateBoard();
                                 try {
@@ -415,7 +405,7 @@ public class Discord extends ListenerAdapter {
                         return;
                     }
 
-                    String uuid = AccountLink.getUuid(targetUser.getId());
+                    UUID uuid = AccountLink.getUuid(targetUser.getIdLong());
 
                     if /* the username is invalid */ (uuid == null) {
                         event.reply("That user could not be found.").queue();
@@ -428,7 +418,33 @@ public class Discord extends ListenerAdapter {
                         }
                     }
 
-                } case "freeze" -> {
+                }
+                case "banlist" -> {
+
+                    event.deferReply().queue();
+
+                    Bukkit.getScheduler().runTaskAsynchronously(EyeOfOnyx.getPlugin(), () -> {
+
+                        Mojang mojang = new Mojang().connect();
+
+                        EmbedBuilder message = new EmbedBuilder();
+                        message.setTitle("Banned players:\n");
+
+                        StringBuilder description = new StringBuilder();
+
+                        for (String bannedPlayer : Banned.getBannedPlayers()) {
+
+                            String username = mojang.getPlayerProfile(bannedPlayer).getUsername();
+                            long discordId = AccountLink.getDiscordId(UUID.fromString(bannedPlayer));
+
+                            description.append("`").append(username).append("`: ").append("<@").append(discordId).append(">\n");
+                        }
+                        message.setDescription(description);
+                        event.replyEmbeds(message.build()).queue();
+                    });
+
+                }
+                case "freeze" -> {
 
                     if (RoyaltyBoard.isFrozen()) {
                         RoyaltyBoard.setFrozen(false);

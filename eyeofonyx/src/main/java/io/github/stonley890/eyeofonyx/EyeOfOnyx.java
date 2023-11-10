@@ -31,6 +31,7 @@ import java.net.InetSocketAddress;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.logging.Level;
 
 /*
@@ -147,7 +148,7 @@ public class EyeOfOnyx extends JavaPlugin {
                 // Check for unnoticed challenges
                 for (int i = 0; i < 10; i++) {
                     for (int j = 0; j < 5; j++) {
-                        String uuid = RoyaltyBoard.getUuid(i, j);
+                        UUID uuid = RoyaltyBoard.getUuid(i, j);
                         try {
                             List<Notification> notifications = Notification.getNotificationsOfPlayer(uuid);
 
@@ -164,9 +165,9 @@ public class EyeOfOnyx extends JavaPlugin {
                                         new Notification(uuid, "You missed a challenge notification.", "You did not acknowledge a challenge request within the allowed time, but you will remain on the royalty board because you were unable to receive it.", NotificationType.GENERIC).create();
 
                                         // Send notification to attacker
-                                        String attackerUuid = RoyaltyBoard.getAttacker(PlayerTribe.getTribeOfPlayer(uuid), RoyaltyBoard.getPositionIndexOfUUID(uuid));
+                                        UUID attackerUuid = RoyaltyBoard.getAttacker(PlayerTribe.getTribeOfPlayer(uuid), RoyaltyBoard.getPositionIndexOfUUID(uuid));
                                         if (attackerUuid != null) {
-                                            String defenderUsername = new Mojang().connect().getPlayerProfile(uuid).getUsername();
+                                            String defenderUsername = new Mojang().connect().getPlayerProfile(uuid.toString()).getUsername();
                                             new Notification(attackerUuid, "Your challenge to " + defenderUsername + " was not seen.", "Your challenge was nullified because the user you challenged was unable to receive the notification.", NotificationType.GENERIC).create();
                                         }
 

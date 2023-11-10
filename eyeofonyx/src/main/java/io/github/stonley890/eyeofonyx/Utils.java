@@ -63,23 +63,23 @@ public class Utils {
      * @param tribeIndex the tribe to set.
      * @param posIndex the position to set.
      */
-    public static void setPlayerPerms(String playerUuid, int tribeIndex, int posIndex) {
+    public static void setPlayerPerms(UUID playerUuid, int tribeIndex, int posIndex) {
         if (EyeOfOnyx.luckperms != null) {
             // Get user manager
             UserManager userManager = EyeOfOnyx.luckperms.getUserManager();
 
             // Get user
-            CompletableFuture<User> userFuture = userManager.loadUser(UUID.fromString(playerUuid));
+            CompletableFuture<User> userFuture = userManager.loadUser(playerUuid);
 
             userFuture.thenAcceptAsync(user -> {
                 String[] tribes = RoyaltyBoard.getTribes();
                 String[] positions = RoyaltyBoard.getValidPositions();
 
                 // Remove all other groups
-                for (int t = 0; t < tribes.length; t++) {
-                    for (int p = 0; p < positions.length; p++) {
+                for (String tribe : tribes) {
+                    for (String position : positions) {
                         // Get the lp group name from config
-                        String groupName = plugin.getConfig().getString(positions[p] + "." + tribes[t]);
+                        String groupName = EyeOfOnyx.getPlugin().getConfig().getString(position + "." + tribe);
 
                         if (groupName != null) {
                             // Get the group from lp and remove it from the user.
@@ -87,12 +87,12 @@ public class Utils {
                             user.getInheritedGroups(user.getQueryOptions()).remove(group);
 
                         } else
-                            Bukkit.getLogger().warning("Group " + positions[p] + "." + tribes[t] + " is null in the config!");
+                            Bukkit.getLogger().warning("Group " + position + "." + tribe + " is null in the config!");
                     }
                 }
 
                 // Add the group
-                String groupName = plugin.getConfig().getString(positions[posIndex] + "." + tribes[tribeIndex]);
+                String groupName = EyeOfOnyx.getPlugin().getConfig().getString(positions[posIndex] + "." + tribes[tribeIndex]);
 
                 if (groupName != null) {
                     // Get the group from lp and add it to the user.

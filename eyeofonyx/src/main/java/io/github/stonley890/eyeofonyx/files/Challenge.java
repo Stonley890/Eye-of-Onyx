@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class Challenge {
 
@@ -22,8 +23,8 @@ public class Challenge {
     private static FileConfiguration fileConfig;
     private static final EyeOfOnyx plugin = EyeOfOnyx.getPlugin();
 
-    public final String attacker;
-    public final String defender;
+    public final UUID attacker;
+    public final UUID defender;
     public final ChallengeType type;
     public final List<LocalDateTime> time;
     public boolean finalized = false;
@@ -35,7 +36,7 @@ public class Challenge {
      * @param challengeTimes The possible dates/times of the challenge.
      * @param challengeType The competition to be played.
      */
-    public Challenge(String attackerUUID, String defenderUUID, ChallengeType challengeType, List<LocalDateTime> challengeTimes) {
+    public Challenge(UUID attackerUUID, UUID defenderUUID, ChallengeType challengeType, List<LocalDateTime> challengeTimes) {
         attacker = attackerUUID;
         defender = defenderUUID;
         type = challengeType;
@@ -139,7 +140,7 @@ public class Challenge {
         Dreamvisitor.debug("Creating notification...");
         Mojang mojang = new Mojang().connect();
 
-        String defenderUsername = mojang.getPlayerProfile(defender).getUsername();
+        String defenderUsername = mojang.getPlayerProfile(defender.toString()).getUsername();
         String content = defenderUsername + " accepted your challenge! Please select from one of the following times:";
 
         Dreamvisitor.debug("Saving to file");
@@ -168,8 +169,8 @@ public class Challenge {
             for (List<Object> yamlChallenge : yamlChallenges) {
 
                 // Get saved values
-                String attacker = (String) yamlChallenge.get(0);
-                String defender = (String) yamlChallenge.get(1);
+                UUID attacker = UUID.fromString((String) yamlChallenge.get(0));
+                UUID defender = UUID.fromString((String) yamlChallenge.get(1));
                 ChallengeType type = ChallengeType.valueOf((String) yamlChallenge.get(2));
 
                 List<String> dateTimes = (List<String>) yamlChallenge.get(3);

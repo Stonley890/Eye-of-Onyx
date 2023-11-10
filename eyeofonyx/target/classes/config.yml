@@ -27,6 +27,10 @@ character-name-field: "name"
 # Default: 913509632348139591
 royalty-board-channel: 913509632348139591
 
+# The channel ID for the Discord channel where updates to the royalty board should be recorded.
+# Default: 660597606233276436
+royalty-log-channel: 660597606233276436
+
 # The message IDs for the messages containing the royalty board.
 # This is set automatically by Eye of Onyx.
 royalty-board-message:

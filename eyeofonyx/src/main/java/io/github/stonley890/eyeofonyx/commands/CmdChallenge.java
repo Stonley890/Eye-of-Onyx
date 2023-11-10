@@ -10,6 +10,7 @@ import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
+import net.md_5.bungee.api.chat.hover.content.Text;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -18,8 +19,6 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.InvalidConfigurationException;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -61,27 +60,23 @@ public class CmdChallenge implements CommandExecutor {
             // Ensure player is part of a team
             int playerTribe;
             try {
-                playerTribe = PlayerTribe.getTribeOfPlayer(player.getUniqueId().toString());
+                playerTribe = PlayerTribe.getTribeOfPlayer(player.getUniqueId());
             } catch (NotFoundException e) {
                 sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You are not part of a team!");
                 return true;
             }
 
             // Ensure player has a linked Discord account
-            if (AccountLink.getDiscordId(player.getUniqueId().toString().replaceAll("-", "")) == null) {
+            try {
+                AccountLink.getDiscordId(player.getUniqueId());
+            } catch (NullPointerException e) {
                 sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You do not have a linked Discord account! Contact a staff member for help.");
                 return true;
             }
 
-            int playerPosition = 0;
-            try {
-                playerPosition = RoyaltyBoard.getPositionIndexOfUUID(player.getUniqueId().toString());
-            } catch (NotFoundException e) {
-                sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You are not part of a team!");
-                return true;
-            }
+            int playerPosition = RoyaltyBoard.getPositionIndexOfUUID(playerTribe, player.getUniqueId());
 
-            if (Banned.isPlayerBanned(player.getUniqueId().toString())) {
+            if (Banned.isPlayerBanned(player.getUniqueId())) {
 
                 // Player is banned from royalty board
                 sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You are not allowed to initiate a challenge!");
@@ -92,7 +87,7 @@ public class CmdChallenge implements CommandExecutor {
 
                 // Player is on cooldown. They cannot challenge
                 ComponentBuilder builder = new ComponentBuilder();
-                LocalDateTime challengeDate = LocalDateTime.parse(RoyaltyBoard.getLastChallengeDate(playerTribe, playerPosition));
+                LocalDateTime challengeDate = RoyaltyBoard.getLastChallengeDate(playerTribe, playerPosition);
                 challengeDate = challengeDate.plusDays(EyeOfOnyx.getPlugin().getConfig().getInt("challenge-cool-down"));
 
                 builder.append(EyeOfOnyx.EOO)
@@ -104,7 +99,7 @@ public class CmdChallenge implements CommandExecutor {
 
                 return true;
 
-            } else if (playerPosition != CIVILIAN && playerPosition != RULER && !RoyaltyBoard.getAttacking(playerTribe, playerPosition).equals("none")) {
+            } else if (playerPosition != CIVILIAN && playerPosition != RULER && RoyaltyBoard.getAttacking(playerTribe, playerPosition) != null) {
 
                 if (args.length == 0 || (!args[0].equals("date") && !args[0].equals("start"))) {
                     // Player has already initiated a challenge
@@ -142,7 +137,7 @@ public class CmdChallenge implements CommandExecutor {
                     for (int i = 0; i < positions.length; i++) {
                         nextEmptyPosition = i;
                         // If position is empty, break
-                        if (RoyaltyBoard.getUuid(playerTribe, i).equals("none")) {
+                        if (RoyaltyBoard.getUuid(playerTribe, i) == null) {
                             break;
                         }
                     }
@@ -180,7 +175,7 @@ public class CmdChallenge implements CommandExecutor {
 
                         builder.append(positions[NOBLE_PRESUMPTIVE].toUpperCase().replace('_', ' '))
                                 .append(" ")
-                                .append(mojang.getPlayerProfile(RoyaltyBoard.getUuid(playerTribe, NOBLE_PRESUMPTIVE)).getUsername()).color(net.md_5.bungee.api.ChatColor.YELLOW)
+                                .append(mojang.getPlayerProfile(RoyaltyBoard.getUuid(playerTribe, NOBLE_PRESUMPTIVE).toString()).getUsername()).color(net.md_5.bungee.api.ChatColor.YELLOW)
                                 .append("\n");
 
                         TextComponent button = new TextComponent("[ Initiate Challenge ]");
@@ -193,7 +188,7 @@ public class CmdChallenge implements CommandExecutor {
                                 .append("\n \n")
                                 .append(positions[NOBLE_APPARENT].toUpperCase().replace('_', ' '))
                                 .append("\n")
-                                .append(mojang.getPlayerProfile(RoyaltyBoard.getUuid(playerTribe, NOBLE_APPARENT)).getUsername())
+                                .append(mojang.getPlayerProfile(RoyaltyBoard.getUuid(playerTribe, NOBLE_APPARENT).toString()).getUsername())
                                 .append(" ");
 
                         button.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/challenge position2"));
@@ -205,7 +200,7 @@ public class CmdChallenge implements CommandExecutor {
 
                     builder.append(positions[HEIR_PRESUMPTIVE].toUpperCase().replace('_', ' '))
                             .append(" ")
-                            .append(mojang.getPlayerProfile(RoyaltyBoard.getUuid(playerTribe, HEIR_PRESUMPTIVE)).getUsername()).color(net.md_5.bungee.api.ChatColor.YELLOW)
+                            .append(mojang.getPlayerProfile(RoyaltyBoard.getUuid(playerTribe, HEIR_PRESUMPTIVE).toString()).getUsername()).color(net.md_5.bungee.api.ChatColor.YELLOW)
                             .append("\n");
 
                     TextComponent button = new TextComponent("[ Initiate Challenge ]");
@@ -217,7 +212,7 @@ public class CmdChallenge implements CommandExecutor {
                             .append("\n \n")
                             .append(positions[HEIR_APPARENT].toUpperCase().replace('_', ' '))
                             .append("\n")
-                            .append(mojang.getPlayerProfile(RoyaltyBoard.getUuid(playerTribe, HEIR_APPARENT)).getUsername())
+                            .append(mojang.getPlayerProfile(RoyaltyBoard.getUuid(playerTribe, HEIR_APPARENT).toString()).getUsername())
                             .append(" ");
 
                     button.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/challenge position2"));
@@ -229,7 +224,7 @@ public class CmdChallenge implements CommandExecutor {
 
                     builder.append(positions[RULER].toUpperCase().replace('_', ' '))
                             .append(" ")
-                            .append(mojang.getPlayerProfile(RoyaltyBoard.getUuid(playerTribe, RULER)).getUsername()).color(net.md_5.bungee.api.ChatColor.YELLOW)
+                            .append(mojang.getPlayerProfile(RoyaltyBoard.getUuid(playerTribe, RULER).toString()).getUsername()).color(net.md_5.bungee.api.ChatColor.YELLOW)
                             .append("\n");
 
                     TextComponent button = new TextComponent("[Initiate Challenge]");
@@ -281,7 +276,7 @@ public class CmdChallenge implements CommandExecutor {
                                 nextEmptyPosition = i;
                                 Dreamvisitor.debug("Next empty position: " + i);
                                 // If position is empty, break
-                                if (getUuid(playerTribe, i).equals("none")) {
+                                if (getUuid(playerTribe, i) == null) {
                                     Dreamvisitor.debug("Position " + i + "is empty");
                                     break;
                                 }
@@ -291,13 +286,11 @@ public class CmdChallenge implements CommandExecutor {
                             if (nextEmptyPosition < CIVILIAN) {
                                 Dreamvisitor.debug("Position available. Skipping challenge process.");
 
-                                FileConfiguration board = RoyaltyBoard.get();
+                                BoardState oldBoard = getBoardOf(playerTribe);
+                                RoyaltyBoard.set(playerTribe, nextEmptyPosition, new BoardPosition(player.getUniqueId(), null, LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now(), null, null));
+                                BoardState newBoard = getBoardOf(playerTribe);
 
-                                board.set(getTribes()[playerTribe] + "." + getValidPositions()[nextEmptyPosition] + ".uuid", player.getUniqueId().toString());
-                                board.set(getTribes()[playerTribe] + "." + getValidPositions()[nextEmptyPosition] + ".joined_time", LocalDateTime.now().toString());
-                                board.set(getTribes()[playerTribe] + "." + getValidPositions()[nextEmptyPosition] + ".last_online", LocalDateTime.now().toString());
-                                board.set(getTribes()[playerTribe] + "." + getValidPositions()[nextEmptyPosition] + ".last_challenge_time", LocalDateTime.now().toString());
-                                RoyaltyBoard.save(board);
+                                sendUpdate(new RoyaltyAction(player.getName(), playerTribe, oldBoard, newBoard));
 
                                 // setValue(playerTribe, nextEmptyPosition, "uuid", player.getUniqueId().toString());
                                 // setValue(playerTribe, nextEmptyPosition, "joined_time", LocalDateTime.now().toString());
@@ -350,7 +343,7 @@ public class CmdChallenge implements CommandExecutor {
                         }
 
                         // Check that target is not being challenged
-                        if (!(RoyaltyBoard.getAttacker(playerTribe, targetPosition).equals("none") || (targetPosition != 0 && !RoyaltyBoard.getAttacking(playerTribe, targetPosition).equals("none")))) {
+                        if (!(RoyaltyBoard.getAttacker(playerTribe, targetPosition) == null || (targetPosition != 0 && RoyaltyBoard.getAttacking(playerTribe, targetPosition) != null))) {
 
                             player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
                             builder.append("That player is already in a challenge!");
@@ -362,10 +355,10 @@ public class CmdChallenge implements CommandExecutor {
                             // Check for cooldown
                             player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
                             // Unless position is empty...
-                            if (!RoyaltyBoard.positionEmpty(playerTribe, targetPosition)) {
+                            if (!RoyaltyBoard.isPositionEmpty(playerTribe, targetPosition)) {
 
                                 // Get last challenge
-                                LocalDateTime targetChallenge = LocalDateTime.parse(RoyaltyBoard.getLastChallengeDate(playerTribe, targetPosition));
+                                LocalDateTime targetChallenge = RoyaltyBoard.getLastChallengeDate(playerTribe, targetPosition);
                                 // Compare with cooldown time
                                 targetChallenge = targetChallenge.plusDays(EyeOfOnyx.getPlugin().getConfig().getInt("challenge-cool-down"));
                                 if (RoyaltyBoard.isOnCoolDown(playerTribe, targetPosition)) {
@@ -379,11 +372,16 @@ public class CmdChallenge implements CommandExecutor {
                             }
 
                             player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
-                            String targetUuid = RoyaltyBoard.getUuid(playerTribe, targetPosition);
+                            java.util.UUID targetUuid = RoyaltyBoard.getUuid(playerTribe, targetPosition);
+
+                            BoardState oldBoard = RoyaltyBoard.getBoardOf(playerTribe);
 
                             // set values in board.yml
-                            RoyaltyBoard.setAttacker(playerTribe, targetPosition, player.getUniqueId().toString());
+                            RoyaltyBoard.setAttacker(playerTribe, targetPosition, player.getUniqueId());
                             if (playerPosition != 5) RoyaltyBoard.setAttacking(playerTribe, playerPosition, targetUuid);
+
+                            BoardState newBoard = RoyaltyBoard.getBoardOf(playerTribe);
+                            RoyaltyBoard.sendUpdate(new RoyaltyAction(sender.getName(), playerTribe, oldBoard, newBoard));
 
                             // create notification for target
                             String title = "You've been challenged!";
@@ -406,7 +404,7 @@ public class CmdChallenge implements CommandExecutor {
                         link.setColor(net.md_5.bungee.api.ChatColor.YELLOW);
                         link.setUnderlined(true);
                         link.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "http://" + EyeOfOnyx.getPlugin().getConfig().getString("address") + ":8000/availability"));
-                        link.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder("Click to open the web form.").create()));
+                        link.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("Click to open the web form.")));
 
                         String id = String.format("%04d", new Random().nextInt(10000));
 
@@ -414,7 +412,7 @@ public class CmdChallenge implements CommandExecutor {
                         code.setColor(net.md_5.bungee.api.ChatColor.YELLOW);
                         code.setUnderlined(true);
                         code.setClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, id));
-                        code.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder("Click to copy the code.").create()));
+                        code.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("Click to copy the code.")));
 
                         builder.append(link).append(" ").reset().append(code).append("\n").reset()
                                 .append("The code will expire in five minutes.").color(net.md_5.bungee.api.ChatColor.RED).append("\n");
@@ -464,7 +462,7 @@ public class CmdChallenge implements CommandExecutor {
 
                         // Remove notification
                         try {
-                            List<Notification> notificationList = Notification.getNotificationsOfPlayer(player.getUniqueId().toString());
+                            List<Notification> notificationList = Notification.getNotificationsOfPlayer(player.getUniqueId());
                             for (Notification notification : notificationList) {
                                 if (notification.type == NotificationType.CHALLENGE_REQUESTED)
                                     Notification.removeNotification(notification);
@@ -476,14 +474,17 @@ public class CmdChallenge implements CommandExecutor {
                         }
 
                         // Remove from royalty board
+                        BoardState oldBoard = RoyaltyBoard.getBoardOf(playerTribe);
                         RoyaltyBoard.removePlayer(playerTribe, playerPosition);
+                        BoardState newBoard = RoyaltyBoard.getBoardOf(playerTribe);
+                        sendUpdate(new RoyaltyAction(sender.getName(), playerTribe, oldBoard, newBoard));
                         RoyaltyBoard.updateBoard();
                         sender.sendMessage(EyeOfOnyx.EOO + "You have been removed from the royalty board.");
                     }
                     case "start" -> {
 
                         player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
-                        if ((Competition.activeChallenge.defender.equals(player.getUniqueId().toString()) || Competition.activeChallenge.attacker.equals(player.getUniqueId().toString())) && !Competition.activeChallenge.started) {
+                        if ((Competition.activeChallenge.defender.equals(player.getUniqueId()) || Competition.activeChallenge.attacker.equals(player.getUniqueId())) && !Competition.activeChallenge.started) {
 
                             List<Location> waitingRooms = (List<Location>) EyeOfOnyx.getPlugin().getConfig().getList("waiting-rooms");
                             if (waitingRooms != null) {
@@ -540,11 +541,11 @@ public class CmdChallenge implements CommandExecutor {
                         playerChallenge.passiveSave();
 
                         sender.sendMessage(EyeOfOnyx.EOO + "Time confirmed! Your challenge will take place " + selectedTime.format(DateTimeFormatter.ofPattern("MM/dd hh:mm a")) + "!");
-                        new Notification(playerChallenge.defender, "Challenge date confirmed!", "The time of your challenge with " + mojang.getPlayerProfile(playerChallenge.attacker).getUsername() + " will be " + selectedTime.format(DateTimeFormatter.ofPattern("MM/dd hh:mm a")) + ".", NotificationType.GENERIC).create();
+                        new Notification(playerChallenge.defender, "Challenge date confirmed!", "The time of your challenge with " + mojang.getPlayerProfile(playerChallenge.attacker.toString()).getUsername() + " will be " + selectedTime.format(DateTimeFormatter.ofPattern("MM/dd hh:mm a")) + ".", NotificationType.GENERIC).create();
 
                         // Remove CHALLENGE_ACCEPTED notification
                         try {
-                            for (Notification notification : Notification.getNotificationsOfPlayer(player.getUniqueId().toString())) {
+                            for (Notification notification : Notification.getNotificationsOfPlayer(player.getUniqueId())) {
                                 if (notification.type == NotificationType.CHALLENGE_ACCEPTED)
                                     Notification.removeNotification(notification);
                             }
@@ -569,7 +570,7 @@ public class CmdChallenge implements CommandExecutor {
 
         try {
             for (Challenge challenge : Challenge.getChallenges()) {
-                if (Objects.equals(challenge.attacker, player.getUniqueId().toString())) {
+                if (Objects.equals(challenge.attacker, player.getUniqueId())) {
                     playerChallenge = challenge;
                     break;
                 }

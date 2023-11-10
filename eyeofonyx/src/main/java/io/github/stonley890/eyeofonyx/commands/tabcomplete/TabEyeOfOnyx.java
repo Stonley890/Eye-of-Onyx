@@ -33,6 +33,7 @@ public class TabEyeOfOnyx implements TabCompleter {
             if (sender.hasPermission("eyeofonyx.ban")) {
                 suggestions.add("ban");
                 suggestions.add("unban");
+                suggestions.add("banlist");
             }
             if (sender.isOp()) {
                 suggestions.add("freeze");
@@ -81,7 +82,7 @@ public class TabEyeOfOnyx implements TabCompleter {
             if (sender.isOp())
                 if (args[0].equals("config") && args[1].equals("waiting-rooms")) {
                     if (sender instanceof Player player) {
-                        player.getLocation().getX();
+                        suggestions.add(String.valueOf(player.getLocation().getX()));
                     }
                 }
         }  else if (args.length == 5) {
@@ -89,7 +90,7 @@ public class TabEyeOfOnyx implements TabCompleter {
             if (sender.isOp())
                 if (args[0].equals("config") && args[1].equals("waiting-rooms")) {
                     if (sender instanceof Player player) {
-                        player.getLocation().getY();
+                        suggestions.add(String.valueOf(player.getLocation().getY()));
                     }
                 }
         }  else if (args.length == 6) {
@@ -97,7 +98,7 @@ public class TabEyeOfOnyx implements TabCompleter {
             if (sender.isOp())
                 if (args[0].equals("config") && args[1].equals("waiting-rooms")) {
                     if (sender instanceof Player player) {
-                        player.getLocation().getZ();
+                        suggestions.add(String.valueOf(player.getLocation().getZ()));
                     }
                 }
         }  else if (args.length == 7) {

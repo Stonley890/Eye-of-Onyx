@@ -33,7 +33,7 @@ public class Notification {
     private static FileConfiguration fileConfig;
     private static final EyeOfOnyx plugin = EyeOfOnyx.getPlugin();
 
-    private final String player;
+    private final UUID player;
     private final String title;
     private final String content;
     public final NotificationType type;
@@ -99,7 +99,7 @@ public class Notification {
         fileConfig.load(file);
 
         // Get list of notifications of given player
-        List<List<String>> notifications = (List<List<String>>) fileConfig.getList(notification.player);
+        List<List<String>> notifications = (List<List<String>>) fileConfig.getList(notification.player.toString());
 
         // Init if null or empty
         if (notifications == null || notifications.isEmpty()) {
@@ -118,7 +118,7 @@ public class Notification {
         // Add given notifications
         notifications.add(yamlNotification);
 
-        fileConfig.set(notification.player, notifications);
+        fileConfig.set(notification.player.toString(), notifications);
         save(fileConfig);
     }
 
@@ -129,12 +129,12 @@ public class Notification {
      * @throws IOException If the file could not be accessed.
      * @throws InvalidConfigurationException If the configuration is invalid.
      */
-    public static @NotNull List<Notification> getNotificationsOfPlayer(String uuid) throws IOException, InvalidConfigurationException {
+    public static @NotNull List<Notification> getNotificationsOfPlayer(UUID uuid) throws IOException, InvalidConfigurationException {
 
         fileConfig.load(file);
 
         // Get list of notifications of given player
-        List<List<String>> yamlNotifications = (List<List<String>>) fileConfig.getList(uuid);
+        List<List<String>> yamlNotifications = (List<List<String>>) fileConfig.getList(uuid.toString());
 
         List<Notification> notifications = new ArrayList<>();
 
@@ -195,7 +195,7 @@ public class Notification {
             yamlNotifications.add(yamlNotification);
         }
 
-        fileConfig.set(notification.player, yamlNotifications);
+        fileConfig.set(notification.player.toString(), yamlNotifications);
         save(fileConfig);
     }
 
@@ -206,7 +206,7 @@ public class Notification {
      * @param notificationContent The content of the message.
      * @param notificationType The type of Notification. This will determine the buttons added and actions taken upon delivery.
      */
-    public Notification(String playerUuid, String notificationTitle, String notificationContent, NotificationType notificationType) {
+    public Notification(UUID playerUuid, String notificationTitle, String notificationContent, NotificationType notificationType) {
         player = playerUuid;
         title = notificationTitle;
         content = notificationContent;
@@ -220,7 +220,7 @@ public class Notification {
     public void create() {
         try {
             saveNotification(this);
-            if (Bukkit.getPlayer(UUID.fromString(Utils.formatUuid(this.player))) != null) {
+            if (Bukkit.getPlayer(this.player) != null) {
                 sendMessage();
             }
         } catch (IOException | InvalidConfigurationException e) {
@@ -235,7 +235,7 @@ public class Notification {
      * @throws InvalidConfigurationException If the configuration is invalid.
      */
     public boolean sendMessage() throws IOException, InvalidConfigurationException {
-        Player onlinePlayer = Bukkit.getPlayer(UUID.fromString(Utils.formatUuid(player)));
+        Player onlinePlayer = Bukkit.getPlayer(player);
         if (onlinePlayer != null) {
 
             /*

@@ -5,7 +5,6 @@ import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import io.github.stonley890.eyeofonyx.files.Challenge;
 import io.github.stonley890.eyeofonyx.files.ChallengeType;
 import io.github.stonley890.eyeofonyx.files.PlayerTribe;
-import io.github.stonley890.eyeofonyx.files.RoyaltyBoard;
 import javassist.NotFoundException;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -15,17 +14,14 @@ import org.bukkit.Bukkit;
 import org.bukkit.configuration.InvalidConfigurationException;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
 public class Competition {
 
     public static Competition activeChallenge;
 
-    public String attacker;
-    public String defender;
+    public UUID attacker;
+    public UUID defender;
     public int tribe;
     public ChallengeType type;
     public boolean started = false;
@@ -69,12 +65,12 @@ public class Competition {
 
         Dreamvisitor.debug("Message built. Sending to " + this.attacker + " and " + this.defender + ".");
 
-        if (Bukkit.getPlayer(UUID.fromString(this.attacker)) != null) {
-            Bukkit.getPlayer(UUID.fromString(this.attacker)).spigot().sendMessage(message.create());
+        if (Bukkit.getPlayer(this.attacker) != null) {
+            Bukkit.getPlayer(this.attacker).spigot().sendMessage(message.create());
             Dreamvisitor.debug("Send message to attacker.");
         }
-        if (Bukkit.getPlayer(UUID.fromString(this.defender)) != null) {
-            Bukkit.getPlayer(UUID.fromString(this.defender)).spigot().sendMessage(message.create());
+        if (Bukkit.getPlayer(this.defender) != null) {
+            Bukkit.getPlayer(this.defender).spigot().sendMessage(message.create());
             Dreamvisitor.debug("Send message to defender.");
         }
     }

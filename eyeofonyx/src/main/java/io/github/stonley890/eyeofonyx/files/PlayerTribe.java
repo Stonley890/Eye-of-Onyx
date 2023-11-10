@@ -1,6 +1,5 @@
 package io.github.stonley890.eyeofonyx.files;
 
-import io.github.stonley890.dreamvisitor.Dreamvisitor;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import javassist.NotFoundException;
 import org.bukkit.Bukkit;
@@ -16,6 +15,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InvalidObjectException;
 import java.util.HashMap;
+import java.util.UUID;
 
 public class PlayerTribe {
 
@@ -74,13 +74,13 @@ public class PlayerTribe {
      * @return The index of their tribe.
      * @throws NotFoundException The given player does not have a recorded tribe. Use {@code updateTribeOfPlayer(Player player)} to get and record it from an online player.
      */
-    public static int getTribeOfPlayer(String playerUuid) throws NotFoundException {
+    public static int getTribeOfPlayer(UUID playerUuid) throws NotFoundException {
 
-        String tribeName = tribeStorage.get(playerUuid);
+        String tribeName = tribeStorage.get(playerUuid.toString());
 
         // If not cached, get from file.
         if (tribeName == null) {
-            tribeName = fileConfig.getString(playerUuid);
+            tribeName = fileConfig.getString(playerUuid.toString());
 
             // If not in file, try to get from online player
             if (tribeName == null) {
@@ -92,7 +92,7 @@ public class PlayerTribe {
                     // if online, try to get from team or tag
                     try {
                         updateTribeOfPlayer(player);
-                        tribeName = tribeStorage.get(playerUuid);
+                        tribeName = tribeStorage.get(playerUuid.toString());
                     } catch (Exception e) {
                         throw new NotFoundException("The given player does not have a recorded tribe.");
                     }

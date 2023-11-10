@@ -7,7 +7,9 @@ import javassist.NotFoundException;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
+import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
+import net.md_5.bungee.api.chat.hover.content.Text;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -20,10 +22,7 @@ import org.jetbrains.annotations.NotNull;
 import org.shanerx.mojang.Mojang;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public class CmdEyeOfOnyx implements CommandExecutor {
 
@@ -47,80 +46,87 @@ public class CmdEyeOfOnyx implements CommandExecutor {
                         // There must be at least 2 arguments: /eyeofonxy ban <username>
                         if /* there is another argument */ (args.length > 1) {
 
-                            // Get UUID
-                            String uuid = mojang.getUUIDOfUsername(args[1]);
-                            if /* the username is invalid */ (uuid == null) {
-                                sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "That user could not be found.");
-                            } else /* the username is valid */ {
+                            UUID uuid;
+
+                            try {
+                                // Get UUID
+                                uuid = UUID.fromString(mojang.getUUIDOfUsername(args[1]));
+
                                 if /* player is already banned */ (Banned.isPlayerBanned(uuid)) {
                                     sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "That player is already banned.");
                                 } else /* player is not yet banned */ {
 
                                     // Add player to ban list, remove them from the royalty board, and send them a notification.
                                     Banned.addPlayer(uuid);
+
                                     int tribe = 0;
                                     try {
                                         tribe = PlayerTribe.getTribeOfPlayer(uuid);
-                                    } catch (NotFoundException e) {
-                                        // Player does not have a tribe.
-                                        sender.sendMessage(EyeOfOnyx.EOO + "This player does not have an associated tribe.");
-                                    }
-                                    int pos = 0;
-                                    try {
-                                        pos = RoyaltyBoard.getPositionIndexOfUUID(uuid);
-                                    } catch (NotFoundException e) {
-                                        // Player does not have a tribe.
-                                        sender.sendMessage(EyeOfOnyx.EOO + "This player does not have an associated tribe.");
-                                    }
-
-                                    try {
-
-                                        // Notify attacker if exists
-                                        String attacker = RoyaltyBoard.getAttacker(tribe,pos);
-                                        if (!attacker.equals("none")) {
-                                            int attackerPos = RoyaltyBoard.getPositionIndexOfUUID(attacker);
-                                            RoyaltyBoard.setAttacking(tribe, attackerPos, "none");
-                                            new Notification(attacker, "Your challenge was canceled.", "The player you were challenging was removed from the royalty board, so your challenge was canceled.", NotificationType.GENERIC).create();
+                                        int pos = 0;
+                                        try {
+                                            pos = RoyaltyBoard.getPositionIndexOfUUID(uuid);
+                                        } catch (NotFoundException e) {
+                                            // Player does not have a tribe.
+                                            sender.sendMessage(EyeOfOnyx.EOO + "This player does not have an associated tribe.");
                                         }
 
-                                        // Notify defender if exists
-                                        if (pos != RoyaltyBoard.RULER) {
-                                            String attacking = RoyaltyBoard.getAttacking(tribe,pos);
-                                            if (!attacking.equals("none")) {
-                                                int defenderPos = RoyaltyBoard.getPositionIndexOfUUID(attacking);
-                                                RoyaltyBoard.setAttacker(tribe, defenderPos, "none");
-                                                new Notification(attacker, "Your challenge was canceled.", "The player who was challenging you was removed from the royalty board, so your challenge was canceled.", NotificationType.GENERIC).create();
+                                        try {
+
+                                            // Notify attacker if exists
+                                            UUID attacker = RoyaltyBoard.getAttacker(tribe,pos);
+                                            if (attacker != null) {
+                                                int attackerPos = RoyaltyBoard.getPositionIndexOfUUID(attacker);
+                                                RoyaltyBoard.setAttacking(tribe, attackerPos, null);
+                                                new Notification(attacker, "Your challenge was canceled.", "The player you were challenging was removed from the royalty board, so your challenge was canceled.", NotificationType.GENERIC).create();
+                                            }
+
+                                            // Notify defender if exists
+                                            if (pos != RoyaltyBoard.RULER) {
+                                                UUID attacking = RoyaltyBoard.getAttacking(tribe,pos);
+                                                if (attacking != null) {
+                                                    int defenderPos = RoyaltyBoard.getPositionIndexOfUUID(attacking);
+                                                    RoyaltyBoard.setAttacker(tribe, defenderPos, null);
+                                                    new Notification(attacker, "Your challenge was canceled.", "The player who was challenging you was removed from the royalty board, so your challenge was canceled.", NotificationType.GENERIC).create();
+                                                }
+                                            }
+
+                                            // Remove any challenges
+                                            for (Challenge challenge : Challenge.getChallenges()) {
+                                                if (challenge.defender.equals(uuid) || challenge.attacker.equals(uuid)) Challenge.remove(challenge);
+                                            }
+
+                                            // Remove any challenge notifications
+                                            for (Notification notification : Notification.getNotificationsOfPlayer(uuid)) {
+                                                if (notification.type == NotificationType.CHALLENGE_ACCEPTED || notification.type == NotificationType.CHALLENGE_REQUESTED) Notification.removeNotification(notification);
+                                            }
+                                        } catch (IOException | InvalidConfigurationException e) {
+                                            e.printStackTrace();
+                                        } catch (NotFoundException e) {
+                                            throw new RuntimeException(e);
+                                        }
+
+                                        if (pos != -1 && pos != RoyaltyBoard.CIVILIAN) {
+                                            RoyaltyBoard.removePlayer(tribe, pos);
+                                            RoyaltyBoard.updateBoard();
+                                            try {
+                                                RoyaltyBoard.updateDiscordBoard(tribe);
+                                            } catch (IOException e) {
+                                                sender.sendMessage(EyeOfOnyx.EOO + org.bukkit.ChatColor.RED + "An I/O error occurred while attempting to update Discord board.");
                                             }
                                         }
 
-                                        // Remove any challenges
-                                        for (Challenge challenge : Challenge.getChallenges()) {
-                                            if (challenge.defender.equals(uuid) || challenge.attacker.equals(uuid)) Challenge.remove(challenge);
-                                        }
-
-                                        // Remove any challenge notifications
-                                        for (Notification notification : Notification.getNotificationsOfPlayer(uuid)) {
-                                            if (notification.type == NotificationType.CHALLENGE_ACCEPTED || notification.type == NotificationType.CHALLENGE_REQUESTED) Notification.removeNotification(notification);
-                                        }
-                                    } catch (IOException | InvalidConfigurationException e) {
-                                        e.printStackTrace();
                                     } catch (NotFoundException e) {
-                                        throw new RuntimeException(e);
+                                        // Player does not have a tribe. Not necessary in this case.
+                                        // sender.sendMessage(EyeOfOnyx.EOO + "This player does not have an associated tribe.");
                                     }
 
-                                    if (pos != -1 && pos != RoyaltyBoard.CIVILIAN) {
-                                        RoyaltyBoard.removePlayer(tribe, pos);
-                                        RoyaltyBoard.updateBoard();
-                                        try {
-                                            RoyaltyBoard.updateDiscordBoard(tribe);
-                                        } catch (IOException e) {
-                                            sender.sendMessage(EyeOfOnyx.EOO + org.bukkit.ChatColor.RED + "An I/O error occurred while attempting to update Discord board.");
-                                        }
-                                    }
                                     new Notification(uuid, "Royalty Ban", "You are no longer allowed to participate in royalty. Contact staff if you think this is a mistake.", NotificationType.GENERIC).create();
                                     sender.sendMessage(EyeOfOnyx.EOO + args[1] + " has been banned.");
 
                                 }
+
+                            } catch (IllegalArgumentException e) {
+                                sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "That user could not be found.");
                             }
 
                         } else /* there are no other arguments */ {
@@ -135,20 +141,57 @@ public class CmdEyeOfOnyx implements CommandExecutor {
                         sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You do not have permission to run that command.");
                     else {
                         if /* there is another argument */ (args.length > 1) {
-                            String uuid = mojang.getUUIDOfUsername(args[1]);
-                            if /* the username is invalid */ (uuid == null) {
-                                sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "That user could not be found.");
-                            } else /* the username is valid */ {
+                            try {
+                                UUID uuid = UUID.fromString(mojang.getUUIDOfUsername(args[1]));
                                 if /* player is banned */ (Banned.isPlayerBanned(uuid)) {
                                     Banned.removePlayer(uuid);
                                     sender.sendMessage(EyeOfOnyx.EOO + args[1] + " has been unbanned.");
                                 } else /* player is not banned */ {
                                     sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "That player is not banned.");
                                 }
+                            } catch (IllegalArgumentException e) {
+                                sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "That user could not be found.");
                             }
+
                         } else {
                             sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Missing arguments. /eyeofonyx ban <player>");
                         }
+                    }
+
+                }
+                case "banlist" -> {
+                    if (!sender.hasPermission("eyeofonxy.ban"))
+                        sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You do not have permission to run that command.");
+                    else {
+                        sender.sendMessage(EyeOfOnyx.EOO + "Please wait.");
+
+                        Bukkit.getScheduler().runTaskAsynchronously(EyeOfOnyx.getPlugin(), () -> {
+
+                            Mojang mojang = new Mojang().connect();
+
+                            ComponentBuilder message = new ComponentBuilder(EyeOfOnyx.EOO);
+                            message.append("Banned players:\n");
+
+                            for (String bannedPlayer : Banned.getBannedPlayers()) {
+
+                                String username = mojang.getPlayerProfile(bannedPlayer).getUsername();
+
+                                TextComponent button = new TextComponent();
+                                button.setText("Unban");
+                                button.setItalic(true);
+                                button.setColor(ChatColor.RED);
+                                button.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("Click to unban this player from royalty.")));
+                                button.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/eyeofonyx unban " + username));
+
+                                message.append("[").color(ChatColor.DARK_GRAY)
+                                        .append(button).append("]").color(ChatColor.DARK_GRAY)
+                                        .append(" ").reset().append(username).append("\n");
+
+                            }
+
+                            sender.spigot().sendMessage(message.create());
+
+                        });
                     }
 
                 }

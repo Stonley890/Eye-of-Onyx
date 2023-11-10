@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.io.InvalidObjectException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class CmdUpdatePlayer implements CommandExecutor {
 
@@ -74,39 +75,39 @@ public class CmdUpdatePlayer implements CommandExecutor {
                 for (int t = 0; t < RoyaltyBoard.getTribes().length; t++) {
                     for (int p = 0; p < RoyaltyBoard.getValidPositions().length; p++) {
 
-                        if (RoyaltyBoard.getUuid(t,p).equals(player.getUniqueId().toString()) && t != PlayerTribe.getTribeOfPlayer(player.getUniqueId().toString())) {
+                        if (RoyaltyBoard.getUuid(t,p).equals(player.getUniqueId()) && t != PlayerTribe.getTribeOfPlayer(player.getUniqueId())) {
 
                             // Notify attacker if exists
-                            String attacker = RoyaltyBoard.getAttacker(t,p);
-                            if (!attacker.equals("none")) {
+                            UUID attacker = RoyaltyBoard.getAttacker(t,p);
+                            if (attacker != null) {
                                 int attackerPos = RoyaltyBoard.getPositionIndexOfUUID(attacker);
-                                RoyaltyBoard.setAttacking(t, attackerPos, "none");
+                                RoyaltyBoard.setAttacking(t, attackerPos, null);
                                 new Notification(attacker, "Your challenge was canceled.", "The player you were challenging was removed from the royalty board, so your challenge was canceled.", NotificationType.GENERIC).create();
                             }
 
                             // Notify defender if exists
                             if (p != RoyaltyBoard.RULER) {
-                                String attacking = RoyaltyBoard.getAttacking(t,p);
-                                if (!attacking.equals("none")) {
+                                UUID attacking = RoyaltyBoard.getAttacking(t,p);
+                                if (attacking != null) {
                                     int defenderPos = RoyaltyBoard.getPositionIndexOfUUID(attacking);
-                                    RoyaltyBoard.setAttacker(t, defenderPos, "none");
+                                    RoyaltyBoard.setAttacker(t, defenderPos, null);
                                     new Notification(attacker, "Your challenge was canceled.", "The player who was challenging you was removed from the royalty board, so your challenge was canceled.", NotificationType.GENERIC).create();
                                 }
                             }
 
                             // Remove any challenges
                             for (Challenge challenge : Challenge.getChallenges()) {
-                                if (challenge.defender.equals(player.getUniqueId().toString()) || challenge.attacker.equals(player.getUniqueId().toString())) Challenge.remove(challenge);
+                                if (challenge.defender.equals(player.getUniqueId()) || challenge.attacker.equals(player.getUniqueId())) Challenge.remove(challenge);
                             }
 
                             // Remove any challenge notifications
-                            for (Notification notification : Notification.getNotificationsOfPlayer(player.getUniqueId().toString())) {
+                            for (Notification notification : Notification.getNotificationsOfPlayer(player.getUniqueId())) {
                                 if (notification.type == NotificationType.CHALLENGE_ACCEPTED || notification.type == NotificationType.CHALLENGE_REQUESTED) Notification.removeNotification(notification);
                             }
 
                             RoyaltyBoard.removePlayer(t, p);
                             RoyaltyBoard.updateBoard();
-                            new Notification(player.getUniqueId().toString(), "You have been removed from the royalty board.", "You were removed from the royalty board because you changed your tribe. Any pending challenges have been canceled.", NotificationType.GENERIC).create();
+                            new Notification(player.getUniqueId(), "You have been removed from the royalty board.", "You were removed from the royalty board because you changed your tribe. Any pending challenges have been canceled.", NotificationType.GENERIC).create();
                         }
 
                     }

@@ -2,6 +2,8 @@ package io.github.stonley890.eyeofonyx.commands;
 
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import io.github.stonley890.eyeofonyx.challenges.Competition;
+import io.github.stonley890.eyeofonyx.files.BoardState;
+import io.github.stonley890.eyeofonyx.files.RoyaltyAction;
 import io.github.stonley890.eyeofonyx.files.RoyaltyBoard;
 import javassist.NotFoundException;
 import net.md_5.bungee.api.chat.ComponentBuilder;
@@ -10,13 +12,11 @@ import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.shanerx.mojang.Mojang;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 
@@ -53,8 +53,8 @@ public class CmdCompetition implements CommandExecutor {
                 try {
                     builder.append("Competition Information\n")
                             .append("Tribe: ").append(RoyaltyBoard.getTribes()[Competition.activeChallenge.tribe])
-                            .append("Attacker: ").append(attackerPos).append(" ").append(mojang.getPlayerProfile(Competition.activeChallenge.attacker).getUsername())
-                            .append("Defender: ").append(RoyaltyBoard.getValidPositions()[RoyaltyBoard.getPositionIndexOfUUID(Competition.activeChallenge.defender)].toUpperCase().replace('_', ' ')).append(" ").append(mojang.getPlayerProfile(Competition.activeChallenge.attacker).getUsername())
+                            .append("Attacker: ").append(attackerPos).append(" ").append(mojang.getPlayerProfile(Competition.activeChallenge.attacker.toString()).getUsername())
+                            .append("Defender: ").append(RoyaltyBoard.getValidPositions()[RoyaltyBoard.getPositionIndexOfUUID(Competition.activeChallenge.defender)].toUpperCase().replace('_', ' ')).append(" ").append(mojang.getPlayerProfile(Competition.activeChallenge.attacker.toString()).getUsername())
                             .append("Type: ").append(Competition.activeChallenge.type.toString());
                 } catch (NotFoundException e) {
                     // Attacker does not have an associate tribe (should not happen)
@@ -71,13 +71,15 @@ public class CmdCompetition implements CommandExecutor {
                     else if (!Competition.activeChallenge.started) {
 
                         // Get participants as players
-                        Player attacker = Bukkit.getPlayer(UUID.fromString(Competition.activeChallenge.attacker));
-                        Player defender = Bukkit.getPlayer(UUID.fromString(Competition.activeChallenge.defender));
+                        Player attacker = Bukkit.getPlayer(Competition.activeChallenge.attacker);
+                        Player defender = Bukkit.getPlayer(Competition.activeChallenge.defender);
 
                         // Ensure both players are online
                         if (attacker != null && defender != null) {
 
                             int tribe = Competition.activeChallenge.tribe;
+
+                            BoardState oldBoard = RoyaltyBoard.getBoardOf(tribe);
 
                             // Get positions
                             int attackerPos;
@@ -86,8 +88,8 @@ public class CmdCompetition implements CommandExecutor {
                                 defenderPos = RoyaltyBoard.getPositionIndexOfUUID(Competition.activeChallenge.defender);
                                 attackerPos = RoyaltyBoard.getPositionIndexOfUUID(Competition.activeChallenge.attacker);
 
-                                RoyaltyBoard.setAttacker(tribe, defenderPos, "none");
-                                RoyaltyBoard.setAttacking(tribe, attackerPos, "none");
+                                RoyaltyBoard.setAttacker(tribe, defenderPos, null);
+                                RoyaltyBoard.setAttacking(tribe, attackerPos, null);
                             } catch (NotFoundException e) {
                                 // No associated tribe (should not happen)
                                 sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "One or more players do not have an associated tribe. Royalty board values will not be set.");
@@ -98,6 +100,10 @@ public class CmdCompetition implements CommandExecutor {
                             Bukkit.getScoreboardManager().getMainScoreboard().getTeam("eoo.defender").addEntry(defender.getName());
                             // Start challenge
                             Competition.activeChallenge.started = true;
+
+                            BoardState newBoard = RoyaltyBoard.getBoardOf(tribe);
+                            RoyaltyBoard.sendUpdate(new RoyaltyAction(sender.getName(), tribe, newBoard, oldBoard));
+
                             sender.sendMessage(EyeOfOnyx.EOO + "Competition is now started.");
                         } else {
                             sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Both players must be online!");
@@ -114,6 +120,8 @@ public class CmdCompetition implements CommandExecutor {
 
                         int tribe = Competition.activeChallenge.tribe;
 
+                        BoardState oldBoard = RoyaltyBoard.getBoardOf(tribe);
+
                         // Get positions
                         int attackerPos;
                         int defenderPos;
@@ -121,12 +129,15 @@ public class CmdCompetition implements CommandExecutor {
                             defenderPos = RoyaltyBoard.getPositionIndexOfUUID(Competition.activeChallenge.defender);
                             attackerPos = RoyaltyBoard.getPositionIndexOfUUID(Competition.activeChallenge.attacker);
 
-                            RoyaltyBoard.setAttacker(tribe, defenderPos, "none");
-                            RoyaltyBoard.setAttacking(tribe, attackerPos, "none");
+                            RoyaltyBoard.setAttacker(tribe, defenderPos, null);
+                            RoyaltyBoard.setAttacking(tribe, attackerPos, null);
                         } catch (NotFoundException e) {
                             // No associated tribe (should not happen)
                             sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "One or more players do not have an associated tribe. Royalty board values will not be set.");
                         }
+
+                        BoardState newBoard = RoyaltyBoard.getBoardOf(tribe);
+                        RoyaltyBoard.sendUpdate(new RoyaltyAction(sender.getName(), tribe, oldBoard, newBoard));
 
                         Competition.activeChallenge = null;
 
@@ -142,6 +153,8 @@ public class CmdCompetition implements CommandExecutor {
                             sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Missing arguments! /competition end <attacker|defender>");
                         } else {
 
+
+
                             // Get positions
                             int attackerPos;
                             int defenderPos;
@@ -153,19 +166,20 @@ public class CmdCompetition implements CommandExecutor {
                             }
 
                             int tribe = Competition.activeChallenge.tribe;
+                            BoardState oldBoard = RoyaltyBoard.getBoardOf(tribe);
 
                             if (args[1].equals("attacker")) {
 
-                                RoyaltyBoard.move(tribe, attackerPos, defenderPos);
+                                RoyaltyBoard.replace(tribe, attackerPos, defenderPos);
                                 RoyaltyBoard.removePlayer(tribe, attackerPos);
-                                RoyaltyBoard.save(RoyaltyBoard.get());
+                                RoyaltyBoard.save();
                                 RoyaltyBoard.updateBoard();
 
                             } else if (args[1].equals("defender")) {
 
                                 // Defender win; remove attacker
                                 RoyaltyBoard.removePlayer(Competition.activeChallenge.tribe, attackerPos);
-                                RoyaltyBoard.save(RoyaltyBoard.get());
+                                RoyaltyBoard.save();
                                 RoyaltyBoard.updateBoard();
 
                             } else {
@@ -174,6 +188,9 @@ public class CmdCompetition implements CommandExecutor {
                             }
 
                             Competition.activeChallenge = null;
+
+                            BoardState newBoard = RoyaltyBoard.getBoardOf(tribe);
+                            RoyaltyBoard.sendUpdate(new RoyaltyAction(sender.getName(), tribe, oldBoard, newBoard));
 
                             try {
                                 RoyaltyBoard.updateDiscordBoard(tribe);

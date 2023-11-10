@@ -3,13 +3,14 @@ package io.github.stonley890.eyeofonyx.listeners;
 import java.io.IOException;
 import java.io.InvalidObjectException;
 import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import io.github.stonley890.eyeofonyx.challenges.Competition;
+import io.github.stonley890.eyeofonyx.files.BoardPosition;
 import io.github.stonley890.eyeofonyx.files.Notification;
 import io.github.stonley890.eyeofonyx.files.PlayerTribe;
 import io.github.stonley890.eyeofonyx.web.IpUtils;
@@ -31,10 +32,7 @@ import io.github.stonley890.eyeofonyx.files.RoyaltyBoard;
 
 public class ListenJoin implements Listener {
 
-    private static final FileConfiguration board = RoyaltyBoard.get();
     private static final Scoreboard scoreboard = Objects.requireNonNull(Bukkit.getScoreboardManager()).getMainScoreboard();
-
-    private static final Mojang mojang = new Mojang().connect();
 
     private static final String[] teamNames = RoyaltyBoard.getTeamNames();
     private static final String[] tribes = RoyaltyBoard.getTribes();
@@ -63,8 +61,8 @@ public class ListenJoin implements Listener {
             int posIndex;
 
             try {
-                tribeIndex = PlayerTribe.getTribeOfPlayer(player.getUniqueId().toString());
-                posIndex = RoyaltyBoard.getPositionIndexOfUUID(player.getUniqueId().toString());
+                tribeIndex = PlayerTribe.getTribeOfPlayer(player.getUniqueId());
+                posIndex = RoyaltyBoard.getPositionIndexOfUUID(player.getUniqueId());
             } catch (NotFoundException e) {
                 return;
             }
@@ -95,7 +93,7 @@ public class ListenJoin implements Listener {
         }
 
         try {
-            for (Notification notification : Notification.getNotificationsOfPlayer(player.getUniqueId().toString())) {
+            for (Notification notification : Notification.getNotificationsOfPlayer(player.getUniqueId())) {
                 notification.sendMessage();
             }
         } catch (IOException | InvalidConfigurationException e) {
@@ -104,25 +102,22 @@ public class ListenJoin implements Listener {
 
         try {
             String playerTeam = scoreboard.getEntryTeam(player.getName()).getName();
-            int playerTribe = Arrays.binarySearch(teamNames, playerTeam);
+            int tribe = Arrays.binarySearch(teamNames, playerTeam);
 
-            if (playerTribe > 6 || playerTribe < 1) {
+            if (tribe > 6 || tribe < 1) {
                 return;
             }
 
-            String playerUUID = mojang.getUUIDOfUsername(player.getName()).replaceFirst(
-                    "(\\p{XDigit}{8})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}+)",
-                    "$1-$2-$3-$4-$5");
+            UUID uuid = player.getUniqueId();
 
             // Check each position for player
-            for (String validPosition : validPositions) {
+            for (int pos = 0; pos < validPositions.length; pos++) {
 
                 // If player is found on board, update last_online
-                if (board.contains(tribes[playerTribe] + "." + validPosition + "." + playerUUID)) {
-                    board.set(tribes[playerTribe] + "." + validPosition + ".last_online",
-                            LocalDateTime.now().toString());
-
-                    RoyaltyBoard.save(board);
+                if (RoyaltyBoard.getUuid(tribe, pos).equals(uuid)){
+                    BoardPosition updatedPos = RoyaltyBoard.getBoardOf(tribe).getPos(pos);
+                    updatedPos.lastOnline = LocalDateTime.now();
+                    RoyaltyBoard.set(tribe, pos, updatedPos);
                 }
             }
         } catch (NullPointerException e) {
