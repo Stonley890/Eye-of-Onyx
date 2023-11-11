@@ -54,6 +54,7 @@ public class Banned {
         List<String> banlist = fileConfig.getStringList("banned");
         banlist.add(uuid.toString());
         fileConfig.set("banned", banlist);
+        save(fileConfig);
     }
 
     /**
@@ -64,6 +65,7 @@ public class Banned {
         List<String> banlist = fileConfig.getStringList("banned");
         banlist.remove(uuid.toString());
         fileConfig.set("banned", banlist);
+        save(fileConfig);
     }
 
     /**

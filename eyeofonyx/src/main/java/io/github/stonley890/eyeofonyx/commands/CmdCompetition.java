@@ -79,7 +79,7 @@ public class CmdCompetition implements CommandExecutor {
 
                             int tribe = Competition.activeChallenge.tribe;
 
-                            BoardState oldBoard = RoyaltyBoard.getBoardOf(tribe);
+                            BoardState oldBoard = RoyaltyBoard.getBoardOf(tribe).clone();
 
                             // Get positions
                             int attackerPos;
@@ -101,7 +101,7 @@ public class CmdCompetition implements CommandExecutor {
                             // Start challenge
                             Competition.activeChallenge.started = true;
 
-                            BoardState newBoard = RoyaltyBoard.getBoardOf(tribe);
+                            BoardState newBoard = RoyaltyBoard.getBoardOf(tribe).clone();
                             RoyaltyBoard.sendUpdate(new RoyaltyAction(sender.getName(), tribe, newBoard, oldBoard));
 
                             sender.sendMessage(EyeOfOnyx.EOO + "Competition is now started.");
@@ -120,7 +120,7 @@ public class CmdCompetition implements CommandExecutor {
 
                         int tribe = Competition.activeChallenge.tribe;
 
-                        BoardState oldBoard = RoyaltyBoard.getBoardOf(tribe);
+                        BoardState oldBoard = RoyaltyBoard.getBoardOf(tribe).clone();
 
                         // Get positions
                         int attackerPos;
@@ -136,7 +136,7 @@ public class CmdCompetition implements CommandExecutor {
                             sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "One or more players do not have an associated tribe. Royalty board values will not be set.");
                         }
 
-                        BoardState newBoard = RoyaltyBoard.getBoardOf(tribe);
+                        BoardState newBoard = RoyaltyBoard.getBoardOf(tribe).clone();
                         RoyaltyBoard.sendUpdate(new RoyaltyAction(sender.getName(), tribe, oldBoard, newBoard));
 
                         Competition.activeChallenge = null;
@@ -166,7 +166,7 @@ public class CmdCompetition implements CommandExecutor {
                             }
 
                             int tribe = Competition.activeChallenge.tribe;
-                            BoardState oldBoard = RoyaltyBoard.getBoardOf(tribe);
+                            BoardState oldBoard = RoyaltyBoard.getBoardOf(tribe).clone();
 
                             if (args[1].equals("attacker")) {
 
@@ -190,7 +190,7 @@ public class CmdCompetition implements CommandExecutor {
                             Competition.activeChallenge = null;
 
                             BoardState newBoard = RoyaltyBoard.getBoardOf(tribe);
-                            RoyaltyBoard.sendUpdate(new RoyaltyAction(sender.getName(), tribe, oldBoard, newBoard));
+                            RoyaltyBoard.sendUpdate(new RoyaltyAction(sender.getName(), tribe, oldBoard.clone(), newBoard));
 
                             try {
                                 RoyaltyBoard.updateDiscordBoard(tribe);

@@ -62,7 +62,7 @@
     <dependency>
       <groupId>com.github.Stonley890</groupId>
       <artifactId>Dreamvisitor</artifactId>
-      <version>main-ddd2b562b1-1</version>
+      <version>5198a252a0</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -76,11 +76,6 @@
       <artifactId>api</artifactId>
       <version>5.4</version>
       <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.github.stonley890</groupId>
-      <artifactId>dreamvisitor</artifactId>
-      <version>main-ddd2b562b1-1</version>
     </dependency>
   </dependencies>
 

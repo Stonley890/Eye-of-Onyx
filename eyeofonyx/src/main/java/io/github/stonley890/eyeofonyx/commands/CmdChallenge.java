@@ -286,19 +286,19 @@ public class CmdChallenge implements CommandExecutor {
                             if (nextEmptyPosition < CIVILIAN) {
                                 Dreamvisitor.debug("Position available. Skipping challenge process.");
 
-                                BoardState oldBoard = getBoardOf(playerTribe);
+                                BoardState oldBoard = getBoardOf(playerTribe).clone();
                                 RoyaltyBoard.set(playerTribe, nextEmptyPosition, new BoardPosition(player.getUniqueId(), null, LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now(), null, null));
-                                BoardState newBoard = getBoardOf(playerTribe);
-
+                                BoardState newBoard = getBoardOf(playerTribe).clone();
                                 sendUpdate(new RoyaltyAction(player.getName(), playerTribe, oldBoard, newBoard));
-
-                                // setValue(playerTribe, nextEmptyPosition, "uuid", player.getUniqueId().toString());
-                                // setValue(playerTribe, nextEmptyPosition, "joined_time", LocalDateTime.now().toString());
-                                // setValue(playerTribe, nextEmptyPosition, "last_online", LocalDateTime.now().toString());
-                                // setValue(playerTribe, nextEmptyPosition, "last_challenge_time", LocalDateTime.now().toString());
                                 updateBoard();
                                 Dreamvisitor.debug("Board updated.");
+
                                 sender.sendMessage(EyeOfOnyx.EOO + "You are now " + getValidPositions()[nextEmptyPosition].toUpperCase().replace("_", " ") + " of the " + getTeamNames()[playerTribe].toUpperCase() + "s!");
+                                try {
+                                    RoyaltyBoard.updateDiscordBoard(playerTribe);
+                                } catch (IOException e) {
+                                    Bukkit.getLogger().warning("Unable to update Discord board.");
+                                }
                                 return true;
                             }
 
@@ -374,13 +374,13 @@ public class CmdChallenge implements CommandExecutor {
                             player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
                             java.util.UUID targetUuid = RoyaltyBoard.getUuid(playerTribe, targetPosition);
 
-                            BoardState oldBoard = RoyaltyBoard.getBoardOf(playerTribe);
+                            BoardState oldBoard = RoyaltyBoard.getBoardOf(playerTribe).clone();
 
                             // set values in board.yml
                             RoyaltyBoard.setAttacker(playerTribe, targetPosition, player.getUniqueId());
                             if (playerPosition != 5) RoyaltyBoard.setAttacking(playerTribe, playerPosition, targetUuid);
 
-                            BoardState newBoard = RoyaltyBoard.getBoardOf(playerTribe);
+                            BoardState newBoard = RoyaltyBoard.getBoardOf(playerTribe).clone();
                             RoyaltyBoard.sendUpdate(new RoyaltyAction(sender.getName(), playerTribe, oldBoard, newBoard));
 
                             // create notification for target
@@ -474,9 +474,9 @@ public class CmdChallenge implements CommandExecutor {
                         }
 
                         // Remove from royalty board
-                        BoardState oldBoard = RoyaltyBoard.getBoardOf(playerTribe);
+                        BoardState oldBoard = RoyaltyBoard.getBoardOf(playerTribe).clone();
                         RoyaltyBoard.removePlayer(playerTribe, playerPosition);
-                        BoardState newBoard = RoyaltyBoard.getBoardOf(playerTribe);
+                        BoardState newBoard = RoyaltyBoard.getBoardOf(playerTribe).clone();
                         sendUpdate(new RoyaltyAction(sender.getName(), playerTribe, oldBoard, newBoard));
                         RoyaltyBoard.updateBoard();
                         sender.sendMessage(EyeOfOnyx.EOO + "You have been removed from the royalty board.");

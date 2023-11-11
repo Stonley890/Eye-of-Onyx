@@ -133,10 +133,18 @@ public class Notification {
 
         fileConfig.load(file);
 
-        // Get list of notifications of given player
-        List<List<String>> yamlNotifications = (List<List<String>>) fileConfig.getList(uuid.toString());
-
         List<Notification> notifications = new ArrayList<>();
+
+        // Get list of notifications of given player
+        List<List<String>> yamlNotifications;
+        try {
+            yamlNotifications = (List<List<String>>) fileConfig.getList(uuid.toString());
+        } catch (NullPointerException e) {
+            return notifications;
+        }
+
+
+
 
         if (yamlNotifications == null || yamlNotifications.isEmpty()) {
             notifications = new ArrayList<>();

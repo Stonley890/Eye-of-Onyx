@@ -2,12 +2,15 @@ package io.github.stonley890.eyeofonyx;
 
 import io.github.stonley890.dreamvisitor.Bot;
 import io.github.stonley890.dreamvisitor.Dreamvisitor;
+import io.github.stonley890.dreamvisitor.Utils;
 import io.github.stonley890.dreamvisitor.data.AccountLink;
 import io.github.stonley890.eyeofonyx.files.*;
 import javassist.NotFoundException;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -15,6 +18,8 @@ import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
+import net.dv8tion.jda.api.interactions.components.ActionRow;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.InvalidConfigurationException;
@@ -146,17 +151,17 @@ public class Discord extends ListenerAdapter {
                                 if (position.equals(RoyaltyBoard.getValidPositions()[i])) targetPos = i;
                             }
 
-                            BoardState oldBoard = RoyaltyBoard.getBoardOf(playerTribe);
+                            BoardState oldBoard = RoyaltyBoard.getBoardOf(playerTribe).clone();
 
                             BoardPosition newPos = new BoardPosition(targetPlayerUUID, null, LocalDateTime.now(), LocalDateTime.now(),LocalDateTime.now(), LocalDateTime.now(), null, null);
 
                             // Set value in board.yml
                             RoyaltyBoard.set(playerTribe, targetPos, newPos);
 
-                            BoardState newBoard = RoyaltyBoard.getBoardOf(playerTribe);
+                            BoardState newBoard = RoyaltyBoard.getBoardOf(playerTribe).clone();
                             RoyaltyBoard.sendUpdate(new RoyaltyAction(event.getMember().getId(), playerTribe, oldBoard, newBoard));
 
-                            event.reply("✅ " + user.getAsMention() + " is now " + position.toUpperCase().replace('_', ' ')).queue();
+                            event.reply("✅ " + targetUser.getAsMention() + " is now " + position.toUpperCase().replace('_', ' ')).queue();
 
                             RoyaltyBoard.updateBoard();
 
@@ -228,7 +233,7 @@ public class Discord extends ListenerAdapter {
                         return;
                     }
 
-                    BoardState oldBoard = RoyaltyBoard.getBoardOf(tribeIndex);
+                    BoardState oldBoard = RoyaltyBoard.getBoardOf(tribeIndex).clone();
 
                     try {
 
@@ -268,11 +273,18 @@ public class Discord extends ListenerAdapter {
                         throw new RuntimeException(e);
                     }
 
-                    new Notification(uuid, "You have been removed from the royalty board.", "You were removed from the royalty board because you changed your tribe. And pending challenges have been canceled.", NotificationType.GENERIC).create();
+                    new Notification(uuid, "You have been removed from the royalty board.", "You were removed from the royalty board because you changed your tribe. All pending challenges have been canceled.", NotificationType.GENERIC).create();
 
+                    Dreamvisitor.debug("OldPos is null: " +  (oldBoard.getPos(posIndex).player == null));
                     RoyaltyBoard.removePlayer(tribeIndex, posIndex);
-                    BoardState newBoard = RoyaltyBoard.getBoardOf(tribeIndex);
+                    Dreamvisitor.debug("OldPos is null: " +  (oldBoard.getPos(posIndex).player == null));
+                    BoardState newBoard = RoyaltyBoard.getBoardOf(tribeIndex).clone();
+                    Dreamvisitor.debug("OldPos is null: " +  (oldBoard.getPos(posIndex).player == null));
+                    Dreamvisitor.debug("NewPos is null: " +  (newBoard.getPos(posIndex).player == null));
                     RoyaltyBoard.sendUpdate(new RoyaltyAction(event.getMember().getId(), tribeIndex, oldBoard, newBoard));
+                    Dreamvisitor.debug("OldPos is null: " +  (oldBoard.getPos(posIndex).player == null));
+                    Dreamvisitor.debug("NewPos is null: " +  (newBoard.getPos(posIndex).player == null));
+                    Dreamvisitor.debug("Currentpos is null: " +  (RoyaltyBoard.getBoardOf(tribeIndex).getPos(posIndex).player == null));
 
                     RoyaltyBoard.updateBoard();
                     try {
@@ -384,7 +396,7 @@ public class Discord extends ListenerAdapter {
                                 try {
                                     RoyaltyBoard.updateDiscordBoard(tribe);
                                 } catch (IOException e) {
-                                    Bukkit.getLogger().warning(EyeOfOnyx.EOO + org.bukkit.ChatColor.RED + "An I/O error occurred while attempting to update Discord board.");
+                                    Bukkit.getLogger().warning(EyeOfOnyx.EOO + ChatColor.RED + "An I/O error occurred while attempting to update Discord board.");
                                 }
                             }
                             new Notification(uuid, "Royalty Ban", "You are no longer allowed to participate in royalty. Contact staff if you think this is a mistake.", NotificationType.GENERIC).create();
@@ -440,7 +452,7 @@ public class Discord extends ListenerAdapter {
                             description.append("`").append(username).append("`: ").append("<@").append(discordId).append(">\n");
                         }
                         message.setDescription(description);
-                        event.replyEmbeds(message.build()).queue();
+                        event.getHook().editOriginalEmbeds(message.build()).queue();
                     });
 
                 }
@@ -457,6 +469,101 @@ public class Discord extends ListenerAdapter {
                 }
             }
 
+        }
+
+    }
+
+    @Override
+    public void onButtonInteraction(ButtonInteractionEvent event) {
+
+        Button button = event.getButton();
+
+        if (button.getId().startsWith("revertaction-")) {
+
+            String targetId = button.getId().substring("revertaction-".length());
+
+            for (RoyaltyAction royaltyAction : RoyaltyAction.actionHistory) {
+                if (targetId.equals(String.valueOf(royaltyAction.id))) {
+                    EmbedBuilder embed = new EmbedBuilder();
+                    embed.setTitle("Are you sure?")
+                            .setDescription("Reverting this action will revert all values of this tribe to the values they were set to before this change.")
+                            .setFooter("This action cannot be undone.");
+
+                    for (int pos = 0; pos < 5; pos++) {
+
+
+                        BoardPosition position = royaltyAction.oldState.getPos(pos);
+
+                        StringBuilder values = new StringBuilder();
+
+                        String uuid = "N/A";
+                        String username = "N/A";
+                        String ocName = "N/A";
+                        String lastOnline = "N/A";
+                        String lastChallenge = "N/A";
+                        String joinedBoard = "N/A";
+                        String joinedPos = "N/A";
+                        String challenger = "N/A";
+                        String challenging = "N/A";
+
+                        // OLD
+                        if (position.player != null) uuid = position.player.toString();
+                        if (position.player != null) username = Utils.getUsernameOfUuid(uuid);
+                        if (position.name != null) ocName = position.name;
+                        if (position.lastOnline != null) lastOnline = position.lastOnline.toString();
+                        if (position.lastChallenge != null) lastChallenge = position.lastChallenge.toString();
+                        if (position.joinedBoard != null) joinedBoard = position.joinedBoard.toString();
+                        if (position.joinedPosition != null) joinedPos = position.joinedPosition.toString();
+                        if (position.challenger != null) challenger = Utils.getUsernameOfUuid(position.challenger.toString());
+                        if (position.challenging != null) challenging = Utils.getUsernameOfUuid(position.challenging.toString());
+
+                        String discordUser = "N/A";
+
+                        try {
+                            long discordId = AccountLink.getDiscordId(position.player);
+                            net.dv8tion.jda.api.entities.User user = Bot.getJda().retrieveUserById(discordId).complete();
+                            if (user != null) discordUser = user.getAsMention();
+                        } catch (NullPointerException IllegalArgumentException) {
+                            // No user
+                        }
+
+                        values.append("\nPlayer: ").append(io.github.stonley890.dreamvisitor.Utils.escapeMarkdownFormatting(username))
+                                .append("\nUUID: ").append(uuid)
+                                .append("\nUser: ").append(discordUser)
+                                .append("\nOC Name: ").append(io.github.stonley890.dreamvisitor.Utils.escapeMarkdownFormatting(ocName))
+                                .append("\nLast Online: ").append(lastOnline)
+                                .append("\nLast Challenge: ").append(lastChallenge)
+                                .append("\nDate Joined Board: ").append(joinedBoard)
+                                .append("\nDate Joined Position: ").append(joinedPos)
+                                .append("\nChallenger: ").append(io.github.stonley890.dreamvisitor.Utils.escapeMarkdownFormatting(challenger))
+                                .append("\nChallenging: ").append(io.github.stonley890.dreamvisitor.Utils.escapeMarkdownFormatting(challenging));
+
+                        embed.addField(RoyaltyBoard.getValidPositions()[pos].replace("_", " ").toUpperCase(), values.toString(), false);
+
+                    }
+
+                    ActionRow actionRow = ActionRow.of(Button.danger("revertconfirm-" + royaltyAction.id, "Yes, revert to this state."));
+                    event.replyEmbeds(embed.build()).addActionRows(actionRow).queue();
+                    break;
+                }
+            }
+
+        } else if (button.getId().startsWith("revertconfirm-")) {
+            String targetId = button.getId().substring("revertconfirm-".length());
+
+            List<RoyaltyAction> actionHistory = RoyaltyAction.actionHistory;
+            for (RoyaltyAction royaltyAction : actionHistory) {
+                if (targetId.equals(String.valueOf(royaltyAction.id))) {
+
+                    RoyaltyBoard.getBoard().put(royaltyAction.affectedTribe, royaltyAction.oldState);
+                    RoyaltyBoard.save();
+                    RoyaltyBoard.updateBoard();
+                    event.reply("✅ Values reverted.").queue();
+                    event.getInteraction().editButton(button.asDisabled()).queue();
+                    break;
+
+                }
+            }
         }
 
     }

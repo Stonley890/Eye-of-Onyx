@@ -1,11 +1,11 @@
 package io.github.stonley890.eyeofonyx.files;
 
-import org.bukkit.configuration.file.YamlConfiguration;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 public class BoardPosition {
@@ -30,7 +30,7 @@ public class BoardPosition {
     @Nullable
     public UUID challenging;
 
-    public BoardPosition(UUID uuid, String name, LocalDateTime joinedBoard, LocalDateTime joinedPosition, LocalDateTime lastOnline, LocalDateTime lastChallenge, UUID challenger, UUID challenging) {
+    public BoardPosition(@Nullable UUID uuid, @Nullable String name, @Nullable LocalDateTime joinedBoard, @Nullable LocalDateTime joinedPosition, @Nullable LocalDateTime lastOnline, @Nullable LocalDateTime lastChallenge, @Nullable UUID challenger, @Nullable UUID challenging) {
 
         this.player = uuid;
         this.name = name;
@@ -76,31 +76,23 @@ public class BoardPosition {
         return this;
     }
 
-    /**
-     * Converts this {@link BoardPosition} to a {@link YamlConfiguration}-compatible list of objects. If an object is null, it will be transformed into the {@link String} "none"
-     * @return a {@link List<Object>} containing never-null values.
-     */
-    public List<Object> toObjectList() {
-
-        List<Object> list = new ArrayList<>();
-
-        list.add(noneIfNull(player));
-        list.add(noneIfNull(name));
-        list.add(noneIfNull(joinedBoard));
-        list.add(noneIfNull(joinedPosition));
-        list.add(noneIfNull(lastOnline));
-        list.add(noneIfNull(lastChallenge));
-        list.add(noneIfNull(challenger));
-        list.add(noneIfNull(challenging));
-
-        return list;
-    }
-
-    private Object noneIfNull(Object object) {
+    @Contract(value = "!null -> param1", pure = true)
+    private @NotNull Object noneIfNull(Object object) {
 
         if (object == null) return "none";
         else return object;
 
+    }
+
+    public boolean equals(@NotNull BoardPosition that) {
+        if (this.player != that.player) return false;
+        if (!Objects.equals(this.name, that.name)) return false;
+        if (!Objects.equals(this.joinedBoard, that.joinedBoard)) return false;
+        if (!Objects.equals(this.joinedPosition, that.joinedPosition)) return false;
+        if (!Objects.equals(this.lastOnline, that.lastOnline)) return false;
+        if (!Objects.equals(this.lastChallenge, that.lastChallenge)) return false;
+        if (this.challenger != that.challenger) return false;
+        return this.challenging == that.challenging;
     }
 
 }

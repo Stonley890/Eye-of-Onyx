@@ -132,7 +132,7 @@ public class CmdRoyalty implements CommandExecutor {
             // Check if third argument contains a valid position
             if (Arrays.stream(validPositions).anyMatch(args[2]::contains)) {
 
-                BoardState oldBoard = RoyaltyBoard.getBoardOf(playerTribe);
+                BoardState oldBoard = RoyaltyBoard.getBoardOf(playerTribe).clone();
 
                 int targetPos = -1;
 
@@ -146,7 +146,7 @@ public class CmdRoyalty implements CommandExecutor {
                 RoyaltyBoard.set(playerTribe, targetPos, newPos);
 
                 // Log update
-                BoardState newBoard = RoyaltyBoard.getBoardOf(playerTribe);
+                BoardState newBoard = RoyaltyBoard.getBoardOf(playerTribe).clone();
                 RoyaltyBoard.sendUpdate(new RoyaltyAction(sender.getName(), playerTribe, oldBoard, newBoard));
 
                 sender.sendMessage(EyeOfOnyx.EOO + ChatColor.YELLOW + args[1] + " is now " + args[2].toUpperCase().replace('_', ' '));
@@ -198,7 +198,7 @@ public class CmdRoyalty implements CommandExecutor {
             boardMessage = buildBoard(Arrays.binarySearch(tribes, args[1]));
 
             // Send built message
-            sender.sendMessage(EyeOfOnyx.EOO + ChatColor.YELLOW + "ROYALTY BOARD" + boardMessage.toString());
+            sender.sendMessage(EyeOfOnyx.EOO + ChatColor.YELLOW + "ROYALTY BOARD" + boardMessage);
 
         } else {
             // Invalid argument
@@ -248,7 +248,7 @@ public class CmdRoyalty implements CommandExecutor {
             return;
         }
 
-        BoardState oldBoard = RoyaltyBoard.getBoardOf(tribeIndex);
+        BoardState oldBoard = RoyaltyBoard.getBoardOf(tribeIndex).clone();
 
         try {
 
@@ -288,13 +288,13 @@ public class CmdRoyalty implements CommandExecutor {
             throw new RuntimeException(e);
         }
 
-        new Notification(uuid, "You have been removed from the royalty board.", "You were removed from the royalty board because you changed your tribe. And pending challenges have been canceled.", NotificationType.GENERIC).create();
+        new Notification(uuid, "You have been removed from the royalty board.", "You were removed from the royalty board because you changed your tribe. All pending challenges have been canceled.", NotificationType.GENERIC).create();
 
         RoyaltyBoard.removePlayer(tribeIndex, posIndex);
 
-        BoardState newBoard = RoyaltyBoard.getBoardOf(tribeIndex);
+        BoardState newBoard = RoyaltyBoard.getBoardOf(tribeIndex).clone();
         RoyaltyBoard.sendUpdate(new RoyaltyAction(sender.getName(), tribeIndex, oldBoard, newBoard));
-
+        RoyaltyBoard.save();
         RoyaltyBoard.updateBoard();
         try {
             RoyaltyBoard.updateDiscordBoard(tribeIndex);
@@ -475,7 +475,7 @@ public class CmdRoyalty implements CommandExecutor {
                     sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Not a valid key! /royalty manage <tribe> <position> [name|joined_time|last_online|last_challenge_time|challenger|challenging]");
             } else if (args.length == 5) {
 
-                BoardState oldBoard = RoyaltyBoard.getBoardOf(tribeIndex);
+                BoardState oldBoard = RoyaltyBoard.getBoardOf(tribeIndex).clone();
 
                 // Set info for specified key
                 // Get data
@@ -594,7 +594,7 @@ public class CmdRoyalty implements CommandExecutor {
                         }
                     }
 
-                    BoardState newBoard = RoyaltyBoard.getBoardOf(tribeIndex);
+                    BoardState newBoard = RoyaltyBoard.getBoardOf(tribeIndex).clone();
                     if (!Objects.equals(oldBoard, newBoard)) RoyaltyBoard.sendUpdate(new RoyaltyAction(sender.getName(), tribeIndex, oldBoard, newBoard));
 
                     try {

@@ -45,7 +45,7 @@ public class ListenJoin implements Listener {
 
         // Update tribe
         try {
-            PlayerTribe.updateTribeOfPlayer(player);
+            PlayerTribe.updateTribeOfPlayer(player.getUniqueId());
         } catch (InvalidObjectException | NotFoundException e) {
             // Player does not have a tribe.
         }

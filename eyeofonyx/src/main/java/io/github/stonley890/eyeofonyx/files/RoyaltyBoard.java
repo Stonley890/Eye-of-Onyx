@@ -7,11 +7,14 @@ import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import io.github.stonley890.eyeofonyx.Utils;
 import javassist.NotFoundException;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.exceptions.ErrorHandler;
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
+import net.dv8tion.jda.api.interactions.components.ActionRow;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.luckperms.api.model.user.User;
 import net.luckperms.api.model.user.UserManager;
@@ -115,7 +118,8 @@ public class RoyaltyBoard {
         load();
 
         long channelID = plugin.getConfig().getLong("royalty-board-channel");
-        boardChannel = Bot.getJda().getTextChannelById(channelID);
+        JDA jda = Bot.getJda();
+        boardChannel = jda.getTextChannelById(channelID);
 
     }
 
@@ -152,114 +156,50 @@ public class RoyaltyBoard {
 
     public static void sendUpdate(RoyaltyAction action) {
 
+        Dreamvisitor.debug("Send update...");
+
         Bukkit.getScheduler().runTaskAsynchronously(EyeOfOnyx.getPlugin(), () -> {
             EmbedBuilder builder = new EmbedBuilder();
 
             long channelID = plugin.getConfig().getLong("royalty-log-channel");
 
-            if (action.executor == null) action.executor = "**Eye of Onyx**";
+            if (action.executor == null) action.executor = "Eye of Onyx";
 
-            builder.setAuthor("Eye of Onyx")
-                    .setTitle("Changes have been made to the " + teamNames[action.affectedTribe] + " board.");
+            String emblem = "";
+            List<String> emblems = EyeOfOnyx.getPlugin().getConfig().getStringList("tribe-emblems");
+            if (emblems.size() == tribes.length) emblem = emblems.get(action.affectedTribe) + " ";
+
+            builder.setTitle(emblem + "Changes have been made to the " + teamNames[action.affectedTribe] + " board.");
+
+            Dreamvisitor.debug("Getting executor...");
 
             try {
                 long discordID = Long.parseLong(action.executor);
 
                 net.dv8tion.jda.api.entities.User user = Bot.getJda().retrieveUserById(discordID).complete();
-                builder.setAuthor("This action was performed by " + user.getAsMention(), user.getAvatarUrl());
+                builder.setFooter("This action was performed by " + user.getName(), user.getAvatarUrl());
 
             } catch (NumberFormatException e) {
                 builder.setFooter("This action was performed by " + action.executor);
             }
 
-            Mojang mojang = new Mojang().connect();
+            Dreamvisitor.debug("Building message...");
 
             for (int i = 0; i < validPositions.length; i++) {
+
+                Dreamvisitor.debug("Checking pos " + i + "...");
 
                 BoardPosition oldPos = action.oldState.getPos(i);
                 BoardPosition newPos = action.newState.getPos(i);
 
-                if (!Objects.equals(oldPos, newPos)) {
+                if (!oldPos.equals(newPos)) {
+                    Dreamvisitor.debug("Mismatch found.");
                     StringBuilder changes = new StringBuilder();
 
-                    String uuid = "N/A";
-                    String username = "N/A";
-                    String ocName = "N/A";
-                    String lastOnline = "N/A";
-                    String lastChallenge = "N/A";
-                    String joinedBoard = "N/A";
-                    String joinedPos = "N/A";
-                    String challenger = "N/A";
-                    String challenging = "N/A";
-
-                    // OLD
-                    if (oldPos.player != null) uuid = oldPos.player.toString();
-                    if (oldPos.player != null) username = mojang.getPlayerProfile(uuid).getUsername();
-                    if (oldPos.name != null) ocName = oldPos.name;
-                    if (oldPos.lastOnline != null) lastOnline = oldPos.lastOnline.toString();
-                    if (oldPos.lastChallenge != null) lastChallenge = oldPos.lastChallenge.toString();
-                    if (oldPos.joinedBoard != null) joinedBoard = oldPos.joinedBoard.toString();
-                    if (oldPos.joinedPosition != null) joinedPos = oldPos.joinedPosition.toString();
-                    if (oldPos.challenger != null) challenger = mojang.getPlayerProfile(oldPos.challenger.toString()).getUsername();
-                    if (oldPos.challenging != null) challenging = mojang.getPlayerProfile(oldPos.challenging.toString()).getUsername();
-
-                    String discordUser = "N/A";
-
-                    try {
-                        long discordId = AccountLink.getDiscordId(oldPos.player);
-                        net.dv8tion.jda.api.entities.User user = Bot.getJda().retrieveUserById(discordId).complete();
-                        if (user != null) discordUser = user.getAsMention();
-                    } catch (IllegalArgumentException e) {
-                        // No user
-                    }
-
-                    changes.append("**BEFORE**")
-                                    .append("Player: ").append(username)
-                                    .append("\nUUID: ").append(uuid)
-                                    .append("\nUser: ").append(discordUser)
-                                    .append("\nOC Name: ").append(ocName)
-                                    .append("\nLast Online: ").append(lastOnline)
-                                    .append("\nLast Challenge: ").append(lastChallenge)
-                                    .append("\nDate Joined Board: ").append(joinedBoard)
-                                    .append("\nDate Joined Position: ").append(joinedPos)
-                                    .append("\nChallenger: ").append(challenger)
-                                    .append("\nChallenging: ").append(challenging);
-
-                    // NEW
-                    if (newPos.player != null) uuid = newPos.player.toString();
-                    if (newPos.player != null) username = mojang.getPlayerProfile(uuid).getUsername();
-                    if (newPos.name != null) ocName = newPos.name;
-                    if (newPos.lastOnline != null) lastOnline = newPos.lastOnline.toString();
-                    if (newPos.lastChallenge != null) lastChallenge = newPos.lastChallenge.toString();
-                    if (newPos.joinedBoard != null) joinedBoard = newPos.joinedBoard.toString();
-                    if (newPos.joinedPosition != null) joinedPos = newPos.joinedPosition.toString();
-                    if (newPos.challenger != null) challenger = mojang.getPlayerProfile(newPos.challenger.toString()).getUsername();
-                    if (newPos.challenging != null) challenging = mojang.getPlayerProfile(newPos.challenging.toString()).getUsername();
-
-                    discordUser = "N/A";
-
-                    try {
-                        long discordId = AccountLink.getDiscordId(newPos.player);
-                        net.dv8tion.jda.api.entities.User user = Bot.getJda().retrieveUserById(discordId).complete();
-                        if (user != null) discordUser = user.getAsMention();
-                    } catch (IllegalArgumentException e) {
-                        // No user
-                    }
-
-                    changes.append("\n\n**AFTER**")
-                            .append("Player: ").append(username)
-                            .append("\nUUID: ").append(uuid)
-                            .append("\nUser: ").append(discordUser)
-                            .append("\nOC Name: ").append(ocName)
-                            .append("\nLast Online: ").append(lastOnline)
-                            .append("\nLast Challenge: ").append(lastChallenge)
-                            .append("\nDate Joined Board: ").append(joinedBoard)
-                            .append("\nDate Joined Position: ").append(joinedPos)
-                            .append("\nChallenger: ").append(challenger)
-                            .append("\nChallenging: ").append(challenging);
+                    changes.append("**Before**").append(writeChanges(oldPos)).append("\n\n**After**").append(writeChanges(newPos));
 
                     builder.addField(
-                            validPositions[i].replace("_","").toUpperCase(),
+                            validPositions[i].replace("_"," ").toUpperCase(),
                             changes.toString(),
                             false
                     );
@@ -270,10 +210,60 @@ public class RoyaltyBoard {
             if (builder.getFields().isEmpty()) builder.addField("Something went wrong!","That's odd... It looks like there aren't any changes.", false);
 
             TextChannel logChannel = Bot.getJda().getTextChannelById(channelID);
+            ActionRow actionRow = ActionRow.of(Button.danger("revertaction-" + action.id, "Revert"));
 
-            if (logChannel != null) logChannel.sendMessageEmbeds(builder.build()).queue();
+            if (logChannel != null) logChannel.sendMessageEmbeds(builder.build()).setActionRows(actionRow).queue();
+            Dreamvisitor.debug("Sent.");
         });
 
+    }
+
+    private static StringBuilder writeChanges(BoardPosition position) {
+        StringBuilder changes = new StringBuilder();
+
+        String uuid = "N/A";
+        String username = "N/A";
+        String ocName = "N/A";
+        String lastOnline = "N/A";
+        String lastChallenge = "N/A";
+        String joinedBoard = "N/A";
+        String joinedPos = "N/A";
+        String challenger = "N/A";
+        String challenging = "N/A";
+
+        // OLD
+        if (position.player != null) uuid = position.player.toString();
+        if (position.player != null) username = mojang.getPlayerProfile(uuid).getUsername();
+        if (position.name != null) ocName = position.name;
+        if (position.lastOnline != null) lastOnline = position.lastOnline.toString();
+        if (position.lastChallenge != null) lastChallenge = position.lastChallenge.toString();
+        if (position.joinedBoard != null) joinedBoard = position.joinedBoard.toString();
+        if (position.joinedPosition != null) joinedPos = position.joinedPosition.toString();
+        if (position.challenger != null) challenger = mojang.getPlayerProfile(position.challenger.toString()).getUsername();
+        if (position.challenging != null) challenging = mojang.getPlayerProfile(position.challenging.toString()).getUsername();
+
+        String discordUser = "N/A";
+
+        try {
+            long discordId = AccountLink.getDiscordId(position.player);
+            net.dv8tion.jda.api.entities.User user = Bot.getJda().retrieveUserById(discordId).complete();
+            if (user != null) discordUser = user.getAsMention();
+        } catch (NullPointerException IllegalArgumentException) {
+            // No user
+        }
+
+        changes.append("\nPlayer: ").append(io.github.stonley890.dreamvisitor.Utils.escapeMarkdownFormatting(username))
+                .append("\nUUID: ").append(uuid)
+                .append("\nUser: ").append(discordUser)
+                .append("\nOC Name: ").append(io.github.stonley890.dreamvisitor.Utils.escapeMarkdownFormatting(ocName))
+                .append("\nLast Online: ").append(lastOnline)
+                .append("\nLast Challenge: ").append(lastChallenge)
+                .append("\nDate Joined Board: ").append(joinedBoard)
+                .append("\nDate Joined Position: ").append(joinedPos)
+                .append("\nChallenger: ").append(io.github.stonley890.dreamvisitor.Utils.escapeMarkdownFormatting(challenger))
+                .append("\nChallenging: ").append(io.github.stonley890.dreamvisitor.Utils.escapeMarkdownFormatting(challenging));
+
+        return changes;
     }
 
     /**
@@ -287,8 +277,6 @@ public class RoyaltyBoard {
 
         Dreamvisitor.debug("Updating royalty board.");
 
-        Map<Integer, BoardState> newBoard = royaltyBoard;
-
         // joined_time access
         LocalDateTime last_online;
         // Count the number of empty positions
@@ -296,6 +284,8 @@ public class RoyaltyBoard {
 
         // For each tribe
         for (int tribe = 0; tribe < tribes.length; tribe++) {
+
+            BoardState oldPos = getBoardOf(tribe).clone();
 
             positionsEmpty = 0;
 
@@ -312,7 +302,7 @@ public class RoyaltyBoard {
                     if (EyeOfOnyx.openrp != null) {
                         String ocName = (String) EyeOfOnyx.openrp.getDesc().getUserdata().get(uuid + ".name");
                         if (ocName != null && !ocName.equals("No name set")) {
-                            newBoard.get(tribe).updatePosition(pos, newBoard.get(tribe).getPos(pos).setName(ocName));
+                            RoyaltyBoard.set(tribe, pos, royaltyBoard.get(tribe).getPos(pos).setName(ocName));
 
                         }
                     }
@@ -321,7 +311,7 @@ public class RoyaltyBoard {
                 // If last_online is before inactivity period, clear position
                 last_online = getLastOnline(tribe, pos);
                 if (last_online != null && last_online.isBefore(LocalDateTime.now().minusDays(30))) {
-                    newBoard.get(tribe).setLastOnline(tribe, null);
+                    RoyaltyBoard.set(tribe, pos, royaltyBoard.get(tribe).getPos(positionsEmpty).setLastOnline(null));
                 }
 
                 // If last_online is empty, clear position
@@ -342,7 +332,7 @@ public class RoyaltyBoard {
                     }
 
                     // Clear data
-                    newBoard.get(tribe).clear(pos);
+                    RoyaltyBoard.removePlayer(tribe, pos);
 
                 } // If position is held by an active player
                 else {
@@ -355,15 +345,11 @@ public class RoyaltyBoard {
 
                         int emptyPosition = pos - positionsEmpty;
 
-                        String tribeName = tribes[tribe];
-                        String posName = validPositions[pos];
-                        String emptyPosName = validPositions[emptyPosition];
-
-                        newBoard.get(tribe).replace(pos, emptyPosition);
+                        RoyaltyBoard.replace(tribe, pos, emptyPosition);
 
                         // Notify the user who has moved
-                        if (newBoard.get(tribe).getPos(emptyPosition).player != null) {
-                            new Notification(newBoard.get(tribe).getPos(emptyPosition).player, "You've been promoted!", "A player was removed from the royalty board and you moved into a higher position.", NotificationType.GENERIC).create();
+                        if (royaltyBoard.get(tribe).getPos(emptyPosition).player != null) {
+                            new Notification(royaltyBoard.get(tribe).getPos(emptyPosition).player, "You've been promoted!", "A player was removed from the royalty board and you moved into a higher position.", NotificationType.GENERIC).create();
                         }
 
                         // This position is now empty
@@ -373,11 +359,10 @@ public class RoyaltyBoard {
                 }
             }
 
-            if (newBoard.get(tribe) != royaltyBoard.get(tribe)) sendUpdate(new RoyaltyAction(null, tribe, royaltyBoard.get(tribe), newBoard.get(tribe)));
+            if (!oldPos.equals(royaltyBoard.get(tribe))) sendUpdate(new RoyaltyAction(null, tribe, oldPos, royaltyBoard.get(tribe)));
 
         }
 
-        royaltyBoard = newBoard;
         save();
         updatePermissions();
 
@@ -585,7 +570,7 @@ public class RoyaltyBoard {
 
         // Iterate though positions to search for target player
         for (int i = 0; i < validPositions.length; i++) {
-            if (RoyaltyBoard.getUuid(playerTribe, i).equals(player)) {
+            if (Objects.equals(RoyaltyBoard.getUuid(playerTribe, i), (player))) {
                 // Change position if found on the royalty board
                 playerPosition = i;
                 break;
@@ -609,7 +594,7 @@ public class RoyaltyBoard {
 
         // Iterate though positions to search for target player
         for (int i = 0; i < validPositions.length; i++) {
-            if (RoyaltyBoard.getUuid(tribe, i).equals(player)) {
+            if (Objects.equals(RoyaltyBoard.getUuid(tribe, i), player)) {
                 // Change position if found on the royalty board
                 playerPosition = i;
                 break;

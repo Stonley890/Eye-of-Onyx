@@ -1,7 +1,9 @@
 package io.github.stonley890.eyeofonyx.commands;
 
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
+import io.github.stonley890.eyeofonyx.files.BoardState;
 import io.github.stonley890.eyeofonyx.files.PlayerTribe;
+import io.github.stonley890.eyeofonyx.files.RoyaltyAction;
 import io.github.stonley890.eyeofonyx.files.RoyaltyBoard;
 import javassist.NotFoundException;
 import org.bukkit.ChatColor;
@@ -23,12 +25,12 @@ public class CmdForfeit implements CommandExecutor {
 
         if (sender instanceof Player player) {
 
-            int tribeIndex;
+            int tribe;
             int posIndex;
 
             try {
-                tribeIndex = PlayerTribe.getTribeOfPlayer(player.getUniqueId());
-                posIndex = RoyaltyBoard.getPositionIndexOfUUID(player.getUniqueId());
+                tribe = PlayerTribe.getTribeOfPlayer(player.getUniqueId());
+                posIndex = RoyaltyBoard.getPositionIndexOfUUID(tribe, player.getUniqueId());
             } catch (NotFoundException e) {
                 sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You do not have an associated tribe! Contact a staff member.");
                 return true;
@@ -40,16 +42,18 @@ public class CmdForfeit implements CommandExecutor {
             }
 
             if (partingPlayers.contains(player)) {
+                BoardState oldBoard = RoyaltyBoard.getBoardOf(tribe).clone();
                 partingPlayers.remove(player);
-                RoyaltyBoard.removePlayer(tribeIndex, posIndex);
+                RoyaltyBoard.removePlayer(tribe, posIndex);
+                RoyaltyBoard.save();
+                RoyaltyBoard.sendUpdate(new RoyaltyAction(sender.getName(), tribe, oldBoard, RoyaltyBoard.getBoardOf(tribe)));
                 RoyaltyBoard.updateBoard();
                 sender.sendMessage(EyeOfOnyx.EOO + "You have been removed from the royalty board.");
-                return true;
             } else {
                 partingPlayers.add(player);
-                sender.sendMessage(EyeOfOnyx.EOO + "Are you sure you want to leave the position of " + RoyaltyBoard.getTeamNames()[tribeIndex] + " " + RoyaltyBoard.getValidPositions()[posIndex].replace('_', ' ') + "? " + ChatColor.RED + "This action cannot be undone. Run /forfeit again to confirm.");
-                return true;
+                sender.sendMessage(EyeOfOnyx.EOO + "Are you sure you want to leave the position of " + RoyaltyBoard.getTeamNames()[tribe] + " " + RoyaltyBoard.getValidPositions()[posIndex].replace('_', ' ') + "? " + ChatColor.RED + "This action cannot be undone. Run /forfeit again to confirm.");
             }
+            return true;
 
         } else {
             sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "This command be must by a player!");

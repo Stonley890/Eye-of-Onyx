@@ -1,5 +1,6 @@
 package io.github.stonley890.eyeofonyx.commands;
 
+import io.github.stonley890.dreamvisitor.Dreamvisitor;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import io.github.stonley890.eyeofonyx.files.*;
 import javassist.NotFoundException;
@@ -17,6 +18,7 @@ import java.io.IOException;
 import java.io.InvalidObjectException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 public class CmdUpdatePlayer implements CommandExecutor {
@@ -69,13 +71,15 @@ public class CmdUpdatePlayer implements CommandExecutor {
         for (Player player : targets) {
             try {
 
+                Dreamvisitor.debug("Updating " + player.getName());
+
                 // Success
-                PlayerTribe.updateTribeOfPlayer(player);
+                PlayerTribe.updateTribeOfPlayer(player.getUniqueId());
 
                 for (int t = 0; t < RoyaltyBoard.getTribes().length; t++) {
                     for (int p = 0; p < RoyaltyBoard.getValidPositions().length; p++) {
 
-                        if (RoyaltyBoard.getUuid(t,p).equals(player.getUniqueId()) && t != PlayerTribe.getTribeOfPlayer(player.getUniqueId())) {
+                        if (Objects.equals(RoyaltyBoard.getUuid(t,p), player.getUniqueId()) && t != PlayerTribe.getTribeOfPlayer(player.getUniqueId())) {
 
                             // Notify attacker if exists
                             UUID attacker = RoyaltyBoard.getAttacker(t,p);

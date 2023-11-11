@@ -1,5 +1,7 @@
 package io.github.stonley890.eyeofonyx.files;
 
+import io.github.stonley890.dreamvisitor.Dreamvisitor;
+import io.github.stonley890.dreamvisitor.Utils;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import javassist.NotFoundException;
 import org.bukkit.Bukkit;
@@ -91,7 +93,7 @@ public class PlayerTribe {
                 else {
                     // if online, try to get from team or tag
                     try {
-                        updateTribeOfPlayer(player);
+                        updateTribeOfPlayer(player.getUniqueId());
                         tribeName = tribeStorage.get(playerUuid.toString());
                     } catch (Exception e) {
                         throw new NotFoundException("The given player does not have a recorded tribe.");
@@ -111,44 +113,55 @@ public class PlayerTribe {
 
     }
 
-    public static void updateTribeOfPlayer(@NotNull Player player) throws InvalidObjectException, NotFoundException {
+    public static void updateTribeOfPlayer(@NotNull UUID uuid) throws InvalidObjectException, NotFoundException {
 
-        if (!player.isOnline()) {
-            throw new InvalidObjectException("The given player is not online.");
-        }
+        boolean online;
+        Player player = Bukkit.getPlayer(uuid);
+
+        online = player != null;
 
         Scoreboard scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
 
-        int playerTribe = -1;
+        int playerTribe;
+
+        String username;
+        if (online) username = player.getName();
+        else username = Utils.getUsernameOfUuid(uuid);
 
         // Check by team
+        Dreamvisitor.debug("Checking by team...");
         String[] teamNames = RoyaltyBoard.getTeamNames();
         for (int i = 0; i < teamNames.length; i++) {
             String teamName = teamNames[i];
             Team team = scoreboard.getTeam(teamName);
-            if (team != null && team.hasEntry(player.getName())) {
+            if (team != null && team.hasEntry(username)) {
+                Dreamvisitor.debug("Found tribe " + i);
                 playerTribe = i;
-                saveTribe(player, playerTribe);
+                saveTribe(uuid, playerTribe);
                 return;
             }
         }
 
-        // If no matching team, check by tags
-        for (int i = 0; i < teamNames.length; i++) {
-            String teamName = teamNames[i];
-            if (player.getScoreboardTags().contains(teamName)) {
-                playerTribe = i;
-                saveTribe(player, playerTribe);
-                return;
+        if (online) {
+            // If no matching team, check by tags
+            Dreamvisitor.debug("Checking by tag...");
+            for (int i = 0; i < teamNames.length; i++) {
+                String teamName = teamNames[i];
+                if (player.getScoreboardTags().contains(teamName)) {
+                    Dreamvisitor.debug("Found tag " + i);
+                    playerTribe = i;
+                    saveTribe(uuid, playerTribe);
+                    return;
+                }
             }
         }
 
         throw new NotFoundException("Given player does not have a valid team or tag associated with a tribe!");
     }
 
-    private static void saveTribe(Player player, int tribeIndex) {
-        tribeStorage.put(player.getUniqueId().toString(), RoyaltyBoard.getTeamNames()[tribeIndex]);
-        fileConfig.set(player.getUniqueId().toString(), RoyaltyBoard.getTeamNames()[tribeIndex]);
+    private static void saveTribe(UUID player, int tribeIndex) {
+        tribeStorage.put(player.toString(), RoyaltyBoard.getTeamNames()[tribeIndex]);
+        fileConfig.set(player.toString(), RoyaltyBoard.getTeamNames()[tribeIndex]);
         save();
     }
 

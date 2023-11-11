@@ -20,6 +20,7 @@ import net.md_5.bungee.api.ChatColor;
 import openrp.OpenRP;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -60,7 +61,12 @@ public class EyeOfOnyx extends JavaPlugin {
         // Create config if needed
         saveDefaultConfig();
 
-        Dreamvisitor.debug("Setting up files.");
+        try {
+            Bot.getJda().awaitReady();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
         // Set up files
         try {
             RoyaltyBoard.setup();
@@ -198,6 +204,33 @@ public class EyeOfOnyx extends JavaPlugin {
                     }
                 }
 
+                // Check for OC name changes
+                if (EyeOfOnyx.openrp != null) {
+                    for (Player player : Bukkit.getOnlinePlayers()) {
+
+                        try {
+                            int tribe = PlayerTribe.getTribeOfPlayer(player.getUniqueId());
+                            int pos = RoyaltyBoard.getPositionIndexOfUUID(tribe, player.getUniqueId());
+
+                            if (pos != RoyaltyBoard.CIVILIAN) {
+                                String ocName = (String) EyeOfOnyx.openrp.getDesc().getUserdata().get(player.getUniqueId() + ".name");
+                                if (ocName != null && !ocName.equals("No name set") && !ocName.equals(RoyaltyBoard.getOcName(tribe, pos))) {
+                                    RoyaltyBoard.updateBoard();
+                                    RoyaltyBoard.updateDiscordBoard(tribe);
+                                }
+                            }
+
+
+                        } catch (NotFoundException ignored) {
+
+                        } catch (IOException e) {
+                            Bukkit.getLogger().warning("Eye of Onyx was unable to edit the Discord royalty board!");
+                            if (Dreamvisitor.debug) e.printStackTrace();
+                        }
+
+                    }
+
+                }
 
             }
         };
