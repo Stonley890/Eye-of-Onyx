@@ -7,8 +7,8 @@ import io.github.stonley890.dreamvisitor.data.AccountLink;
 import io.github.stonley890.eyeofonyx.files.*;
 import javassist.NotFoundException;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -71,7 +71,7 @@ public class Discord extends ListenerAdapter {
                                         .addChoice("Noble Presumptive", "noble_presumptive")
                                 ),
                         new SubcommandData("update", "Reload and force update the royalty board.")
-                ).setDefaultPermissions(DefaultMemberPermissions.DISABLED));
+                ).setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MANAGE_ROLES)));
 
         commandData.add(Commands.slash("eyeofonyx", "Manage Eye of Onyx.")
                 .addSubcommands(
@@ -478,9 +478,12 @@ public class Discord extends ListenerAdapter {
 
         Button button = event.getButton();
 
-        if (button.getId().startsWith("revertaction-")) {
+        String id = button.getId();
+        if (id == null) return;
 
-            String targetId = button.getId().substring("revertaction-".length());
+        if (id.startsWith("revertaction-")) {
+
+            String targetId = id.substring("revertaction-".length());
 
             for (RoyaltyAction royaltyAction : RoyaltyAction.actionHistory) {
                 if (targetId.equals(String.valueOf(royaltyAction.id))) {
@@ -548,8 +551,8 @@ public class Discord extends ListenerAdapter {
                 }
             }
 
-        } else if (button.getId().startsWith("revertconfirm-")) {
-            String targetId = button.getId().substring("revertconfirm-".length());
+        } else if (id.startsWith("revertconfirm-")) {
+            String targetId = id.substring("revertconfirm-".length());
 
             List<RoyaltyAction> actionHistory = RoyaltyAction.actionHistory;
             for (RoyaltyAction royaltyAction : actionHistory) {

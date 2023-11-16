@@ -3,12 +3,14 @@ package io.github.stonley890.eyeofonyx.files;
 import io.github.stonley890.dreamvisitor.Bot;
 import io.github.stonley890.dreamvisitor.Dreamvisitor;
 import io.github.stonley890.dreamvisitor.data.AccountLink;
+import io.github.stonley890.dreamvisitor.discord.DiscCommandsManager;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import io.github.stonley890.eyeofonyx.Utils;
 import javassist.NotFoundException;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.exceptions.ErrorHandler;
@@ -421,41 +423,8 @@ public class RoyaltyBoard {
                         .replace("$" + position.toUpperCase() + "-JOINED", joined);
 
                 // Update Discord roles
-                if (RoyaltyBoard.getUuid(tribeIndex, j) != null && !Dreamvisitor.botFailed) {
-
-                    // Get recorded user ID
-                    try {
-                        long userId = AccountLink.getDiscordId(getUuid(tribeIndex, j));
-                        // Get sister guild
-                        Guild sisterGuild = Bot.getJda().getGuildById(Dreamvisitor.getPlugin().getConfig().getLong("tribeGuildID"));
-                        if (sisterGuild != null) {
-                            // Get role
-                            Role tribeRole = sisterGuild.getRoleById(plugin.getConfig().getLongList("sister-royalty-roles").get(tribeIndex));
-                            if (tribeRole != null) {
-                                // Get user and add role
-                                sisterGuild.retrieveMemberById(userId).queue(user -> sisterGuild.addRoleToMember(user, tribeRole).queue(), new ErrorHandler().handle(ErrorResponse.UNKNOWN_MEMBER, (error) -> Dreamvisitor.debug("Could not get member of ID " + userId + " in sister server.")));
-                            }
-                        }
-
-                        // Get main guild
-                        Guild mainGuild = Bot.gameLogChannel.getGuild();
-                        // Get appropriate role
-                        Role royaltyRole = null;
-                        if (j == 0)
-                            royaltyRole = mainGuild.getRoleById(plugin.getConfig().getLong("main-royalty-roles.ruler"));
-                        if (j == 1 || j == 2)
-                            royaltyRole = mainGuild.getRoleById(plugin.getConfig().getLong("main-royalty-roles.heir"));
-                        if (j == 3 || j == 4)
-                            royaltyRole = mainGuild.getRoleById(plugin.getConfig().getLong("main-royalty-roles.noble"));
-                        // Add to user
-                        if (royaltyRole != null) {
-                            Role finalRoyaltyRole = royaltyRole;
-                            mainGuild.retrieveMemberById(userId).queue(user -> mainGuild.addRoleToMember(user, finalRoyaltyRole).queue(), new ErrorHandler().handle(ErrorResponse.UNKNOWN_MEMBER, (error) -> Dreamvisitor.debug("Could not get member of ID " + userId + " in main server.")));
-                        }
-                    } catch (NullPointerException e) {
-                        Bukkit.getLogger().warning(username + " does not have an associated Discord ID!");
-                    }
-                }
+                removeRoles();
+                applyRoles();
             }
 
             if (messageIDs.isEmpty() || messageIDs.size() < 10) {
@@ -475,6 +444,98 @@ public class RoyaltyBoard {
             }
 
         }
+
+    }
+
+    /**
+     * Removes all royalty-associated Discord roles from all members of main and sister servers.
+     * applyRoles() should be used after this to reapply the roles.
+     */
+    public static void removeRoles() {
+
+        Bukkit.getScheduler().runTaskAsynchronously(EyeOfOnyx.getPlugin(), () -> {
+
+            FileConfiguration config = EyeOfOnyx.getPlugin().getConfig();
+
+            // Get roles
+            Role rulerRole = Bot.getJda().getRoleById(config.getLong("main-royalty-roles.ruler"));
+            Role heirRole = Bot.getJda().getRoleById(config.getLong("main-royalty-roles.heir"));
+            Role nobleRole = Bot.getJda().getRoleById(config.getLong("main-royalty-roles.noble"));
+
+            Map<Integer, Role> sisterTribeRoles = new HashMap<>();
+            List<Long> sisterRoyaltyRoles = config.getLongList("sister-royalty-roles");
+            for (int tribe = 0; tribe < 10; tribe++) sisterTribeRoles.put(tribe, Bot.getJda().getRoleById(sisterRoyaltyRoles.get(tribe)));
+
+            // Remove roles
+            for (Member member : Bot.gameLogChannel.getGuild().getMembers()) {
+                if (member.getRoles().contains(rulerRole)) Bot.gameLogChannel.getGuild().removeRoleFromMember(member, rulerRole).complete();
+                if (member.getRoles().contains(heirRole)) Bot.gameLogChannel.getGuild().removeRoleFromMember(member, heirRole).complete();
+                if (member.getRoles().contains(nobleRole)) Bot.gameLogChannel.getGuild().removeRoleFromMember(member, nobleRole).complete();
+            }
+            Guild sisterGuild = Bot.getJda().getGuildById(Dreamvisitor.getPlugin().getConfig().getLong("tribeGuildID"));
+            for (Member member : sisterGuild.getMembers()) for (int tribe = 0; tribe < 10; tribe++) if (member.getRoles().contains(sisterTribeRoles.get(tribe))) Bot.gameLogChannel.getGuild().removeRoleFromMember(member, sisterTribeRoles.get(tribe)).complete();
+
+        });
+    }
+
+    /**
+     * Adds appropriate royalty roles to members of the royalty board.
+     * This does not remove roles from non-royalty members. removeRoles() should be used to do that.
+     */
+    public static void applyRoles() {
+
+        Bukkit.getScheduler().runTaskAsynchronously(EyeOfOnyx.getPlugin(), () -> {
+
+            FileConfiguration config = EyeOfOnyx.getPlugin().getConfig();
+
+            // Get guilds
+            Guild mainGuild = Bot.gameLogChannel.getGuild();
+            Guild sisterGuild = Bot.getJda().getGuildById(Dreamvisitor.getPlugin().getConfig().getLong("tribeGuildID"));
+
+            // Get roles
+            Role rulerRole = Bot.getJda().getRoleById(config.getLong("main-royalty-roles.ruler"));
+            Role heirRole = Bot.getJda().getRoleById(config.getLong("main-royalty-roles.heir"));
+            Role nobleRole = Bot.getJda().getRoleById(config.getLong("main-royalty-roles.noble"));
+
+            Map<Integer, Role> sisterTribeRoles = new HashMap<>();
+            List<Long> sisterRoyaltyRoles = config.getLongList("sister-royalty-roles");
+            for (int tribe = 0; tribe < 10; tribe++) sisterTribeRoles.put(tribe, Bot.getJda().getRoleById(sisterRoyaltyRoles.get(tribe)));
+
+            for (int tribe = 0; tribe < tribes.length; tribe++) {
+                for (int pos = 0; pos < validPositions.length; pos++) {
+
+                    if (isPositionEmpty(tribe, pos)) continue;
+
+                    // Get recorded user ID
+                    try {
+                        long userId = AccountLink.getDiscordId(getUuid(tribe, pos));
+
+                        // Get user and add role
+                        Member member = sisterGuild.retrieveMemberById(userId).complete();
+                        sisterGuild.addRoleToMember(member, sisterTribeRoles.get(tribe)).complete();
+
+                        // Get appropriate role
+                        Role royaltyRole = null;
+                        if (pos == 0) royaltyRole = rulerRole;
+                        if (pos == 1 || pos == 2) royaltyRole = heirRole;
+                        if (pos == 3 || pos == 4) royaltyRole = nobleRole;
+                        // Add to user
+                        member = mainGuild.retrieveMemberById(userId).complete();
+                        if (royaltyRole != null) mainGuild.addRoleToMember(member, royaltyRole).complete();
+
+                    } catch (NullPointerException e) {
+
+                        String username = io.github.stonley890.dreamvisitor.Utils.getUsernameOfUuid(getUuid(tribe, pos));
+
+                        Bukkit.getLogger().warning(username + " is on the royalty board but does not have an associated Discord ID!");
+                    }
+                }
+
+            }
+
+
+
+        });
 
     }
 
