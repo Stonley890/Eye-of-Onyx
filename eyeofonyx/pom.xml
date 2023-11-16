@@ -77,6 +77,12 @@
       <version>5.4</version>
       <scope>provided</scope>
     </dependency>
+    <dependency>
+      <groupId>com.github.Mokulu</groupId>
+      <artifactId>discord-oauth2-api</artifactId>
+      <version>1.0.2</version>
+    </dependency>
+
   </dependencies>
 
   <build>

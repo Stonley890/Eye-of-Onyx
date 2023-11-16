@@ -33,6 +33,7 @@ public class TabRoyalty implements TabCompleter {
             suggestions.add("clear");
             suggestions.add("list");
             suggestions.add("set");
+            suggestions.add("swap");
             suggestions.add("update");
             suggestions.add("manage");
 

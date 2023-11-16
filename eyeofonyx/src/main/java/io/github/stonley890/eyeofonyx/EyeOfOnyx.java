@@ -112,6 +112,7 @@ public class EyeOfOnyx extends JavaPlugin {
             server = HttpServer.create(new InetSocketAddress(getConfig().getInt("port")), 0);
             server.createContext("/availability", new AvailabilityHandler());
             server.createContext("/availability-submitted", new SubmitHandler());
+            server.createContext("/dashboard", )
             server.setExecutor(null); // creates a default executor
             server.start();
 

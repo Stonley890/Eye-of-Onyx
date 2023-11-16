@@ -116,7 +116,7 @@
             padding: auto;
         }
 
-        form {
+        .stuff {
             width: fit-content;
             display: grid;
             justify-items: center;
@@ -137,8 +137,12 @@
         }
 
         input:hover {
-            cursor: pointer;
             background-color: #838383;
+            cursor: pointer;
+        }
+
+        .contentbox p {
+            margin: 10px;
         }
 
         .datebutton {
@@ -159,7 +163,7 @@
     <header>
         <nav>
             <p style="text-align: left;"><b>Wings of Fire: The New World</b>
-            <p style="text-align: right;">Royalty Portal</p>
+            <p style="text-align: right;">Royalty Dashboard</p>
         </nav>
     </header>
 
@@ -168,10 +172,8 @@
         <div class="bg">
             <div class="banner">
                 <div class="bannercontent">
-                    <h1>Submit Availability</h1>
-                    <p>To proceed with the challenge, please add at least one date and time that you would be available
-                        to attend the challenge. Your challenger will choose from the times you've selected to
-                        participate in the challenge.</p>
+                    <h1>Restricted</h1>
+                    <p>This page requires authenication to access.</p>
                 </div>
             </div>
         </div>
@@ -180,46 +182,21 @@
 
             <br>
 
-            <form method="post" action="/availability-submitted" id="availabilityForm">
-                <div style="grid-column: 1;">
-                    <div class="contentbox">
-                        <div id="additionalDateTimes">
-                            <input type="datetime-local" name="availability" required="true" class="datebutton"
-                                min="2023-07-21T09:00" max="2023-07-28T18:00"><br>
-                            <input type="datetime-local" name="availability" class="datebutton" min="2023-07-21T09:00"
-                                max="2023-07-28T18:00"><br>
-                            <input type="datetime-local" name="availability" class="datebutton" min="2023-07-21T09:00"
-                                max="2023-07-28T18:00">
+            <div class="stuff">
+                <div class="contentbox">
+
+                    <div style="display: grid; grid-area: 2, 2">
+
+                        <div>
+                            <p>Click the button below to authenicate with Discord</p>
+                            <a href="https://discord.com/api/oauth2/authorize?client_id=942342230964858910&redirect_uri=http%3A%2F%2Fwoftnw.duckdns.org%3A8000%2Fdashboard&response_type=code&scope=identify">
+                                <input type="button" value="Authenticate">
+                            </a>
                         </div>
                     </div>
-
-                </div>
-                <div style="grid-column: 2; ">
-                    <div class="contentbox">
-
-                        <div style="display: grid; grid-area: 2, 2">
-
-                            <div style="display: flex; align-items: center; justify-content: center; gap: 20px">
-
-                                <input type="text" id="code" name="code" required="true" minlength="4" maxlength="4"
-                                    size="4">
-                                <label for="code" style="font-weight: bold; grid-column: 2;">Enter Code</label>
-
-                            </div>
-
-                            <div style="display: flex;">
-                                <input type="button" value="Add Another Date/Time" onclick="addDateTimeField()"
-                                    style="grid-column: 2;"><br><br>
-                                <input type="submit" value="Submit">
-                            </div>
-                        </div>
-                    </div>
-
                 </div>
 
-
-
-            </form>
+            </div>
 
             <script th:inline="javascript">
 
