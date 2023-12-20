@@ -8,11 +8,12 @@ import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.jetbrains.annotations.NotNull;
 
 public class ListenCmdPreprocess implements Listener {
 
     @EventHandler
-    public void onCmdPreprocess(PlayerCommandPreprocessEvent event) {
+    public void onCmdPreprocess(@NotNull PlayerCommandPreprocessEvent event) {
 
         if (event.getMessage().startsWith("/tempban")) {
 

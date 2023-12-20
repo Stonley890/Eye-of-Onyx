@@ -1,18 +1,11 @@
 package io.github.stonley890.eyeofonyx.listeners;
 
-import java.io.IOException;
-import java.io.InvalidObjectException;
-import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.Objects;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import io.github.stonley890.eyeofonyx.challenges.Competition;
 import io.github.stonley890.eyeofonyx.files.BoardPosition;
 import io.github.stonley890.eyeofonyx.files.Notification;
 import io.github.stonley890.eyeofonyx.files.PlayerTribe;
+import io.github.stonley890.eyeofonyx.files.RoyaltyBoard;
 import io.github.stonley890.eyeofonyx.web.IpUtils;
 import javassist.NotFoundException;
 import net.luckperms.api.model.user.User;
@@ -20,15 +13,20 @@ import net.luckperms.api.model.user.UserManager;
 import net.luckperms.api.node.Node;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.InvalidConfigurationException;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.scoreboard.Scoreboard;
-import org.shanerx.mojang.Mojang;
+import org.jetbrains.annotations.NotNull;
 
-import io.github.stonley890.eyeofonyx.files.RoyaltyBoard;
+import java.io.IOException;
+import java.io.InvalidObjectException;
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.Objects;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 public class ListenJoin implements Listener {
 
@@ -39,7 +37,7 @@ public class ListenJoin implements Listener {
     private static final String[] validPositions = RoyaltyBoard.getValidPositions();
 
     @EventHandler
-    public void onPlayerJoin(PlayerJoinEvent event) {
+    public void onPlayerJoin(@NotNull PlayerJoinEvent event) {
 
         Player player = event.getPlayer();
 

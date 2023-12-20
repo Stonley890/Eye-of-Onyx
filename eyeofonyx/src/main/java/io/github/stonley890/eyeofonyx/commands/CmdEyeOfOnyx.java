@@ -33,7 +33,7 @@ public class CmdEyeOfOnyx implements CommandExecutor {
     boolean disabling = false;
 
     @Override
-    public boolean onCommand(CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String @NotNull [] args) {
 
         if (args.length == 0) {
             sender.sendMessage(ChatColor.YELLOW + "Eye of Onyx " + main.version + "\nStonley890 / iHeron");
@@ -79,28 +79,7 @@ public class CmdEyeOfOnyx implements CommandExecutor {
 
                                             try {
 
-                                                // Notify attacker if exists
-                                                UUID attacker = RoyaltyBoard.getAttacker(tribe,pos);
-                                                if (attacker != null) {
-                                                    int attackerPos = RoyaltyBoard.getPositionIndexOfUUID(attacker);
-                                                    RoyaltyBoard.setAttacking(tribe, attackerPos, null);
-                                                    new Notification(attacker, "Your challenge was canceled.", "The player you were challenging was removed from the royalty board, so your challenge was canceled.", NotificationType.GENERIC).create();
-                                                }
-
-                                                // Notify defender if exists
-                                                if (pos != RoyaltyBoard.RULER) {
-                                                    UUID attacking = RoyaltyBoard.getAttacking(tribe,pos);
-                                                    if (attacking != null) {
-                                                        int defenderPos = RoyaltyBoard.getPositionIndexOfUUID(attacking);
-                                                        RoyaltyBoard.setAttacker(tribe, defenderPos, null);
-                                                        new Notification(attacker, "Your challenge was canceled.", "The player who was challenging you was removed from the royalty board, so your challenge was canceled.", NotificationType.GENERIC).create();
-                                                    }
-                                                }
-
-                                                // Remove any challenges
-                                                for (Challenge challenge : Challenge.getChallenges()) {
-                                                    if (challenge.defender.equals(uuid) || challenge.attacker.equals(uuid)) Challenge.remove(challenge);
-                                                }
+                                                Challenge.removeChallengesOfPlayer(uuid, "The player who was challenging you was removed from the royalty board, so your challenge was canceled.");
 
                                                 // Remove any challenge notifications
                                                 for (Notification notification : Notification.getNotificationsOfPlayer(uuid)) {
@@ -108,14 +87,12 @@ public class CmdEyeOfOnyx implements CommandExecutor {
                                                 }
                                             } catch (IOException | InvalidConfigurationException e) {
                                                 e.printStackTrace();
-                                            } catch (NotFoundException e) {
-                                                throw new RuntimeException(e);
                                             }
 
-                                            RoyaltyBoard.removePlayer(tribe, pos);
+                                            RoyaltyBoard.removePlayer(tribe, pos, true);
                                             BoardState newBoard = RoyaltyBoard.getBoardOf(tribe).clone();
-                                            RoyaltyBoard.sendUpdate(new RoyaltyAction(sender.getName(), tribe, oldBoard, newBoard));
-                                            RoyaltyBoard.updateBoard();
+                                            RoyaltyBoard.reportChange(new RoyaltyAction(sender.getName(), tribe, oldBoard, newBoard));
+                                            RoyaltyBoard.updateBoard(tribe, false);
                                             try {
                                                 RoyaltyBoard.updateDiscordBoard(tribe);
                                             } catch (IOException e) {
@@ -347,7 +324,6 @@ public class CmdEyeOfOnyx implements CommandExecutor {
                                                     world = Bukkit.getWorlds().get(0);
                                                 }
                                             }
-
 
                                             if (tribeIndex > -1) {
 

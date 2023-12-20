@@ -11,6 +11,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
@@ -20,7 +21,6 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -29,7 +29,7 @@ import java.util.UUID;
 
 public class SubmitHandler implements HttpHandler {
     @Override
-    public void handle(HttpExchange httpExchange) throws IOException {
+    public void handle(@NotNull HttpExchange httpExchange) throws IOException {
 
         if (httpExchange.getRequestMethod().equalsIgnoreCase("POST")) {
 
@@ -42,7 +42,7 @@ public class SubmitHandler implements HttpHandler {
 
             // Parse the code
             String encodedCode = formData.split("code=")[1].split("&availability=")[0]; // Extracting code value from the form data
-            String code = URLDecoder.decode(encodedCode, StandardCharsets.UTF_8.name());
+            String code = URLDecoder.decode(encodedCode, StandardCharsets.UTF_8);
 
             Dreamvisitor.debug(encodedCode + "AND" + code);
 

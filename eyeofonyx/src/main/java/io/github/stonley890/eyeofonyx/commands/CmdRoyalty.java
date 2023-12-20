@@ -14,10 +14,8 @@ import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import org.bukkit.scoreboard.Scoreboard;
 import org.jetbrains.annotations.NotNull;
 import org.shanerx.mojang.Mojang;
 
@@ -45,7 +43,7 @@ public class CmdRoyalty implements CommandExecutor {
     private static final String[] validPositions = RoyaltyBoard.getValidPositions();
 
     @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String @NotNull [] args) {
 
         sender.sendMessage(EyeOfOnyx.EOO + "Please wait...");
 
@@ -64,20 +62,26 @@ public class CmdRoyalty implements CommandExecutor {
             if (sender.hasPermission("eyeofonyx.manageboard")) clear(sender, args);
             else sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You are not permitted to use that command.");
 
+        } else if (args[0].equalsIgnoreCase("swap") && args.length > 3) {
+
+            if (sender.hasPermission("eyeofonyx.manageboard")) swap(sender, args);
+            else sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You are not permitted to use that command.");
+
         } else if (args[0].equalsIgnoreCase("update")) {
 
             if (sender.hasPermission("eyeofonyx.manageboard")) {
                 sender.sendMessage(EyeOfOnyx.EOO + "Reloading and updating the board...");
-                RoyaltyBoard.reload();
-                RoyaltyBoard.updateBoard();
+                RoyaltyBoard.loadFromDisk();
+
                 for (int i = 0; i < RoyaltyBoard.getTribes().length; i++) {
                     try {
+                        RoyaltyBoard.updateBoard(i, false);
                         RoyaltyBoard.updateDiscordBoard(i);
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
                 }
-                sender.sendMessage(EyeOfOnyx.EOO + ChatColor.YELLOW + "Board updated.");
+                sender.sendMessage(EyeOfOnyx.EOO + ChatColor.YELLOW + "Board updated. It may take some time for changes to apply completely.");
             } else sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You are not permitted to use that command.");
 
         } else if (args[0].equals("manage")) {
@@ -88,18 +92,21 @@ public class CmdRoyalty implements CommandExecutor {
         } else
             sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Invalid arguments! /royalty <set|list|clear|update|manage>");
 
-        RoyaltyBoard.save(RoyaltyBoard.getBoard());
+        RoyaltyBoard.saveToDisk();
         return true;
     }
 
     // royalty set <player> <position> [name]
-    static void set(CommandSender sender, String[] args) {
+    public static void set(CommandSender sender, String @NotNull [] args) {
 
         UUID targetPlayerUUID;
 
+        String target = args[1];
+        String desiredPos = args[2];
+
         // Get @p if specified
-        if (args[1].equals("@p")) {
-            Entity nearest = Bukkit.selectEntities(sender, args[1]).get(0);
+        if (target.equals("@p")) {
+            Entity nearest = Bukkit.selectEntities(sender, target).get(0);
             if (nearest instanceof Player player) {
                 targetPlayerUUID = player.getUniqueId();
             } else {
@@ -108,7 +115,7 @@ public class CmdRoyalty implements CommandExecutor {
         } else {
             try {
                 // Try to get online Player, otherwise lookup OfflinePlayer
-                targetPlayerUUID = UUID.fromString(mojang.getUUIDOfUsername(args[1]).replaceFirst(
+                targetPlayerUUID = UUID.fromString(mojang.getUUIDOfUsername(target).replaceFirst(
                         "(\\p{XDigit}{8})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}+)",
                         "$1-$2-$3-$4-$5"));
             } catch (NullPointerException e) {
@@ -123,35 +130,44 @@ public class CmdRoyalty implements CommandExecutor {
             return;
         }
 
-        // Get tribe from scoreboard team
+        // Get tribe
         try {
 
             // Get team of player by iterating through list
             int playerTribe = PlayerTribe.getTribeOfPlayer(targetPlayerUUID);
 
+            // Make sure player is not already on the board
+            if (RoyaltyBoard.getPositionIndexOfUUID(playerTribe, targetPlayerUUID) != 5) {
+                sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "That player is already on the royalty board!");
+                return;
+            }
+
             // Check if third argument contains a valid position
-            if (Arrays.stream(validPositions).anyMatch(args[2]::contains)) {
+            if (Arrays.stream(validPositions).anyMatch(desiredPos::contains)) {
 
                 BoardState oldBoard = RoyaltyBoard.getBoardOf(playerTribe).clone();
 
                 int targetPos = -1;
 
                 for (int i = 0; i < validPositions.length; i++) {
-                    if (args[2].equals(validPositions[i])) targetPos = i;
+                    if (desiredPos.equals(validPositions[i])) targetPos = i;
                 }
 
                 BoardPosition newPos = new BoardPosition(targetPlayerUUID, null, LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now(), null, null);
+
+                // Remove any player that might be there
+                RoyaltyBoard.removePlayer(playerTribe, targetPos, true);
 
                 // Set value in board.yml
                 RoyaltyBoard.set(playerTribe, targetPos, newPos);
 
                 // Log update
                 BoardState newBoard = RoyaltyBoard.getBoardOf(playerTribe).clone();
-                RoyaltyBoard.sendUpdate(new RoyaltyAction(sender.getName(), playerTribe, oldBoard, newBoard));
+                RoyaltyBoard.reportChange(new RoyaltyAction(sender.getName(), playerTribe, oldBoard, newBoard));
 
-                sender.sendMessage(EyeOfOnyx.EOO + ChatColor.YELLOW + args[1] + " is now " + args[2].toUpperCase().replace('_', ' '));
+                sender.sendMessage(EyeOfOnyx.EOO + ChatColor.YELLOW + target + " is now " + desiredPos.toUpperCase().replace('_', ' '));
 
-                RoyaltyBoard.updateBoard();
+                RoyaltyBoard.updateBoard(playerTribe, false);
                 try {
                     RoyaltyBoard.updateDiscordBoard(playerTribe);
                 } catch (IOException e) {
@@ -172,8 +188,67 @@ public class CmdRoyalty implements CommandExecutor {
 
     }
 
+    static void swap(CommandSender sender, String @NotNull [] args) {
+
+        String tribe = args[1];
+        String position1 = args[2];
+        String position2 = args[3];
+
+        if (position1.equals(position2)) {
+            sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You cannot swap a position with itself!");
+            return;
+        }
+
+        int tribeIndex = io.github.stonley890.eyeofonyx.Utils.tribeIndexFromString(tribe);
+        int posIndex1 = io.github.stonley890.eyeofonyx.Utils.posIndexFromString(position1);
+        int posIndex2 = io.github.stonley890.eyeofonyx.Utils.posIndexFromString(position2);
+
+        if (tribeIndex == -1) {
+            sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Not a valid tribe!");
+            return;
+        }
+        if (posIndex1 == -1 || posIndex2 == -1) {
+            sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Not a valid position!");
+            return;
+        }
+
+        BoardState oldBoard = RoyaltyBoard.getBoardOf(tribeIndex).clone();
+
+        BoardPosition pos1 = RoyaltyBoard.getBoardOf(tribeIndex).getPos(posIndex1);
+        BoardPosition pos2 = RoyaltyBoard.getBoardOf(tribeIndex).getPos(posIndex2);
+
+        // Remove challenges
+        Challenge.removeChallengesOfPlayer(pos1.player, "The player who was in your challenge was moved to a different position.");
+        Challenge.removeChallengesOfPlayer(pos2.player, "The player who was in your challenge was moved to a different position.");
+
+        Notification.removeNotificationsOfPlayer(pos1.player, NotificationType.CHALLENGE_ACCEPTED);
+        Notification.removeNotificationsOfPlayer(pos1.player, NotificationType.CHALLENGE_REQUESTED);
+        Notification.removeNotificationsOfPlayer(pos2.player, NotificationType.CHALLENGE_ACCEPTED);
+        Notification.removeNotificationsOfPlayer(pos2.player, NotificationType.CHALLENGE_REQUESTED);
+
+        // Apply change
+        RoyaltyBoard.set(tribeIndex, RoyaltyBoard.getBoardOf(tribeIndex).swap(posIndex1, posIndex2));
+
+        // Notify users
+        new Notification(pos1.player, "You've been moved!","You have been moved to a different spot on the royalty board. Any challenges you were in have been canceled.", NotificationType.GENERIC).create();
+        new Notification(pos2.player, "You've been moved!","You have been moved to a different spot on the royalty board. Any challenges you were in have been canceled.", NotificationType.GENERIC).create();
+
+        // Send update
+        BoardState newBoard = RoyaltyBoard.getBoardOf(tribeIndex).clone();
+        RoyaltyBoard.reportChange(new RoyaltyAction(sender.getName(), tribeIndex, oldBoard, newBoard));
+
+        sender.sendMessage(EyeOfOnyx.EOO + "Swapped " + position1.toUpperCase() + " and " + position2.toUpperCase() + " of " + tribe.toUpperCase());
+
+        RoyaltyBoard.updateBoard(tribeIndex, false);
+        try {
+            RoyaltyBoard.updateDiscordBoard(tribeIndex);
+        } catch (IOException e) {
+            Bukkit.getLogger().warning(EyeOfOnyx.EOO + ChatColor.RED + "An I/O error occurred while attempting to update Discord board.");
+        }
+    }
+
     // royalty list [tribe]
-    static void list(CommandSender sender, String[] args) {
+    static void list(CommandSender sender, String @NotNull [] args) {
 
         // If no other arguments, build and send full board
         if (args.length < 2) {
@@ -208,33 +283,19 @@ public class CmdRoyalty implements CommandExecutor {
     }
 
     // royalty clear <tribe> <position>
-    static void clear(CommandSender sender, String[] args) {
+    static void clear(CommandSender sender, String @NotNull [] args) {
+
+        Dreamvisitor.debug("Clearing...");
 
         String tribe = args[1];
         String pos = args[2];
 
-        int tribeIndex = -1;
-        int posIndex = -1;
-
-        for (int i = 0; i < tribes.length; i++) {
-            String vTribe = tribes[i];
-            if (vTribe.equals(tribe)) {
-                tribeIndex = i;
-                break;
-            }
-        }
+        int tribeIndex = Utils.tribeIndexFromString(tribe);;
+        int posIndex = Utils.posIndexFromString(pos);
 
         if (tribeIndex == -1) {
             sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Not a valid tribe!");
             return;
-        }
-
-        for (int i = 0; i < validPositions.length; i++) {
-            String vTribe = validPositions[i];
-            if (vTribe.equals(pos)) {
-                posIndex = i;
-                break;
-            }
         }
 
         if (posIndex == -1) {
@@ -250,52 +311,17 @@ public class CmdRoyalty implements CommandExecutor {
 
         BoardState oldBoard = RoyaltyBoard.getBoardOf(tribeIndex).clone();
 
-        try {
-
-
-            // Notify attacker if exists
-            UUID attacker = RoyaltyBoard.getAttacker(tribeIndex, posIndex);
-            if (attacker != null) {
-                int attackerPos = RoyaltyBoard.getPositionIndexOfUUID(attacker);
-                RoyaltyBoard.setAttacking(tribeIndex, attackerPos, null);
-                new Notification(attacker, "Your challenge was canceled.", "The player you were challenging was removed from the royalty board, so your challenge was canceled.", NotificationType.GENERIC).create();
-            }
-
-            // Notify defender if exists
-            if (posIndex != RoyaltyBoard.RULER) {
-                UUID attacking = RoyaltyBoard.getAttacking(tribeIndex, posIndex);
-                if (attacking != null) {
-                    int defenderPos = RoyaltyBoard.getPositionIndexOfUUID(attacking);
-                    RoyaltyBoard.setAttacker(tribeIndex, defenderPos, null);
-                    new Notification(attacker, "Your challenge was canceled.", "The player who was challenging you was removed from the royalty board, so your challenge was canceled.", NotificationType.GENERIC).create();
-                }
-            }
-
-
-            // Remove any challenges
-            for (Challenge challenge : Challenge.getChallenges()) {
-                if (challenge.defender.equals(uuid) || challenge.attacker.equals(uuid)) Challenge.remove(challenge);
-            }
-
-            // Remove any challenge notifications
-            for (Notification notification : Notification.getNotificationsOfPlayer(uuid)) {
-                if (notification.type == NotificationType.CHALLENGE_ACCEPTED || notification.type == NotificationType.CHALLENGE_REQUESTED)
-                    Notification.removeNotification(notification);
-            }
-        } catch (IOException | InvalidConfigurationException e) {
-            e.printStackTrace();
-        } catch (NotFoundException e) {
-            throw new RuntimeException(e);
-        }
+        Challenge.removeChallengesOfPlayer(uuid, "The other player in your challenge was removed from the royalty board.");
+        Notification.removeNotificationsOfPlayer(uuid, NotificationType.CHALLENGE_REQUESTED);
+        Notification.removeNotificationsOfPlayer(uuid, NotificationType.CHALLENGE_ACCEPTED);
 
         new Notification(uuid, "You have been removed from the royalty board.", "You were removed from the royalty board because you changed your tribe. All pending challenges have been canceled.", NotificationType.GENERIC).create();
 
-        RoyaltyBoard.removePlayer(tribeIndex, posIndex);
+        RoyaltyBoard.removePlayer(tribeIndex, posIndex, true);
 
         BoardState newBoard = RoyaltyBoard.getBoardOf(tribeIndex).clone();
-        RoyaltyBoard.sendUpdate(new RoyaltyAction(sender.getName(), tribeIndex, oldBoard, newBoard));
-        RoyaltyBoard.save();
-        RoyaltyBoard.updateBoard();
+        RoyaltyBoard.reportChange(new RoyaltyAction(sender.getName(), tribeIndex, oldBoard, newBoard));
+        RoyaltyBoard.updateBoard(tribeIndex, false);
         try {
             RoyaltyBoard.updateDiscordBoard(tribeIndex);
         } catch (IOException e) {
@@ -306,25 +332,19 @@ public class CmdRoyalty implements CommandExecutor {
     }
 
     // royalty manage <tribe> <position> [key] [value]
-    void manage(CommandSender sender, String[] args) {
+    void manage(CommandSender sender, String @NotNull [] args) {
 
         if (args.length < 3)
             sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Missing arguments! /royalty manage <tribe> <position> [key] [value]");
         else {
             // Get tribe and position
-            int tribeIndex = -1;
-            int posIndex = -1;
-
-            String[] tribes = RoyaltyBoard.getTribes();
-            for (int i = 0; i < tribes.length; i++) if (args[1].equals(tribes[i])) tribeIndex = i;
+            int tribeIndex = Utils.tribeIndexFromString(args[1]);
+            int posIndex = Utils.posIndexFromString(args[2]);
 
             if (tribeIndex == -1) {
                 sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Invalid tribe!");
                 return;
             }
-
-            String[] positions = RoyaltyBoard.getValidPositions();
-            for (int i = 0; i < positions.length; i++) if (args[2].equals(positions[i])) posIndex = i;
 
             if (posIndex == -1) {
                 sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Invalid position!");
@@ -347,10 +367,10 @@ public class CmdRoyalty implements CommandExecutor {
                     joinedTime = RoyaltyBoard.getJoinedDate(tribeIndex, posIndex).toString();
                     lastOnline = RoyaltyBoard.getLastOnline(tribeIndex, posIndex).toString();
                     lastChallenge = RoyaltyBoard.getLastChallengeDate(tribeIndex, posIndex).toString();
-                    challenger = RoyaltyBoard.getAttacker(tribeIndex, posIndex).toString();
+                    challenger = String.valueOf(RoyaltyBoard.getAttacker(tribeIndex, posIndex));
                     if (challenger == null || challenger.equals("null")) challenger = "N/A";
                     if (posIndex != RoyaltyBoard.RULER) {
-                        challenging = RoyaltyBoard.getAttacking(tribeIndex, posIndex).toString();
+                        challenging = String.valueOf(RoyaltyBoard.getAttacking(tribeIndex, posIndex));
                         if (challenging == null || challenging.equals("null")) challenging = "N/A";
                     }
                 }
@@ -372,8 +392,8 @@ public class CmdRoyalty implements CommandExecutor {
                 ZonedDateTime offsetDateTime;
                 builder.append("Data for ").append(tribes[tribeIndex].toUpperCase()).append(" ").append(validPositions[posIndex].toUpperCase())
                         .append("\n[ NAME: ").append(username).color(net.md_5.bungee.api.ChatColor.YELLOW)
-                        .append("\n[ UUID: ").append(stringUuid).color(net.md_5.bungee.api.ChatColor.YELLOW)
-                        .append("\n[ DATE JOINED: ");
+                        .append("\n[ UUID: ").color(net.md_5.bungee.api.ChatColor.WHITE).append(stringUuid).color(net.md_5.bungee.api.ChatColor.YELLOW)
+                        .append("\n[ DATE JOINED: ").color(net.md_5.bungee.api.ChatColor.WHITE);
 
                 if (!joinedTime.equals("N/A")) {
                     dateTime = ZonedDateTime.of(LocalDateTime.parse(joinedTime), ZoneOffset.systemDefault());
@@ -384,7 +404,7 @@ public class CmdRoyalty implements CommandExecutor {
                     builder.append(button);
                 } else builder.append(joinedTime).color(net.md_5.bungee.api.ChatColor.YELLOW);
 
-                builder.append("\n[ LAST ONLINE: ");
+                builder.append("\n[ LAST ONLINE: ").color(net.md_5.bungee.api.ChatColor.WHITE);
 
                 if (!lastOnline.equals("N/A")) {
                     dateTime = ZonedDateTime.of(LocalDateTime.parse(lastOnline), ZoneOffset.systemDefault());
@@ -395,7 +415,7 @@ public class CmdRoyalty implements CommandExecutor {
                     builder.append(button);
                 } else builder.append(lastOnline).color(net.md_5.bungee.api.ChatColor.YELLOW);
 
-                builder.append("\n[ LAST CHALLENGE: ");
+                builder.append("\n[ LAST CHALLENGE: ").color(net.md_5.bungee.api.ChatColor.WHITE);
 
                 if (!lastChallenge.equals("N/A")) {
                     dateTime = ZonedDateTime.of(LocalDateTime.parse(lastChallenge), ZoneOffset.systemDefault());
@@ -406,7 +426,7 @@ public class CmdRoyalty implements CommandExecutor {
                     builder.append(button);
                 } else builder.append(lastChallenge).color(net.md_5.bungee.api.ChatColor.YELLOW);
 
-                builder.append("\n[ CHALLENGER: ");
+                builder.append("\n[ CHALLENGER: ").color(net.md_5.bungee.api.ChatColor.WHITE);
                 if (challenger.equals("N/A")) builder.append("N/A").color(net.md_5.bungee.api.ChatColor.YELLOW);
                 else {
                     button.setText("[" + challenger + "]");
@@ -416,7 +436,7 @@ public class CmdRoyalty implements CommandExecutor {
                 }
 
                 if (posIndex != RoyaltyBoard.RULER) {
-                    builder.append("\n[ CHALLENGING: ");
+                    builder.append("\n[ CHALLENGING: ").color(net.md_5.bungee.api.ChatColor.WHITE);
                     if (challenging.equals("N/A")) builder.append("N/A").color(net.md_5.bungee.api.ChatColor.YELLOW);
                     else {
                         button.setText("[" + challenging + "]");
@@ -425,6 +445,9 @@ public class CmdRoyalty implements CommandExecutor {
                         builder.append(button);
                     }
                 }
+
+                sender.spigot().sendMessage(builder.create());
+
             } else if (args.length == 4) {
                 // Print info for specified key
                 // Get data
@@ -595,7 +618,7 @@ public class CmdRoyalty implements CommandExecutor {
                     }
 
                     BoardState newBoard = RoyaltyBoard.getBoardOf(tribeIndex).clone();
-                    if (!Objects.equals(oldBoard, newBoard)) RoyaltyBoard.sendUpdate(new RoyaltyAction(sender.getName(), tribeIndex, oldBoard, newBoard));
+                    if (!Objects.equals(oldBoard, newBoard)) RoyaltyBoard.reportChange(new RoyaltyAction(sender.getName(), tribeIndex, oldBoard, newBoard));
 
                     try {
                         RoyaltyBoard.updateDiscordBoard(tribeIndex);
@@ -612,11 +635,11 @@ public class CmdRoyalty implements CommandExecutor {
     }
 
     /*
-     * Used to build a message for `royalty list [tribe]`
-     * Requires tribe of tribe
-     * Returns a StringBuilder with the built message
-     * This method uses Mojang API lookup to get player names and gets data from
-     * royalty.yml
+     * Used to build a message for `royalty list [tribe]`.
+     * Requires tribe of tribe.
+     * Returns a StringBuilder with the built message.
+     * This method uses Mojang API lookup to get player names, and fetches data from
+     * royalty.yml.
      * Here is what the result looks like:
      *
      * 1 TeamName ---
@@ -627,7 +650,7 @@ public class CmdRoyalty implements CommandExecutor {
      * 6 [ NOBLE PRESUMPTIVE: Name (Username)
      *
      */
-    static StringBuilder buildBoard(int tribe) {
+    static @NotNull StringBuilder buildBoard(int tribe) {
 
         // Create string builder
         StringBuilder strBuild = new StringBuilder();

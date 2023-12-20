@@ -61,9 +61,6 @@ public class PlayerTribe {
 
     /**
      * Reloads data from file.
-     *
-     * @throws IOException
-     * @throws InvalidConfigurationException
      */
     public static void reload() throws IOException, InvalidConfigurationException {
         fileConfig.load(file);
@@ -76,7 +73,7 @@ public class PlayerTribe {
      * @return The index of their tribe.
      * @throws NotFoundException The given player does not have a recorded tribe. Use {@code updateTribeOfPlayer(Player player)} to get and record it from an online player.
      */
-    public static int getTribeOfPlayer(UUID playerUuid) throws NotFoundException {
+    public static int getTribeOfPlayer(@NotNull UUID playerUuid) throws NotFoundException {
 
         String tribeName = tribeStorage.get(playerUuid.toString());
 

@@ -24,7 +24,7 @@ import java.util.UUID;
 public class CmdUpdatePlayer implements CommandExecutor {
 
     @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String @NotNull [] args) {
 
         List<Player> targets = new ArrayList<>();
 
@@ -73,6 +73,8 @@ public class CmdUpdatePlayer implements CommandExecutor {
 
                 Dreamvisitor.debug("Updating " + player.getName());
 
+                int originalTribe = PlayerTribe.getTribeOfPlayer(player.getUniqueId());
+
                 // Success
                 PlayerTribe.updateTribeOfPlayer(player.getUniqueId());
 
@@ -109,8 +111,9 @@ public class CmdUpdatePlayer implements CommandExecutor {
                                 if (notification.type == NotificationType.CHALLENGE_ACCEPTED || notification.type == NotificationType.CHALLENGE_REQUESTED) Notification.removeNotification(notification);
                             }
 
-                            RoyaltyBoard.removePlayer(t, p);
-                            RoyaltyBoard.updateBoard();
+                            RoyaltyBoard.removePlayer(t, p, true);
+                            RoyaltyBoard.updateBoard(originalTribe, false);
+                            RoyaltyBoard.updateDiscordBoard(originalTribe);
                             new Notification(player.getUniqueId(), "You have been removed from the royalty board.", "You were removed from the royalty board because you changed your tribe. Any pending challenges have been canceled.", NotificationType.GENERIC).create();
                         }
 

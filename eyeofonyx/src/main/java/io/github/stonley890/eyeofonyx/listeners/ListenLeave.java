@@ -1,23 +1,18 @@
 package io.github.stonley890.eyeofonyx.listeners;
 
-import java.time.LocalDateTime;
-import java.util.Objects;
-import java.util.UUID;
-
 import io.github.stonley890.eyeofonyx.files.BoardPosition;
 import io.github.stonley890.eyeofonyx.files.PlayerTribe;
+import io.github.stonley890.eyeofonyx.files.RoyaltyBoard;
 import io.github.stonley890.eyeofonyx.web.IpUtils;
 import javassist.NotFoundException;
-import org.bukkit.Bukkit;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.scoreboard.Scoreboard;
-import org.shanerx.mojang.Mojang;
+import org.jetbrains.annotations.NotNull;
 
-import io.github.stonley890.eyeofonyx.files.RoyaltyBoard;
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 public class ListenLeave implements Listener {
 
@@ -25,7 +20,7 @@ public class ListenLeave implements Listener {
     private final String[] validPositions = RoyaltyBoard.getValidPositions();
 
     @EventHandler
-    public void onPlayerQuit(PlayerQuitEvent event) {
+    public void onPlayerQuit(@NotNull PlayerQuitEvent event) {
 
         Player player = event.getPlayer();
 

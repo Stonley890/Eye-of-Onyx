@@ -13,6 +13,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,11 +45,15 @@ public class CmdForfeit implements CommandExecutor {
             if (partingPlayers.contains(player)) {
                 BoardState oldBoard = RoyaltyBoard.getBoardOf(tribe).clone();
                 partingPlayers.remove(player);
-                RoyaltyBoard.removePlayer(tribe, posIndex);
-                RoyaltyBoard.save();
-                RoyaltyBoard.sendUpdate(new RoyaltyAction(sender.getName(), tribe, oldBoard, RoyaltyBoard.getBoardOf(tribe)));
-                RoyaltyBoard.updateBoard();
+                RoyaltyBoard.removePlayer(tribe, posIndex, true);
+                RoyaltyBoard.reportChange(new RoyaltyAction(sender.getName(), tribe, oldBoard, RoyaltyBoard.getBoardOf(tribe)));
+                RoyaltyBoard.updateBoard(tribe, false);
                 sender.sendMessage(EyeOfOnyx.EOO + "You have been removed from the royalty board.");
+                try {
+                    RoyaltyBoard.updateDiscordBoard(tribe);
+                } catch (IOException e) {
+                    sender.sendMessage(EyeOfOnyx.EOO + org.bukkit.ChatColor.RED + "An I/O error occurred while attempting to update Discord board.");
+                }
             } else {
                 partingPlayers.add(player);
                 sender.sendMessage(EyeOfOnyx.EOO + "Are you sure you want to leave the position of " + RoyaltyBoard.getTeamNames()[tribe] + " " + RoyaltyBoard.getValidPositions()[posIndex].replace('_', ' ') + "? " + ChatColor.RED + "This action cannot be undone. Run /forfeit again to confirm.");

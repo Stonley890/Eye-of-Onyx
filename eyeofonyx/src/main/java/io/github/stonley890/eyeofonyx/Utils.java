@@ -8,6 +8,8 @@ import net.luckperms.api.model.user.User;
 import net.luckperms.api.model.user.UserManager;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -25,7 +27,8 @@ public class Utils {
      * @param uuid the UUID as a string without hyphens.
      * @return a UUID as a string with hyphens.
      */
-    public static String formatUuid(String uuid) {
+    @Contract(pure = true)
+    public static @NotNull String formatUuid(@NotNull String uuid) {
         return uuid.replaceFirst(
                 "(\\p{XDigit}{8})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}+)",
                 "$1-$2-$3-$4-$5");
@@ -38,7 +41,7 @@ public class Utils {
      * @return A converted {@link ZonedDateTime} with the player timezone.
      * @throws NotFoundException if the player time could not be determined by {@link IpUtils}.
      */
-    public static ZonedDateTime localTimeToPlayerTime(LocalDateTime time, Player player) throws NotFoundException {
+    public static @NotNull ZonedDateTime localTimeToPlayerTime(LocalDateTime time, @NotNull Player player) throws NotFoundException {
         ZonedDateTime playerTime = IpUtils.ipToTime(player.getAddress().getAddress().getHostAddress());
         if (playerTime == null) throw new NotFoundException("Player time could not be determined.");
         ZoneId playerOffset = playerTime.getOffset();
@@ -51,7 +54,7 @@ public class Utils {
      * @return a {@link ZoneId} of the given player.
      * @throws NotFoundException if the player's time could not be retrieved.
      */
-    public static ZoneId getZoneIdOfPlayer(Player player) throws NotFoundException {
+    public static ZoneId getZoneIdOfPlayer(@NotNull Player player) throws NotFoundException {
         ZonedDateTime playerTime = IpUtils.ipToTime(player.getAddress().getAddress().getHostAddress());
         if (playerTime == null) throw new NotFoundException("Player time could not be determined.");
         return playerTime.getZone();
@@ -102,5 +105,43 @@ public class Utils {
 
             });
         }
+    }
+
+    /**
+     * Get the integer index of a tribe's name.
+     * @param tribe a {@link String}.
+     * @return the index of the tribe identified or -1 if no match.
+     */
+    public static int tribeIndexFromString(String tribe) {
+        int tribeIndex = -1;
+
+        for (int i = 0; i < RoyaltyBoard.getTribes().length; i++) {
+            String vTribe = RoyaltyBoard.getTribes()[i];
+            if (vTribe.equals(tribe)) {
+                tribeIndex = i;
+                break;
+            }
+        }
+
+        return tribeIndex;
+    }
+
+    /**
+     * Get the integer index of a position's name.
+     * @param pos a {@link String}.
+     * @return the index of the position identified or -1 if no match.
+     */
+    public static int posIndexFromString(String pos) {
+        int posIndex = -1;
+
+        for (int i = 0; i < RoyaltyBoard.getValidPositions().length; i++) {
+            String vTribe = RoyaltyBoard.getValidPositions()[i];
+            if (vTribe.equals(pos)) {
+                posIndex = i;
+                break;
+            }
+        }
+
+        return posIndex;
     }
 }

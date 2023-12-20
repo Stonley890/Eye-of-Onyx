@@ -55,8 +55,8 @@ public class EyeOfOnyx extends JavaPlugin {
         // Initialize variables
         plugin = this;
 
-        Bukkit.getPluginManager().enablePlugin(Bukkit.getPluginManager().getPlugin("Dreamvisitor"));
-        Bukkit.getPluginManager().enablePlugin(Bukkit.getPluginManager().getPlugin("LuckPerms"));
+        Bukkit.getPluginManager().enablePlugin(Objects.requireNonNull(Bukkit.getPluginManager().getPlugin("Dreamvisitor")));
+        Bukkit.getPluginManager().enablePlugin(Objects.requireNonNull(Bukkit.getPluginManager().getPlugin("LuckPerms")));
 
         // Create config if needed
         saveDefaultConfig();
@@ -112,7 +112,6 @@ public class EyeOfOnyx extends JavaPlugin {
             server = HttpServer.create(new InetSocketAddress(getConfig().getInt("port")), 0);
             server.createContext("/availability", new AvailabilityHandler());
             server.createContext("/availability-submitted", new SubmitHandler());
-            server.createContext("/dashboard", )
             server.setExecutor(null); // creates a default executor
             server.start();
 
@@ -153,9 +152,9 @@ public class EyeOfOnyx extends JavaPlugin {
                 }
 
                 // Check for unnoticed challenges
-                for (int i = 0; i < 10; i++) {
-                    for (int j = 0; j < 5; j++) {
-                        UUID uuid = RoyaltyBoard.getUuid(i, j);
+                for (int tribe = 0; tribe < 10; tribe++) {
+                    for (int pos = 0; pos < 5; pos++) {
+                        UUID uuid = RoyaltyBoard.getUuid(tribe, pos);
                         try {
                             List<Notification> notifications = Notification.getNotificationsOfPlayer(uuid);
 
@@ -165,7 +164,9 @@ public class EyeOfOnyx extends JavaPlugin {
 
                                     // Check if it was seen or not
                                     if (!notification.seen) {
+
                                         // If seen, cancel the challenge.
+                                        Challenge.removeChallengesOfPlayers(uuid, RoyaltyBoard.getAttacker(tribe, pos));
 
                                         // Send expired notification to defender
                                         Notification.removeNotification(notification);
@@ -175,23 +176,23 @@ public class EyeOfOnyx extends JavaPlugin {
                                         UUID attackerUuid = RoyaltyBoard.getAttacker(PlayerTribe.getTribeOfPlayer(uuid), RoyaltyBoard.getPositionIndexOfUUID(uuid));
                                         if (attackerUuid != null) {
                                             String defenderUsername = new Mojang().connect().getPlayerProfile(uuid.toString()).getUsername();
-                                            new Notification(attackerUuid, "Your challenge to " + defenderUsername + " was not seen.", "Your challenge was nullified because the user you challenged was unable to receive the notification.", NotificationType.GENERIC).create();
+                                            new Notification(attackerUuid, "Your challenge to " + defenderUsername + " was not seen.", "Your challenge request was nullified because the user you challenged was unable to receive the notification.", NotificationType.GENERIC).create();
                                         }
+
+                                        // Set data
+                                        RoyaltyBoard.setAttacker(tribe, pos, null);
 
                                     } else {
                                         // Kick from board if seen and ignored.
 
                                         // Remove all notifications that are CHALLENGE_REQUESTED
-                                        List<Notification> notificationList = Notification.getNotificationsOfPlayer(uuid);
+                                        Notification.removeNotificationsOfPlayer(uuid, NotificationType.CHALLENGE_REQUESTED);
 
-                                        for (Notification notification1 : notificationList) {
-                                            if (notification1.type.equals(NotificationType.CHALLENGE_REQUESTED))
-                                                Notification.removeNotification(notification1);
-                                        }
                                         new Notification(uuid, "You were removed from the royalty board!", "You did not acknowledge a challenge request within the allowed time.", NotificationType.GENERIC).create();
 
-                                        RoyaltyBoard.removePlayer(i, j);
-                                        RoyaltyBoard.updateBoard();
+                                        RoyaltyBoard.removePlayer(tribe, pos, true);
+                                        RoyaltyBoard.updateBoard(tribe, false);
+                                        RoyaltyBoard.updateDiscordBoard(tribe);
 
                                         break;
                                     }
@@ -215,8 +216,8 @@ public class EyeOfOnyx extends JavaPlugin {
 
                             if (pos != RoyaltyBoard.CIVILIAN) {
                                 String ocName = (String) EyeOfOnyx.openrp.getDesc().getUserdata().get(player.getUniqueId() + ".name");
+                                // only update if oc name is not equal to currently stored OC name
                                 if (ocName != null && !ocName.equals("No name set") && !ocName.equals(RoyaltyBoard.getOcName(tribe, pos))) {
-                                    RoyaltyBoard.updateBoard();
                                     RoyaltyBoard.updateDiscordBoard(tribe);
                                 }
                             }
@@ -228,11 +229,8 @@ public class EyeOfOnyx extends JavaPlugin {
                             Bukkit.getLogger().warning("Eye of Onyx was unable to edit the Discord royalty board!");
                             if (Dreamvisitor.debug) e.printStackTrace();
                         }
-
                     }
-
                 }
-
             }
         };
 
@@ -245,9 +243,8 @@ public class EyeOfOnyx extends JavaPlugin {
 
     @Override
     public void onDisable() {
-
         // Finish up
-        RoyaltyBoard.updateBoard();
+        RoyaltyBoard.saveToDisk();
         server.stop(1);
     }
 

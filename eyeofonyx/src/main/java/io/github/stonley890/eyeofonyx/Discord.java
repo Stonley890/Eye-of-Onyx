@@ -12,7 +12,9 @@ import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
@@ -22,7 +24,6 @@ import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.configuration.InvalidConfigurationException;
 import org.jetbrains.annotations.NotNull;
 import org.shanerx.mojang.Mojang;
 
@@ -70,7 +71,7 @@ public class Discord extends ListenerAdapter {
                                         .addChoice("Noble Apparent", "noble_apparent")
                                         .addChoice("Noble Presumptive", "noble_presumptive")
                                 )
-                                .addOptions(new OptionData(OptionType.STRING, "position-1", "The second position to swap.", true)
+                                .addOptions(new OptionData(OptionType.STRING, "position-2", "The second position to swap.", true)
                                         .setAutoComplete(false)
                                         .addChoice("Ruler", "ruler")
                                         .addChoice("Heir Apparent", "heir_apparent")
@@ -166,11 +167,17 @@ public class Discord extends ListenerAdapter {
                         return;
                     }
 
-                    // Get tribe from scoreboard team
+                    // Get tribe
                     try {
 
                         // Get team of player by iterating through list
                         int playerTribe = PlayerTribe.getTribeOfPlayer(targetPlayerUUID);
+
+                        // Make sure player is not already on the board
+                        if (RoyaltyBoard.getPositionIndexOfUUID(playerTribe, targetPlayerUUID) != 5) {
+                            event.reply("That player is already on the royalty board. Use the swap command instead.").queue();
+                            return;
+                        }
 
                         // Check if third argument contains a valid position
                         if (Arrays.stream(RoyaltyBoard.getValidPositions()).anyMatch(position::contains)) {
@@ -185,15 +192,19 @@ public class Discord extends ListenerAdapter {
 
                             BoardPosition newPos = new BoardPosition(targetPlayerUUID, null, LocalDateTime.now(), LocalDateTime.now(),LocalDateTime.now(), LocalDateTime.now(), null, null);
 
+                            // Remove any player that might be there
+                            RoyaltyBoard.removePlayer(playerTribe, targetPos, true);
+
                             // Set value in board.yml
                             RoyaltyBoard.set(playerTribe, targetPos, newPos);
 
+                            // Log update
                             BoardState newBoard = RoyaltyBoard.getBoardOf(playerTribe).clone();
-                            RoyaltyBoard.sendUpdate(new RoyaltyAction(event.getMember().getId(), playerTribe, oldBoard, newBoard));
+                            RoyaltyBoard.reportChange(new RoyaltyAction(event.getMember().getId(), playerTribe, oldBoard, newBoard));
 
                             event.reply("✅ " + targetUser.getAsMention() + " is now " + position.toUpperCase().replace('_', ' ')).queue();
 
-                            RoyaltyBoard.updateBoard();
+                            RoyaltyBoard.updateBoard(playerTribe, false);
 
                             try {
                                 RoyaltyBoard.updateDiscordBoard(playerTribe);
@@ -228,30 +239,13 @@ public class Discord extends ListenerAdapter {
                         return;
                     }
 
-                    int tribeIndex = -1;
-                    int posIndex = -1;
-
-                    for (int i = 0; i < RoyaltyBoard.getTribes().length; i++) {
-                        String vTribe = RoyaltyBoard.getTribes()[i];
-                        if (vTribe.equals(tribe)) {
-                            tribeIndex = i;
-                            break;
-                        }
-                    }
+                    int tribeIndex = io.github.stonley890.eyeofonyx.Utils.tribeIndexFromString(tribe);
+                    int posIndex = io.github.stonley890.eyeofonyx.Utils.posIndexFromString(position);
 
                     if (tribeIndex == -1) {
                         event.reply("Not a valid tribe!").queue();
                         return;
                     }
-
-                    for (int i = 0; i < RoyaltyBoard.getValidPositions().length; i++) {
-                        String vTribe = RoyaltyBoard.getValidPositions()[i];
-                        if (vTribe.equals(position)) {
-                            posIndex = i;
-                            break;
-                        }
-                    }
-
                     if (posIndex == -1) {
                         event.reply("Not a valid position!").queue();
                         return;
@@ -265,58 +259,17 @@ public class Discord extends ListenerAdapter {
 
                     BoardState oldBoard = RoyaltyBoard.getBoardOf(tribeIndex).clone();
 
-                    try {
-
-                        // Notify attacker if exists
-                        UUID attacker = RoyaltyBoard.getAttacker(tribeIndex, posIndex);
-                        if (attacker != null) {
-                            int attackerPos = RoyaltyBoard.getPositionIndexOfUUID(attacker);
-                            RoyaltyBoard.setAttacking(tribeIndex, attackerPos, null);
-                            new Notification(attacker, "Your challenge was canceled.", "The player you were challenging was removed from the royalty board, so your challenge was canceled.", NotificationType.GENERIC).create();
-                        }
-
-                        // Notify defender if exists
-                        if (posIndex != RoyaltyBoard.RULER) {
-                            UUID attacking = RoyaltyBoard.getAttacking(tribeIndex, posIndex);
-                            if (attacking != null) {
-                                int defenderPos = RoyaltyBoard.getPositionIndexOfUUID(attacking);
-                                RoyaltyBoard.setAttacker(tribeIndex, defenderPos, null);
-                                new Notification(attacker, "Your challenge was canceled.", "The player who was challenging you was removed from the royalty board, so your challenge was canceled.", NotificationType.GENERIC).create();
-                            }
-                        }
-
-
-                        // Remove any challenges
-                        for (Challenge challenge : Challenge.getChallenges()) {
-                            if (challenge.defender.equals(uuid) || challenge.attacker.equals(uuid))
-                                Challenge.remove(challenge);
-                        }
-
-                        // Remove any challenge notifications
-                        for (Notification notification : Notification.getNotificationsOfPlayer(uuid)) {
-                            if (notification.type == NotificationType.CHALLENGE_ACCEPTED || notification.type == NotificationType.CHALLENGE_REQUESTED)
-                                Notification.removeNotification(notification);
-                        }
-                    } catch (IOException | InvalidConfigurationException e) {
-                        e.printStackTrace();
-                    } catch (NotFoundException e) {
-                        throw new RuntimeException(e);
-                    }
+                    Challenge.removeChallengesOfPlayer(uuid, "The other player in your challenge was removed from the royalty board.");
+                    Notification.removeNotificationsOfPlayer(uuid, NotificationType.CHALLENGE_REQUESTED);
+                    Notification.removeNotificationsOfPlayer(uuid, NotificationType.CHALLENGE_ACCEPTED);
 
                     new Notification(uuid, "You have been removed from the royalty board.", "You were removed from the royalty board because you changed your tribe. All pending challenges have been canceled.", NotificationType.GENERIC).create();
 
-                    Dreamvisitor.debug("OldPos is null: " +  (oldBoard.getPos(posIndex).player == null));
-                    RoyaltyBoard.removePlayer(tribeIndex, posIndex);
-                    Dreamvisitor.debug("OldPos is null: " +  (oldBoard.getPos(posIndex).player == null));
-                    BoardState newBoard = RoyaltyBoard.getBoardOf(tribeIndex).clone();
-                    Dreamvisitor.debug("OldPos is null: " +  (oldBoard.getPos(posIndex).player == null));
-                    Dreamvisitor.debug("NewPos is null: " +  (newBoard.getPos(posIndex).player == null));
-                    RoyaltyBoard.sendUpdate(new RoyaltyAction(event.getMember().getId(), tribeIndex, oldBoard, newBoard));
-                    Dreamvisitor.debug("OldPos is null: " +  (oldBoard.getPos(posIndex).player == null));
-                    Dreamvisitor.debug("NewPos is null: " +  (newBoard.getPos(posIndex).player == null));
-                    Dreamvisitor.debug("Currentpos is null: " +  (RoyaltyBoard.getBoardOf(tribeIndex).getPos(posIndex).player == null));
+                    RoyaltyBoard.removePlayer(tribeIndex, posIndex, true);
 
-                    RoyaltyBoard.updateBoard();
+                    BoardState newBoard = RoyaltyBoard.getBoardOf(tribeIndex).clone();
+                    RoyaltyBoard.reportChange(new RoyaltyAction(event.getMember().getId(), tribeIndex, oldBoard, newBoard));
+                    RoyaltyBoard.updateBoard(tribeIndex, false);
                     try {
                         RoyaltyBoard.updateDiscordBoard(tribeIndex);
                     } catch (IOException e) {
@@ -325,20 +278,85 @@ public class Discord extends ListenerAdapter {
                     event.reply("✅ " + tribe.toUpperCase() + " " + position.toUpperCase() + " position cleared.").queue();
 
                 }
+                case "swap" -> {
+
+                    String tribe;
+                    String position1;
+                    String position2;
+
+                    tribe = event.getOption("tribe", OptionMapping::getAsString);
+                    position1 = event.getOption("position-1", OptionMapping::getAsString);
+                    position2 = event.getOption("position-2", OptionMapping::getAsString);
+
+                    if (Objects.equals(position1, position2)) {
+                        event.reply("You cannot swap a position with itself!").queue();
+                        return;
+                    }
+
+                    int tribeIndex = io.github.stonley890.eyeofonyx.Utils.tribeIndexFromString(tribe);
+                    int posIndex1 = io.github.stonley890.eyeofonyx.Utils.posIndexFromString(position1);
+                    int posIndex2 = io.github.stonley890.eyeofonyx.Utils.posIndexFromString(position2);
+
+                    if (tribeIndex == -1) {
+                        event.reply("Not a valid tribe!").queue();
+                        return;
+                    }
+                    if (posIndex1 == -1 || posIndex2 == -1) {
+                        event.reply("Not a valid position!").queue();
+                        return;
+                    }
+
+                    BoardState oldBoard = RoyaltyBoard.getBoardOf(tribeIndex).clone();
+
+                    BoardPosition pos1 = RoyaltyBoard.getBoardOf(tribeIndex).getPos(posIndex1);
+                    BoardPosition pos2 = RoyaltyBoard.getBoardOf(tribeIndex).getPos(posIndex2);
+
+                    // Remove challenges
+                    Challenge.removeChallengesOfPlayer(pos1.player, "The player who was in your challenge was moved to a different position.");
+                    Challenge.removeChallengesOfPlayer(pos2.player, "The player who was in your challenge was moved to a different position.");
+
+                    Notification.removeNotificationsOfPlayer(pos1.player, NotificationType.CHALLENGE_ACCEPTED);
+                    Notification.removeNotificationsOfPlayer(pos1.player, NotificationType.CHALLENGE_REQUESTED);
+                    Notification.removeNotificationsOfPlayer(pos2.player, NotificationType.CHALLENGE_ACCEPTED);
+                    Notification.removeNotificationsOfPlayer(pos2.player, NotificationType.CHALLENGE_REQUESTED);
+
+                    // Apply change
+                    RoyaltyBoard.set(tribeIndex, RoyaltyBoard.getBoardOf(tribeIndex).swap(posIndex1, posIndex2));
+
+                    // Notify users
+                    new Notification(pos1.player, "You've been moved!","You have been moved to a different spot on the royalty board. Any challenges you were in have been canceled.", NotificationType.GENERIC).create();
+                    new Notification(pos2.player, "You've been moved!","You have been moved to a different spot on the royalty board. Any challenges you were in have been canceled.", NotificationType.GENERIC).create();
+
+                    // Send update
+                    BoardState newBoard = RoyaltyBoard.getBoardOf(tribeIndex).clone();
+                    RoyaltyBoard.reportChange(new RoyaltyAction(event.getUser().getId(), tribeIndex, oldBoard, newBoard));
+
+                    event.reply("Swapped " + position1.toUpperCase() + " and " + position2.toUpperCase() + " of " + tribe.toUpperCase()).queue();
+
+                    RoyaltyBoard.updateBoard(tribeIndex, false);
+                    try {
+                        RoyaltyBoard.updateDiscordBoard(tribeIndex);
+                    } catch (IOException e) {
+                        Bukkit.getLogger().severe("Unable to update Discord board!");
+                    }
+
+                }
                 case "update" -> {
-                    RoyaltyBoard.reload();
-                    RoyaltyBoard.updateBoard();
+                    InteractionHook hook = event.getHook();
+                    event.deferReply().queue();
+
                     try {
                         for (int i = 0; i < RoyaltyBoard.getTribes().length; i++) {
+                            RoyaltyBoard.updateBoard(i, false);
                             RoyaltyBoard.updateDiscordBoard(i);
                         }
                     } catch (IOException e) {
                         Bukkit.getLogger().warning(EyeOfOnyx.EOO + ChatColor.RED + "An I/O error occurred while attempting to update Discord board.");
                     }
-                    event.reply("✅ " + EyeOfOnyx.EOO + ChatColor.YELLOW + "Board updated.").queue();
+                    hook.editOriginal("✅ Board updated. It may take some time for changes to apply everywhere.").queue();
                 }
                 default ->
-                        event.reply(EyeOfOnyx.EOO + ChatColor.RED + "Invalid arguments! /royalty <set|clear|update>").queue();
+                        event.reply("Invalid arguments! /royalty <set|clear|update>").queue();
             }
 
         } else if (command.equals("eyeofonyx")) {
@@ -386,43 +404,15 @@ public class Discord extends ListenerAdapter {
 
                             if (pos != -1 && pos != RoyaltyBoard.CIVILIAN) {
 
-                                try {
+                                // Remove any challenges
+                                Challenge.removeChallengesOfPlayer(uuid, "The player who was challenging you was removed from the royalty board, so your challenge was canceled.");
 
-                                    // Notify attacker if exists
-                                    UUID attacker = RoyaltyBoard.getAttacker(tribe,pos);
-                                    if (attacker != null) {
-                                        int attackerPos = RoyaltyBoard.getPositionIndexOfUUID(attacker);
-                                        RoyaltyBoard.setAttacking(tribe, attackerPos, null);
-                                        new Notification(attacker, "Your challenge was canceled.", "The player you were challenging was removed from the royalty board, so your challenge was canceled.", NotificationType.GENERIC).create();
-                                    }
+                                // Remove any challenge notifications
+                                Notification.removeNotificationsOfPlayer(uuid, NotificationType.CHALLENGE_REQUESTED);
+                                Notification.removeNotificationsOfPlayer(uuid, NotificationType.CHALLENGE_ACCEPTED);
 
-                                    // Notify defender if exists
-                                    if (pos != RoyaltyBoard.RULER) {
-                                        UUID attacking = RoyaltyBoard.getAttacking(tribe,pos);
-                                        if (attacking != null) {
-                                            int defenderPos = RoyaltyBoard.getPositionIndexOfUUID(attacking);
-                                            RoyaltyBoard.setAttacker(tribe, defenderPos, null);
-                                            new Notification(attacker, "Your challenge was canceled.", "The player who was challenging you was removed from the royalty board, so your challenge was canceled.", NotificationType.GENERIC).create();
-                                        }
-                                    }
-
-                                    // Remove any challenges
-                                    for (Challenge challenge : Challenge.getChallenges()) {
-                                        if (challenge.defender.equals(uuid) || challenge.attacker.equals(uuid)) Challenge.remove(challenge);
-                                    }
-
-                                    // Remove any challenge notifications
-                                    for (Notification notification : Notification.getNotificationsOfPlayer(uuid)) {
-                                        if (notification.type == NotificationType.CHALLENGE_ACCEPTED || notification.type == NotificationType.CHALLENGE_REQUESTED) Notification.removeNotification(notification);
-                                    }
-                                } catch (IOException | InvalidConfigurationException e) {
-                                    if (Dreamvisitor.debug) e.printStackTrace();
-                                } catch (NotFoundException e) {
-                                    throw new RuntimeException(e);
-                                }
-
-                                RoyaltyBoard.removePlayer(tribe, pos);
-                                RoyaltyBoard.updateBoard();
+                                RoyaltyBoard.removePlayer(tribe, pos, true);
+                                RoyaltyBoard.updateBoard(tribe, false);
                                 try {
                                     RoyaltyBoard.updateDiscordBoard(tribe);
                                 } catch (IOException e) {
@@ -504,7 +494,7 @@ public class Discord extends ListenerAdapter {
     }
 
     @Override
-    public void onButtonInteraction(ButtonInteractionEvent event) {
+    public void onButtonInteraction(@NotNull ButtonInteractionEvent event) {
 
         Button button = event.getButton();
 
@@ -589,8 +579,8 @@ public class Discord extends ListenerAdapter {
                 if (targetId.equals(String.valueOf(royaltyAction.id))) {
 
                     RoyaltyBoard.getBoard().put(royaltyAction.affectedTribe, royaltyAction.oldState);
-                    RoyaltyBoard.save();
-                    RoyaltyBoard.updateBoard();
+                    RoyaltyBoard.saveToDisk();
+                    RoyaltyBoard.updateBoard(royaltyAction.affectedTribe, false);
                     event.reply("✅ Values reverted.").queue();
                     event.getInteraction().editButton(button.asDisabled()).queue();
                     break;

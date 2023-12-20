@@ -7,6 +7,7 @@ import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.shanerx.mojang.Mojang;
 
 import java.io.File;
@@ -77,6 +78,47 @@ public class Challenge {
 
         Dreamvisitor.debug("Saving to file");
         saveFile(fileConfig);
+    }
+
+    /**
+     * Deletes all challenges that contain a given player.
+     * @param uuid the players whose challenges to delete.
+     * @param reason the reason for the challenge being removed.
+     *               This will be sent in a notification to the other party.
+     *               If this is {@code null}, no notification will be sent.
+     */
+    public static void removeChallengesOfPlayer(UUID uuid, @Nullable String reason) {
+        try {
+            for (Challenge challenge : getChallenges()) {
+                if (challenge.defender == uuid || challenge.attacker == uuid) {
+                    if (reason != null) {
+                        if (challenge.defender == uuid) new Notification(challenge.attacker, "Your challenge was canceled.", reason, NotificationType.GENERIC).create();
+                        if (challenge.attacker == uuid) new Notification(challenge.defender, "Your challenge was canceled.", reason, NotificationType.GENERIC).create();
+                    }
+                    Challenge.remove(challenge);
+                }
+            }
+        } catch (IOException | InvalidConfigurationException e) {
+            Bukkit.getLogger().severe("Unable to access challenges.yml file!");
+        }
+        saveFile(fileConfig);
+    }
+
+    /**
+     * Deletes all challenges that contain the given players.
+     * @param attacker the first player whose challenges to delete.
+     * @param defender the second player whose challenges to delete.
+     */
+    public static void removeChallengesOfPlayers(UUID attacker, UUID defender) {
+        try {
+            for (Challenge challenge : getChallenges()) {
+                if (challenge.attacker == attacker && challenge.defender == defender) {
+                    Challenge.remove(challenge);
+                }
+            }
+        } catch (IOException | InvalidConfigurationException e) {
+            Bukkit.getLogger().severe("Unable to access challenges.yml file!");
+        }
     }
 
     /**

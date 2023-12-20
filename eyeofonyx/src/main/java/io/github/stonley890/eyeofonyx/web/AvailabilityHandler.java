@@ -4,6 +4,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.jetbrains.annotations.NotNull;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
@@ -46,7 +47,7 @@ public class AvailabilityHandler implements HttpHandler {
     }
 
 
-    private void sendResponse(HttpExchange httpExchange, int statusCode, String response) throws IOException {
+    private void sendResponse(@NotNull HttpExchange httpExchange, int statusCode, @NotNull String response) throws IOException {
         httpExchange.sendResponseHeaders(statusCode, response.length());
         OutputStream outputStream = httpExchange.getResponseBody();
         outputStream.write(response.getBytes());

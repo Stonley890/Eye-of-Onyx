@@ -1,23 +1,21 @@
 package io.github.stonley890.eyeofonyx.web;
 
+import org.bukkit.Bukkit;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
+import java.nio.charset.StandardCharsets;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.Calendar;
 import java.util.HashMap;
-import java.util.TimeZone;
-
-import org.bukkit.Bukkit;
-import org.json.simple.JSONObject;
-import org.json.simple.JSONValue;
 
 public class IpUtils {
     static HashMap<String, JSONObject> ipStorage = new HashMap<String, JSONObject>();
@@ -27,8 +25,8 @@ public class IpUtils {
      * @param ip The IP to get the timezone of.
      * @return The current ZonedDateTime with offset. Null if the address can't be reached.
      */
-    public static ZonedDateTime ipToTime(String ip) {
-        String offset = null;
+    public static @Nullable ZonedDateTime ipToTime(String ip) {
+        String offset;
         if (ipStorage.containsKey(ip)) {
             offset = (String) ipStorage.get(ip).get("timeZone");
         } else {
@@ -116,11 +114,11 @@ public class IpUtils {
         return (JSONObject) JSONValue.parse(json);
     }
 
-    private static String getUrlSource(String url) {
+    private static @NotNull String getUrlSource(String url) {
         URL url2 = null;
         try {
             url2 = new URL(url);
-        } catch (MalformedURLException e) {
+        } catch (MalformedURLException ignored) {
         }
         URLConnection yc = null;
         try {
@@ -131,19 +129,19 @@ public class IpUtils {
         }
         BufferedReader in = null;
         try {
-            in = new BufferedReader(new InputStreamReader(yc.getInputStream(), "UTF-8"));
-        } catch (Exception e) {
+            in = new BufferedReader(new InputStreamReader(yc.getInputStream(), StandardCharsets.UTF_8));
+        } catch (Exception ignored) {
         }
         String inputLine;
         StringBuilder a = new StringBuilder();
         try {
             while ((inputLine = in.readLine()) != null)
                 a.append(inputLine);
-        } catch (IOException e) {
+        } catch (IOException ignored) {
         }
         try {
             in.close();
-        } catch (IOException e) {
+        } catch (IOException ignored) {
         }
 
         return a.toString();

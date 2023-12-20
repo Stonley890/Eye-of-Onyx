@@ -40,7 +40,7 @@ public class TabRoyalty implements TabCompleter {
         } else if (args.length == 2) {
 
             switch (args[0]) {
-                case "clear", "list" -> suggestions.addAll(List.of(tribes));
+                case "clear", "list", "swap" -> suggestions.addAll(List.of(tribes));
                 case "set" -> {
                     suggestions.add("@p");
                     for (Player player : Bukkit.getOnlinePlayers()) {
@@ -52,7 +52,7 @@ public class TabRoyalty implements TabCompleter {
 
         } else if (args.length == 3) {
 
-            if (args[0].equals("clear") || args[0].equals("set") || args[0].equals("manage")) {
+            if (args[0].equals("clear") || args[0].equals("set") || args[0].equals("manage") || args[0].equals("swap")) {
                 suggestions.addAll(List.of(positions));
             }
         } else if (args.length == 4) {
@@ -65,6 +65,8 @@ public class TabRoyalty implements TabCompleter {
                 if (!args[2].equals("ruler")) {
                     suggestions.add("challenging");
                 }
+            } else if (args[0].equals("swap")) {
+                suggestions.addAll(List.of(positions));
             }
         } else if (args.length == 5) {
             if (args[0].equals("manage")) {

@@ -17,7 +17,6 @@ import org.jetbrains.annotations.NotNull;
 import org.shanerx.mojang.Mojang;
 
 import java.io.IOException;
-import java.util.UUID;
 
 
 public class CmdCompetition implements CommandExecutor {
@@ -102,7 +101,7 @@ public class CmdCompetition implements CommandExecutor {
                             Competition.activeChallenge.started = true;
 
                             BoardState newBoard = RoyaltyBoard.getBoardOf(tribe).clone();
-                            RoyaltyBoard.sendUpdate(new RoyaltyAction(sender.getName(), tribe, newBoard, oldBoard));
+                            RoyaltyBoard.reportChange(new RoyaltyAction(sender.getName(), tribe, newBoard, oldBoard));
 
                             sender.sendMessage(EyeOfOnyx.EOO + "Competition is now started.");
                         } else {
@@ -137,7 +136,7 @@ public class CmdCompetition implements CommandExecutor {
                         }
 
                         BoardState newBoard = RoyaltyBoard.getBoardOf(tribe).clone();
-                        RoyaltyBoard.sendUpdate(new RoyaltyAction(sender.getName(), tribe, oldBoard, newBoard));
+                        RoyaltyBoard.reportChange(new RoyaltyAction(sender.getName(), tribe, oldBoard, newBoard));
 
                         Competition.activeChallenge = null;
 
@@ -171,16 +170,26 @@ public class CmdCompetition implements CommandExecutor {
                             if (args[1].equals("attacker")) {
 
                                 RoyaltyBoard.replace(tribe, attackerPos, defenderPos);
-                                RoyaltyBoard.removePlayer(tribe, attackerPos);
-                                RoyaltyBoard.save();
-                                RoyaltyBoard.updateBoard();
+                                RoyaltyBoard.removePlayer(tribe, attackerPos, true);
+                                RoyaltyBoard.saveToDisk();
+                                RoyaltyBoard.updateBoard(tribe, false);
+                                try {
+                                    RoyaltyBoard.updateDiscordBoard(tribe);
+                                } catch (IOException e) {
+                                    Bukkit.getLogger().warning("Unable to update Discord board.");
+                                }
 
                             } else if (args[1].equals("defender")) {
 
                                 // Defender win; remove attacker
-                                RoyaltyBoard.removePlayer(Competition.activeChallenge.tribe, attackerPos);
-                                RoyaltyBoard.save();
-                                RoyaltyBoard.updateBoard();
+                                RoyaltyBoard.removePlayer(Competition.activeChallenge.tribe, attackerPos, true);
+                                RoyaltyBoard.saveToDisk();
+                                RoyaltyBoard.updateBoard(tribe, false);
+                                try {
+                                    RoyaltyBoard.updateDiscordBoard(tribe);
+                                } catch (IOException e) {
+                                    Bukkit.getLogger().warning("Unable to update Discord board.");
+                                }
 
                             } else {
                                 sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Incorrect arguments! /competition end <attacker|defender>");
@@ -190,7 +199,7 @@ public class CmdCompetition implements CommandExecutor {
                             Competition.activeChallenge = null;
 
                             BoardState newBoard = RoyaltyBoard.getBoardOf(tribe);
-                            RoyaltyBoard.sendUpdate(new RoyaltyAction(sender.getName(), tribe, oldBoard.clone(), newBoard));
+                            RoyaltyBoard.reportChange(new RoyaltyAction(sender.getName(), tribe, oldBoard.clone(), newBoard));
 
                             try {
                                 RoyaltyBoard.updateDiscordBoard(tribe);

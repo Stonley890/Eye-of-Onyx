@@ -1,9 +1,12 @@
 package io.github.stonley890.eyeofonyx.files;
 
+import io.github.stonley890.dreamvisitor.Dreamvisitor;
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 
 public class BoardState {
@@ -26,6 +29,11 @@ public class BoardState {
         return this;
     }
 
+    /**
+     * Convert a {@code Map<Integer, BoardState>} to a {@link YamlConfiguration}.
+     * @param boardStates the {@code Map<Integer, BoardState>} to convert.
+     * @return a {@link FileConfiguration} with the data.
+     */
     public static YamlConfiguration createYamlConfiguration(Map<Integer, BoardState> boardStates) {
 
         YamlConfiguration config = new YamlConfiguration();
@@ -33,25 +41,32 @@ public class BoardState {
         for (int i = 0; i < RoyaltyBoard.getTribes().length; i++) {
             for (int p = 0; p < RoyaltyBoard.getValidPositions().length; p++) {
                 String uuid = "none";
-                if (boardStates.get(i).positions.get(p).player != null) uuid = boardStates.get(i).positions.get(p).player.toString();
+                if (boardStates.get(i).positions.get(p).player != null)
+                    uuid = boardStates.get(i).positions.get(p).player.toString();
 
                 String joinedBoard = "none";
-                if (boardStates.get(i).positions.get(p).joinedBoard != null) joinedBoard = boardStates.get(i).positions.get(p).joinedBoard.toString();
+                if (boardStates.get(i).positions.get(p).joinedBoard != null)
+                    joinedBoard = boardStates.get(i).positions.get(p).joinedBoard.toString();
 
                 String joinedTime = "none";
-                if (boardStates.get(i).positions.get(p).joinedPosition != null) joinedTime = boardStates.get(i).positions.get(p).joinedPosition.toString();
+                if (boardStates.get(i).positions.get(p).joinedPosition != null)
+                    joinedTime = boardStates.get(i).positions.get(p).joinedPosition.toString();
 
                 String lastOnline = "none";
-                if (boardStates.get(i).positions.get(p).lastOnline != null) lastOnline = boardStates.get(i).positions.get(p).lastOnline.toString();
+                if (boardStates.get(i).positions.get(p).lastOnline != null)
+                    lastOnline = boardStates.get(i).positions.get(p).lastOnline.toString();
 
                 String lastChallenge = "none";
-                if (boardStates.get(i).positions.get(p).lastChallenge != null) lastChallenge = boardStates.get(i).positions.get(p).lastChallenge.toString();
+                if (boardStates.get(i).positions.get(p).lastChallenge != null)
+                    lastChallenge = boardStates.get(i).positions.get(p).lastChallenge.toString();
 
                 String challenger = "none";
-                if (boardStates.get(i).positions.get(p).challenger != null) challenger = boardStates.get(i).positions.get(p).challenger.toString();
+                if (boardStates.get(i).positions.get(p).challenger != null)
+                    challenger = boardStates.get(i).positions.get(p).challenger.toString();
 
                 String challenging = "none";
-                if (boardStates.get(i).positions.get(p).challenging != null) challenging = boardStates.get(i).positions.get(p).challenging.toString();
+                if (boardStates.get(i).positions.get(p).challenging != null)
+                    challenging = boardStates.get(i).positions.get(p).challenging.toString();
 
                 config.set(RoyaltyBoard.getTribes()[i] + "." + RoyaltyBoard.getValidPositions()[p] + ".uuid", uuid);
                 config.set(RoyaltyBoard.getTribes()[i] + "." + RoyaltyBoard.getValidPositions()[p] + ".name", boardStates.get(i).positions.get(p).name);
@@ -67,6 +82,11 @@ public class BoardState {
         return config;
     }
 
+    /**
+     * Convert a {@link FileConfiguration} to a {@code Map<Integer, BoardState>}.
+     * @param config a {@link FileConfiguration} that contains royalty board information.
+     * @return a {@code Map<Integer, BoardState>}.
+     */
     public static Map<Integer, BoardState> fromYamlConfig(FileConfiguration config) {
 
         Map<Integer, BoardState> yamlBoard = new HashMap<>(10);
@@ -74,51 +94,92 @@ public class BoardState {
         String[] tribes = RoyaltyBoard.getTribes();
         String[] positions = RoyaltyBoard.getValidPositions();
 
-        for (int i = 0; i < tribes.length; i++) {
+        for /* each tribe */ (int i = 0; i < tribes.length; i++) {
             String tribe = tribes[i];
 
+            // Create a board state for this tribe
             BoardState boardState = new BoardState();
 
-            for (int p = 0; p < positions.length; p++) {
+            for /* each position */ (int pos = 0; pos < positions.length; pos++) {
+                String position = positions[pos];
 
+                // Get UUID
                 UUID uuid;
-                String uuidString = config.getString(tribe + "." + positions[p] + ".uuid");
-                if (uuidString == null || uuidString.equals("none")) uuid = null;
-                else uuid = UUID.fromString(uuidString);
+                String uuidString = config.getString(tribe + "." + position + ".uuid");
+                Dreamvisitor.debug("UUID: " + uuidString);
+                // Attempt to parse
+                try {
+                    if (uuidString == null || uuidString.equals("none")) uuid = null;
+                    else uuid = UUID.fromString(uuidString);
+                } catch (IllegalArgumentException e) {
+                    Bukkit.getLogger().warning("UUID of tribe " + tribe.toUpperCase() + " position " + position.toUpperCase() + " could not be parsed. It will be overwritten as empty.");
+                    uuid = null;
+                }
 
                 LocalDateTime joinedBoard;
-                String joinedBoardString = config.getString(tribe + "." + positions[p] + ".joined_board");
-                if (joinedBoardString == null || joinedBoardString.equals("none") || joinedBoardString.equals("null")) joinedBoard = null;
-                else joinedBoard = LocalDateTime.parse(joinedBoardString);
+                String joinedBoardString = config.getString(tribe + "." + position + ".joined_board");
+                try {
+                    if (joinedBoardString == null || joinedBoardString.equals("none") || joinedBoardString.equals("null")) joinedBoard = null;
+                    else joinedBoard = LocalDateTime.parse(joinedBoardString);
+                } catch (DateTimeParseException e) {
+                    Bukkit.getLogger().warning("joined_board of tribe " + tribe.toUpperCase() + " position " + position.toUpperCase() + " could not be parsed. It will be overwritten as empty.");
+                    joinedBoard = null;
+                }
 
                 LocalDateTime joinedTime;
-                String joinedTimeString = config.getString(tribe + "." + positions[p] + ".joined_time");
-                if (joinedTimeString == null || joinedTimeString.equals("none") || joinedTimeString.equals("null")) joinedTime = null;
-                else joinedTime = LocalDateTime.parse(joinedTimeString);
+                String joinedTimeString = config.getString(tribe + "." + position + ".joined_time");
+                try {
+                    if (joinedTimeString == null || joinedTimeString.equals("none") || joinedTimeString.equals("null")) joinedTime = null;
+                    else joinedTime = LocalDateTime.parse(joinedTimeString);
+                } catch (DateTimeParseException e) {
+                    Bukkit.getLogger().warning("joined_time of tribe " + tribe.toUpperCase() + " position " + position.toUpperCase() + " could not be parsed. It will be overwritten as empty.");
+                    joinedTime = null;
+                }
 
                 LocalDateTime lastOnline;
-                String lastOnlineString = config.getString(tribe + "." + positions[p] + ".last_online");
-                if (lastOnlineString == null || lastOnlineString.equals("none") || lastOnlineString.equals("null")) lastOnline = null;
-                else lastOnline = LocalDateTime.parse(lastOnlineString);
+                String lastOnlineString = config.getString(tribe + "." + position + ".last_online");
+                try {
+                    if (lastOnlineString == null || lastOnlineString.equals("none") || lastOnlineString.equals("null")) lastOnline = null;
+                    else lastOnline = LocalDateTime.parse(lastOnlineString);
+                } catch (DateTimeParseException e) {
+                    Bukkit.getLogger().warning("last_online of tribe " + tribe.toUpperCase() + " position " + position.toUpperCase() + " could not be parsed. It will be overwritten as empty.");
+                    lastOnline = null;
+                }
 
                 LocalDateTime lastChallenge;
-                String lastChallengeString = config.getString(tribe + "." + positions[p] + ".last_online");
-                if (lastChallengeString == null || lastChallengeString.equals("none") || lastChallengeString.equals("null")) lastChallenge = null;
-                else lastChallenge = LocalDateTime.parse(lastChallengeString);
+                String lastChallengeString = config.getString(tribe + "." + position + ".last_challenge_time");
+                try {
+                    if (lastChallengeString == null || lastChallengeString.equals("none") || lastChallengeString.equals("null")) lastChallenge = null;
+                    else lastChallenge = LocalDateTime.parse(lastChallengeString);
+                } catch (DateTimeParseException e) {
+                    Bukkit.getLogger().warning("last_challenge_time of tribe " + tribe.toUpperCase() + " position " + position.toUpperCase() + " could not be parsed. It will be overwritten as empty.");
+                    lastChallenge = null;
+                }
 
                 UUID challenger;
-                String challengerString = config.getString(tribe + "." + positions[p] + ".uuid");
-                if (challengerString == null || challengerString.equals("none") || challengerString.equals("null")) challenger = null;
-                else challenger = UUID.fromString(challengerString);
+                String challengerString = config.getString(tribe + "." + position + ".challenger");
+                try {
+                    if (challengerString == null || challengerString.equals("none") || challengerString.equals("null")) challenger = null;
+                    else challenger = UUID.fromString(challengerString);
+                } catch (IllegalArgumentException e) {
+                    Bukkit.getLogger().warning("challenger of tribe " + tribe.toUpperCase() + " position " + position.toUpperCase() + " could not be parsed. It will be overwritten as empty.");
+                    challenger = null;
+                }
 
                 UUID challenging;
-                String challengingString = config.getString(tribe + "." + positions[p] + ".uuid");
-                if (challengingString == null || challengingString.equals("none") || challengingString.equals("null")) challenging = null;
-                else challenging = UUID.fromString(challengingString);
+                String challengingString = config.getString(tribe + "." + position + ".challenging");
+                try {
+                    if (challengingString == null || challengingString.equals("none") || challengingString.equals("null")) challenging = null;
+                    else challenging = UUID.fromString(challengingString);
+                } catch (IllegalArgumentException e) {
+                    Bukkit.getLogger().warning("challenging of tribe " + tribe.toUpperCase() + " position " + position.toUpperCase() + " could not be parsed. It will be overwritten as empty.");
+                    challenging = null;
+                }
 
-                boardState.positions.put(p, new BoardPosition(
+                // Set new position of BoardState we created earlier
+                boardState.positions.put(pos, new BoardPosition(
                         uuid,
-                        config.getString(tribe + "." + positions[p] + ".name"),
+                        config.getString(tribe + "." + position + ".name"),
                         joinedBoard,
                         joinedTime,
                         lastOnline,
@@ -128,62 +189,69 @@ public class BoardState {
                 ));
             }
 
+            // Add the completed BoardState to the map
             yamlBoard.put(i, boardState);
         }
 
+        // Return the completed map
         return yamlBoard;
 
     }
 
-    public BoardState setPlayer(int tribe, UUID uuid) {
-        BoardPosition affectedPosition = this.positions.get(tribe);
+    public BoardState setPlayer(int pos, UUID uuid) {
+        BoardPosition affectedPosition = this.positions.get(pos);
         affectedPosition.player = uuid;
-        this.positions.put(tribe, affectedPosition);
+        this.positions.put(pos, affectedPosition);
         return this;
     }
-    public BoardState setName(int tribe, String name) {
-        BoardPosition affectedPosition = this.positions.get(tribe);
+    public BoardState setName(int pos, String name) {
+        BoardPosition affectedPosition = this.positions.get(pos);
         affectedPosition.name = name;
-        this.positions.put(tribe, affectedPosition);
+        this.positions.put(pos, affectedPosition);
         return this;
     }
-    public BoardState setJoinedBoard(int tribe, LocalDateTime joinedBoard) {
-        BoardPosition affectedPosition = this.positions.get(tribe);
+    public BoardState setJoinedBoard(int pos, LocalDateTime joinedBoard) {
+        BoardPosition affectedPosition = this.positions.get(pos);
         affectedPosition.joinedBoard = joinedBoard;
-        this.positions.put(tribe, affectedPosition);
+        this.positions.put(pos, affectedPosition);
         return this;
     }
-    public BoardState setJoinedPosition(int tribe, LocalDateTime joinedPosition) {
-        BoardPosition affectedPosition = this.positions.get(tribe);
+    public BoardState setJoinedPosition(int pos, LocalDateTime joinedPosition) {
+        BoardPosition affectedPosition = this.positions.get(pos);
         affectedPosition.joinedPosition = joinedPosition;
-        this.positions.put(tribe, affectedPosition);
+        this.positions.put(pos, affectedPosition);
         return this;
     }
-    public BoardState setLastOnline(int tribe, LocalDateTime lastOnline) {
-        BoardPosition affectedPosition = this.positions.get(tribe);
+    public BoardState setLastOnline(int pos, LocalDateTime lastOnline) {
+        BoardPosition affectedPosition = this.positions.get(pos);
         affectedPosition.lastOnline = lastOnline;
-        this.positions.put(tribe, affectedPosition);
+        this.positions.put(pos, affectedPosition);
         return this;
     }
-    public BoardState setLastChallenge(int tribe, LocalDateTime lastChallenge) {
-        BoardPosition affectedPosition = this.positions.get(tribe);
+    public BoardState setLastChallenge(int pos, LocalDateTime lastChallenge) {
+        BoardPosition affectedPosition = this.positions.get(pos);
         affectedPosition.lastChallenge = lastChallenge;
-        this.positions.put(tribe, affectedPosition);
+        this.positions.put(pos, affectedPosition);
         return this;
     }
-    public BoardState setChallenger(int tribe, UUID challenger) {
-        BoardPosition affectedPosition = this.positions.get(tribe);
+    public BoardState setChallenger(int pos, UUID challenger) {
+        BoardPosition affectedPosition = this.positions.get(pos);
         affectedPosition.challenger = challenger;
-        this.positions.put(tribe, affectedPosition);
+        this.positions.put(pos, affectedPosition);
         return this;
     }
-    public BoardState setChallenging(int tribe, UUID challenging) {
-        BoardPosition affectedPosition = this.positions.get(tribe);
+    public BoardState setChallenging(int pos, UUID challenging) {
+        BoardPosition affectedPosition = this.positions.get(pos);
         affectedPosition.challenging = challenging;
-        this.positions.put(tribe, affectedPosition);
+        this.positions.put(pos, affectedPosition);
         return this;
     }
 
+    /**
+     * Check if a given position of this tribe is empty.
+     * @param pos the position to check.
+     * @return whether the position is empty.
+     */
     public boolean isEmpty(int pos) {
         return this.positions.get(pos).player == null;
     }
@@ -200,7 +268,7 @@ public class BoardState {
 
     /**
      * Moves a position to the location of another position, replacing it.
-     * This will clear any attackers or defenders and update the lastChallenge value.
+     * This will clear any attackers or defenders and update the {@code lastChallenge} value.
      * @param fromPos the position to move.
      * @param toPos the position to replace.
      * @return the modified {@link BoardState}.
@@ -217,6 +285,12 @@ public class BoardState {
         return this;
     }
 
+    /**
+     * Swap two positions.
+     * @param fromPos the first position to swap.
+     * @param toPos the second position to swap.
+     * @return the modified {@link BoardState}.
+     */
     public BoardState swap(int fromPos, int toPos) {
 
         // Get positions
@@ -238,6 +312,10 @@ public class BoardState {
         return this;
     }
 
+    /**
+     * Create a non-referencing clone of this {@link BoardState}.
+     * @return a clone of this {@link BoardState} that is not a reference variable.
+     */
     @Override
     public BoardState clone() {
         BoardState clone;
@@ -250,6 +328,11 @@ public class BoardState {
         return clone;
     }
 
+    /**
+     * Check if this {@link BoardState} contains the same information as another.
+     * @param state the {@link BoardState} to compare this with.
+     * @return whether the data is the same.
+     */
     public boolean equals(BoardState state) {
         for (int pos = 0; pos < this.positions.size(); pos++) if (!this.positions.get(pos).equals(state.positions.get(pos))) return false;
         return true;

@@ -289,8 +289,8 @@ public class CmdChallenge implements CommandExecutor {
                                 BoardState oldBoard = getBoardOf(playerTribe).clone();
                                 RoyaltyBoard.set(playerTribe, nextEmptyPosition, new BoardPosition(player.getUniqueId(), null, LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now(), null, null));
                                 BoardState newBoard = getBoardOf(playerTribe).clone();
-                                sendUpdate(new RoyaltyAction(player.getName(), playerTribe, oldBoard, newBoard));
-                                updateBoard();
+                                reportChange(new RoyaltyAction(player.getName(), playerTribe, oldBoard, newBoard));
+                                updateBoard(playerTribe, false);
                                 Dreamvisitor.debug("Board updated.");
 
                                 sender.sendMessage(EyeOfOnyx.EOO + "You are now " + getValidPositions()[nextEmptyPosition].toUpperCase().replace("_", " ") + " of the " + getTeamNames()[playerTribe].toUpperCase() + "s!");
@@ -381,7 +381,7 @@ public class CmdChallenge implements CommandExecutor {
                             if (playerPosition != 5) RoyaltyBoard.setAttacking(playerTribe, playerPosition, targetUuid);
 
                             BoardState newBoard = RoyaltyBoard.getBoardOf(playerTribe).clone();
-                            RoyaltyBoard.sendUpdate(new RoyaltyAction(sender.getName(), playerTribe, oldBoard, newBoard));
+                            RoyaltyBoard.reportChange(new RoyaltyAction(sender.getName(), playerTribe, oldBoard, newBoard));
 
                             // create notification for target
                             String title = "You've been challenged!";
@@ -475,11 +475,17 @@ public class CmdChallenge implements CommandExecutor {
 
                         // Remove from royalty board
                         BoardState oldBoard = RoyaltyBoard.getBoardOf(playerTribe).clone();
-                        RoyaltyBoard.removePlayer(playerTribe, playerPosition);
+                        RoyaltyBoard.removePlayer(playerTribe, playerPosition, true);
                         BoardState newBoard = RoyaltyBoard.getBoardOf(playerTribe).clone();
-                        sendUpdate(new RoyaltyAction(sender.getName(), playerTribe, oldBoard, newBoard));
-                        RoyaltyBoard.updateBoard();
+                        reportChange(new RoyaltyAction(sender.getName(), playerTribe, oldBoard, newBoard));
+                        RoyaltyBoard.updateBoard(playerTribe, false);
                         sender.sendMessage(EyeOfOnyx.EOO + "You have been removed from the royalty board.");
+
+                        try {
+                            RoyaltyBoard.updateDiscordBoard(playerTribe);
+                        } catch (IOException e) {
+                            Bukkit.getLogger().warning("Unable to update Discord board.");
+                        }
                     }
                     case "start" -> {
 
@@ -494,10 +500,7 @@ public class CmdChallenge implements CommandExecutor {
                                     sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "No waiting room set! Contact an admin.");
                             } else
                                 sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "No waiting room set! Contact an admin.");
-
                         }
-
-
                     }
                     case "date" -> {
 

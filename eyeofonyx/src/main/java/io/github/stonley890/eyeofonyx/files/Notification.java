@@ -1,8 +1,6 @@
 package io.github.stonley890.eyeofonyx.files;
 
-import io.github.stonley890.dreamvisitor.Dreamvisitor;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
-import io.github.stonley890.eyeofonyx.Utils;
 import io.github.stonley890.eyeofonyx.web.IpUtils;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -14,7 +12,6 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-import org.joml.Matrix2d;
 
 import java.io.File;
 import java.io.IOException;
@@ -369,6 +366,17 @@ public class Notification {
             return true;
         } else {
             return false;
+        }
+    }
+
+    public static void removeNotificationsOfPlayer(UUID uuid, NotificationType type) {
+        try {
+            for (Notification notification : Notification.getNotificationsOfPlayer(uuid)) {
+                if (notification.type == type)
+                    Notification.removeNotification(notification);
+            }
+        } catch (IOException | InvalidConfigurationException e) {
+            Bukkit.getLogger().severe("Unable to access notifications.yml file!");
         }
     }
 }
