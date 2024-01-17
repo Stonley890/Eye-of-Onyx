@@ -23,7 +23,7 @@ public class TabEyeOfOnyx implements TabCompleter {
 
     @Nullable
     @Override
-    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
+    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String @NotNull [] args) {
 
         List<String> suggestions = new ArrayList<>();
 
@@ -82,7 +82,7 @@ public class TabEyeOfOnyx implements TabCompleter {
             if (sender.isOp())
                 if (args[0].equals("config") && args[1].equals("waiting-rooms")) {
                     if (sender instanceof Player player) {
-                        suggestions.add(String.valueOf(player.getLocation().getX()));
+                        suggestions.add(String.valueOf(Math.round(player.getLocation().getX() * 100.0) / 100.0));
                     }
                 }
         }  else if (args.length == 5) {
@@ -90,7 +90,7 @@ public class TabEyeOfOnyx implements TabCompleter {
             if (sender.isOp())
                 if (args[0].equals("config") && args[1].equals("waiting-rooms")) {
                     if (sender instanceof Player player) {
-                        suggestions.add(String.valueOf(player.getLocation().getY()));
+                        suggestions.add(String.valueOf(Math.round(player.getLocation().getY() * 100.0) / 100.0));
                     }
                 }
         }  else if (args.length == 6) {
@@ -98,7 +98,7 @@ public class TabEyeOfOnyx implements TabCompleter {
             if (sender.isOp())
                 if (args[0].equals("config") && args[1].equals("waiting-rooms")) {
                     if (sender instanceof Player player) {
-                        suggestions.add(String.valueOf(player.getLocation().getZ()));
+                        suggestions.add(String.valueOf(Math.round(player.getLocation().getZ() * 100.0) / 100.0));
                     }
                 }
         }  else if (args.length == 7) {

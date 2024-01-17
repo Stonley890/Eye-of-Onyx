@@ -23,18 +23,12 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.io.InvalidObjectException;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 public class ListenJoin implements Listener {
-
-    private static final Scoreboard scoreboard = Objects.requireNonNull(Bukkit.getScoreboardManager()).getMainScoreboard();
-
-    private static final String[] teamNames = RoyaltyBoard.getTeamNames();
     private static final String[] tribes = RoyaltyBoard.getTribes();
-    private static final String[] validPositions = RoyaltyBoard.getValidPositions();
 
     @EventHandler
     public void onPlayerJoin(@NotNull PlayerJoinEvent event) {
@@ -44,7 +38,7 @@ public class ListenJoin implements Listener {
         // Update tribe
         try {
             PlayerTribe.updateTribeOfPlayer(player.getUniqueId());
-        } catch (InvalidObjectException | NotFoundException e) {
+        } catch (NotFoundException e) {
             // Player does not have a tribe.
         }
 
@@ -67,6 +61,15 @@ public class ListenJoin implements Listener {
 
             if (posIndex == RoyaltyBoard.CIVILIAN) {
 
+                // remove other permissions
+                for (int tribe = 0; tribe < tribes.length; tribe++) {
+                    if (tribe != tribeIndex) {
+                        String groupName = EyeOfOnyx.getPlugin().getConfig().getString("citizen." + tribes[tribe]);
+                        user.data().remove(Node.builder("group." + groupName).build());
+                    }
+                }
+
+                // add appropriate permission
                 String groupName = EyeOfOnyx.getPlugin().getConfig().getString("citizen." + tribes[tribeIndex]);
 
                 user.data().add(Node.builder("group." + groupName).build());
@@ -77,12 +80,9 @@ public class ListenJoin implements Listener {
         });
 
         // Get and cache timezone
-        Bukkit.getScheduler().runTaskAsynchronously(EyeOfOnyx.getPlugin(), new Runnable() {
-            @Override
-            public void run() {
-                // Cache player IP data
-                IpUtils.ipToTime(player.getAddress().getAddress().getHostAddress());
-            }
+        Bukkit.getScheduler().runTaskAsynchronously(EyeOfOnyx.getPlugin(), () -> {
+            // Cache player IP data
+            IpUtils.ipToTime(player.getAddress().getAddress().getHostAddress());
         });
 
         // Call to join challenge if active
@@ -98,29 +98,18 @@ public class ListenJoin implements Listener {
             e.printStackTrace();
         }
 
+        // update last online
+        UUID uuid = player.getUniqueId();
         try {
-            String playerTeam = scoreboard.getEntryTeam(player.getName()).getName();
-            int tribe = Arrays.binarySearch(teamNames, playerTeam);
+            int tribe = PlayerTribe.getTribeOfPlayer(uuid);
+            int pos = RoyaltyBoard.getPositionIndexOfUUID(tribe, uuid);
 
-            if (tribe > 6 || tribe < 1) {
-                return;
+            // If the player is not a citizen
+            if (pos != RoyaltyBoard.CIVILIAN) {
+                BoardPosition updatedPos = RoyaltyBoard.getBoardOf(tribe).getPos(pos);
+                updatedPos.lastOnline = LocalDateTime.now();
+                RoyaltyBoard.set(tribe, pos, updatedPos);
             }
-
-            UUID uuid = player.getUniqueId();
-
-            // Check each position for player
-            for (int pos = 0; pos < validPositions.length; pos++) {
-
-                // If player is found on board, update last_online
-                if (RoyaltyBoard.getUuid(tribe, pos).equals(uuid)){
-                    BoardPosition updatedPos = RoyaltyBoard.getBoardOf(tribe).getPos(pos);
-                    updatedPos.lastOnline = LocalDateTime.now();
-                    RoyaltyBoard.set(tribe, pos, updatedPos);
-                }
-            }
-        } catch (NullPointerException e) {
-            // Player is not part of a team
-        }
-
+        } catch (NotFoundException ignored) {}
     }
 }

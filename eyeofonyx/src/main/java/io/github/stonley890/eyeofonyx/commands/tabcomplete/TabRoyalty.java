@@ -59,7 +59,8 @@ public class TabRoyalty implements TabCompleter {
 
             if (args[0].equals("manage")) {
                 suggestions.add("name");
-                suggestions.add("joined_time");
+                suggestions.add("joined_position");
+                suggestions.add("joined_board");
                 suggestions.add("last_challenge_time");
                 suggestions.add("challenger");
                 if (!args[2].equals("ruler")) {
@@ -70,7 +71,7 @@ public class TabRoyalty implements TabCompleter {
             }
         } else if (args.length == 5) {
             if (args[0].equals("manage")) {
-                if (args[3].equals("joined_time") || args[3].equals("last_challenge_time")) {
+                if (args[3].equals("joined_position") || args[3].equals("joined_board") || args[3].equals("last_challenge_time")) {
                     suggestions.add("now");
                     suggestions.add("never");
                 } else if (args[3].equals("challenger") || args[3].equals("challenging")) {

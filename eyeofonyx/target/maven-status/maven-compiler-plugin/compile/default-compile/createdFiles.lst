@@ -24,7 +24,6 @@ io/github/stonley890/eyeofonyx/web/IpUtils.class
 io/github/stonley890/eyeofonyx/commands/CmdCompetition.class
 io/github/stonley890/eyeofonyx/Utils.class
 io/github/stonley890/eyeofonyx/commands/CmdChallenge.class
-io/github/stonley890/eyeofonyx/listeners/ListenJoin$1.class
 io/github/stonley890/eyeofonyx/commands/CmdEyeOfOnyx.class
 io/github/stonley890/eyeofonyx/challenges/Competition.class
 io/github/stonley890/eyeofonyx/files/NotificationType.class

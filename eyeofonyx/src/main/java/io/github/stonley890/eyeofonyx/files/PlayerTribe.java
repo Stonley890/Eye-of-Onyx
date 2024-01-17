@@ -110,7 +110,13 @@ public class PlayerTribe {
 
     }
 
-    public static void updateTribeOfPlayer(@NotNull UUID uuid) throws InvalidObjectException, NotFoundException {
+    /**
+     * Attempts to update a player's recorded tribe by team.
+     * If not found on a team, tags will be checked if player is online.
+     * @param uuid the UUID of the player to update, online or offline.
+     * @throws NotFoundException given player does not have a valid team or tag associated with a tribe.
+     */
+    public static void updateTribeOfPlayer(@NotNull UUID uuid) throws NotFoundException {
 
         boolean online;
         Player player = Bukkit.getPlayer(uuid);
@@ -156,7 +162,7 @@ public class PlayerTribe {
         throw new NotFoundException("Given player does not have a valid team or tag associated with a tribe!");
     }
 
-    private static void saveTribe(UUID player, int tribeIndex) {
+    private static void saveTribe(@NotNull UUID player, int tribeIndex) {
         tribeStorage.put(player.toString(), RoyaltyBoard.getTeamNames()[tribeIndex]);
         fileConfig.set(player.toString(), RoyaltyBoard.getTeamNames()[tribeIndex]);
         save();

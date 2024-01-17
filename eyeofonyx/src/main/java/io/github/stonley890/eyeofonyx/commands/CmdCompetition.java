@@ -138,6 +138,10 @@ public class CmdCompetition implements CommandExecutor {
                         BoardState newBoard = RoyaltyBoard.getBoardOf(tribe).clone();
                         RoyaltyBoard.reportChange(new RoyaltyAction(sender.getName(), tribe, oldBoard, newBoard));
 
+                        // Set teams back
+                        Bukkit.getScoreboardManager().getMainScoreboard().getTeam(RoyaltyBoard.getTeamNames()[tribe]).addEntry(Bukkit.getPlayer(Competition.activeChallenge.attacker).getName());
+                        Bukkit.getScoreboardManager().getMainScoreboard().getTeam(RoyaltyBoard.getTeamNames()[tribe]).addEntry(Bukkit.getPlayer(Competition.activeChallenge.defender).getName());
+
                         Competition.activeChallenge = null;
 
                         sender.sendMessage(EyeOfOnyx.EOO + "Competition canceled.");
@@ -151,8 +155,6 @@ public class CmdCompetition implements CommandExecutor {
                         if (args.length < 2) {
                             sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Missing arguments! /competition end <attacker|defender>");
                         } else {
-
-
 
                             // Get positions
                             int attackerPos;
@@ -195,6 +197,10 @@ public class CmdCompetition implements CommandExecutor {
                                 sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Incorrect arguments! /competition end <attacker|defender>");
                                 return true;
                             }
+
+                            // Set teams back
+                            Bukkit.getScoreboardManager().getMainScoreboard().getTeam(RoyaltyBoard.getTeamNames()[tribe]).addEntry(Bukkit.getPlayer(Competition.activeChallenge.attacker).getName());
+                            Bukkit.getScoreboardManager().getMainScoreboard().getTeam(RoyaltyBoard.getTeamNames()[tribe]).addEntry(Bukkit.getPlayer(Competition.activeChallenge.defender).getName());
 
                             Competition.activeChallenge = null;
 

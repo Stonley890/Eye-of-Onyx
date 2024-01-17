@@ -356,15 +356,19 @@ public class CmdRoyalty implements CommandExecutor {
                 // Get data
                 UUID uuid = RoyaltyBoard.getUuid(tribeIndex, posIndex);
                 String username = "N/A";
-                String joinedTime = "N/A";
+                String name = "N/A";
+                String joinedPos = "N/A";
+                String joinedBoard = "N/A";
                 String lastOnline = "N/A";
                 String lastChallenge = "N/A";
                 String challenger = "N/A";
                 String challenging = "N/A";
 
                 if (uuid != null) {
-                    username = mojang.getPlayerProfile(uuid.toString()).getUsername();
-                    joinedTime = RoyaltyBoard.getJoinedDate(tribeIndex, posIndex).toString();
+                    username = io.github.stonley890.dreamvisitor.Utils.getUsernameOfUuid(uuid);
+                    name = RoyaltyBoard.getOcName(tribeIndex, posIndex);
+                    joinedPos = RoyaltyBoard.getJoinedPosDate(tribeIndex, posIndex).toString();
+                    joinedBoard = RoyaltyBoard.getJoinedBoardDate(tribeIndex, posIndex).toString();
                     lastOnline = RoyaltyBoard.getLastOnline(tribeIndex, posIndex).toString();
                     lastChallenge = RoyaltyBoard.getLastChallengeDate(tribeIndex, posIndex).toString();
                     challenger = String.valueOf(RoyaltyBoard.getAttacker(tribeIndex, posIndex));
@@ -391,18 +395,30 @@ public class CmdRoyalty implements CommandExecutor {
                 ZonedDateTime dateTime;
                 ZonedDateTime offsetDateTime;
                 builder.append("Data for ").append(tribes[tribeIndex].toUpperCase()).append(" ").append(validPositions[posIndex].toUpperCase())
-                        .append("\n[ NAME: ").append(username).color(net.md_5.bungee.api.ChatColor.YELLOW)
+                        .append("\n[ USERNAME: ").append(username).color(net.md_5.bungee.api.ChatColor.YELLOW)
+                        .append("\n[ NAME: ").color(net.md_5.bungee.api.ChatColor.WHITE).append(name).color(net.md_5.bungee.api.ChatColor.YELLOW)
                         .append("\n[ UUID: ").color(net.md_5.bungee.api.ChatColor.WHITE).append(stringUuid).color(net.md_5.bungee.api.ChatColor.YELLOW)
-                        .append("\n[ DATE JOINED: ").color(net.md_5.bungee.api.ChatColor.WHITE);
+                        .append("\n[ DATE JOINED POSITION: ").color(net.md_5.bungee.api.ChatColor.WHITE);
 
-                if (!joinedTime.equals("N/A")) {
-                    dateTime = ZonedDateTime.of(LocalDateTime.parse(joinedTime), ZoneOffset.systemDefault());
+                if (!joinedPos.equals("N/A")) {
+                    dateTime = ZonedDateTime.of(LocalDateTime.parse(joinedPos), ZoneOffset.systemDefault());
                     offsetDateTime = dateTime.withZoneSameLocal(offset);
                     button.setText("[" + offsetDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm a z")) + "]");
                     button.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/royalty manage " + args[1] + " " + args[2] + " joined_time " + offsetDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm"))));
                     button.setColor(net.md_5.bungee.api.ChatColor.YELLOW);
                     builder.append(button);
-                } else builder.append(joinedTime).color(net.md_5.bungee.api.ChatColor.YELLOW);
+                } else builder.append(joinedPos).color(net.md_5.bungee.api.ChatColor.YELLOW);
+
+                builder.append("\n[ DATE JOINED BOARD: ").color(net.md_5.bungee.api.ChatColor.WHITE);
+
+                if (!joinedBoard.equals("N/A")) {
+                    dateTime = ZonedDateTime.of(LocalDateTime.parse(joinedBoard), ZoneOffset.systemDefault());
+                    offsetDateTime = dateTime.withZoneSameLocal(offset);
+                    button.setText("[" + offsetDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm a z")) + "]");
+                    button.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/royalty manage " + args[1] + " " + args[2] + " joined_time " + offsetDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm"))));
+                    button.setColor(net.md_5.bungee.api.ChatColor.YELLOW);
+                    builder.append(button);
+                } else builder.append(joinedBoard).color(net.md_5.bungee.api.ChatColor.YELLOW);
 
                 builder.append("\n[ LAST ONLINE: ").color(net.md_5.bungee.api.ChatColor.WHITE);
 
@@ -453,43 +469,92 @@ public class CmdRoyalty implements CommandExecutor {
                 // Get data
                 String key = args[3];
 
-                String[] keys = {"name", "last_online", "last_challenge_time", "challenger", "challenging"};
+                String[] keys = {"name", "joined_board", "joined_position", "last_online", "last_challenge_time", "challenger", "challenging"};
                 if (Arrays.stream(keys).anyMatch(Predicate.isEqual(key))) {
 
                     String value = null;
 
                     switch (key) {
-                        case "name" -> value = EyeOfOnyx.getPlugin().getConfig().getString("name");
-                        case "last_online" -> {
-                            String dateString = EyeOfOnyx.getPlugin().getConfig().getString("last_online");
-                            if (dateString == null || dateString.equals("none")) value = "N/A";
+                        case "name" -> value = RoyaltyBoard.getOcName(tribeIndex, posIndex);
+                        case "joined_position" -> {
+                            LocalDateTime joinedPos = RoyaltyBoard.getJoinedPosDate(tribeIndex, posIndex);
+
+                            if (joinedPos == null) value = "N/A";
                             else if (sender instanceof Player player) {
                                 try {
-                                    value = Utils.localTimeToPlayerTime(LocalDateTime.parse(dateString), player).format(DateTimeFormatter.ofPattern("uuuu-MM-dd hh:mm a z"));
+                                    // try to use player timezone
+                                    value = Utils.localTimeToPlayerTime(joinedPos, player).format(DateTimeFormatter.ofPattern("uuuu-MM-dd hh:mm a z"));
                                 } catch (NotFoundException e) {
-                                    value = LocalDateTime.parse(dateString).format(DateTimeFormatter.ofPattern("uuuu-MM-dd hh:mm a")) + " " + ZoneOffset.systemDefault().getId();
-                                    ;
+                                    // if not available, use system time zone
+                                    value = joinedPos.format(DateTimeFormatter.ofPattern("uuuu-MM-dd hh:mm a")) + " " + ZoneOffset.systemDefault().getId();
                                 }
                             } else
-                                value = LocalDateTime.parse(dateString).format(DateTimeFormatter.ofPattern("uuuu-MM-dd hh:mm a")) + " " + ZoneOffset.systemDefault().getId();
+                                // if not player use system time zone
+                                value = joinedPos.format(DateTimeFormatter.ofPattern("uuuu-MM-dd hh:mm a")) + " " + ZoneOffset.systemDefault().getId();
+                        }
+                        case "joined_board" -> {
+                            LocalDateTime joinedBoard = RoyaltyBoard.getJoinedBoardDate(tribeIndex, posIndex);
+
+                            if (joinedBoard == null) value = "N/A";
+                            else if (sender instanceof Player player) {
+                                try {
+                                    // try to use player timezone
+                                    value = Utils.localTimeToPlayerTime(joinedBoard, player).format(DateTimeFormatter.ofPattern("uuuu-MM-dd hh:mm a z"));
+                                } catch (NotFoundException e) {
+                                    // if not available, use system time zone
+                                    value = joinedBoard.format(DateTimeFormatter.ofPattern("uuuu-MM-dd hh:mm a")) + " " + ZoneOffset.systemDefault().getId();
+                                }
+                            } else
+                                // if not player use system time zone
+                                value = joinedBoard.format(DateTimeFormatter.ofPattern("uuuu-MM-dd hh:mm a")) + " " + ZoneOffset.systemDefault().getId();
+                        }
+                        case "last_online" -> {
+                            LocalDateTime lastOnline = RoyaltyBoard.getLastOnline(tribeIndex, posIndex);
+
+                            if (lastOnline == null) value = "N/A";
+                            else if (sender instanceof Player player) {
+                                try {
+                                    // try to use player timezone
+                                    value = Utils.localTimeToPlayerTime(lastOnline, player).format(DateTimeFormatter.ofPattern("uuuu-MM-dd hh:mm a z"));
+                                } catch (NotFoundException e) {
+                                    // if not available, use system time zone
+                                    value = lastOnline.format(DateTimeFormatter.ofPattern("uuuu-MM-dd hh:mm a")) + " " + ZoneOffset.systemDefault().getId();
+                                }
+                            } else
+                                // if not player use system time zone
+                                value = lastOnline.format(DateTimeFormatter.ofPattern("uuuu-MM-dd hh:mm a")) + " " + ZoneOffset.systemDefault().getId();
                         }
                         case "last_challenge_time" -> {
-                            String dateString = EyeOfOnyx.getPlugin().getConfig().getString("last_challenge_time");
-                            if (dateString == null || dateString.equals("none")) value = "N/A";
+                            LocalDateTime lastChallenge = RoyaltyBoard.getLastChallengeDate(tribeIndex, posIndex);
+
+                            if (lastChallenge == null) value = "N/A";
                             else if (sender instanceof Player player) {
                                 try {
-                                    value = Utils.localTimeToPlayerTime(LocalDateTime.parse(dateString), player).format(DateTimeFormatter.ofPattern("uuuu-MM-dd hh:mm a z"));
+                                    // try to use player timezone
+                                    value = Utils.localTimeToPlayerTime(lastChallenge, player).format(DateTimeFormatter.ofPattern("uuuu-MM-dd hh:mm a z"));
                                 } catch (NotFoundException e) {
-                                    value = LocalDateTime.parse(dateString).format(DateTimeFormatter.ofPattern("uuuu-MM-dd hh:mm a")) + " " + ZoneOffset.systemDefault().getId();
-                                    ;
+                                    // if not available, use system time zone
+                                    value = lastChallenge.format(DateTimeFormatter.ofPattern("uuuu-MM-dd hh:mm a")) + " " + ZoneOffset.systemDefault().getId();
                                 }
                             } else
-                                value = LocalDateTime.parse(dateString).format(DateTimeFormatter.ofPattern("uuuu-MM-dd hh:mm a")) + " " + ZoneOffset.systemDefault().getId();
+                                // if not player use system time zone
+                                value = lastChallenge.format(DateTimeFormatter.ofPattern("uuuu-MM-dd hh:mm a")) + " " + ZoneOffset.systemDefault().getId();
                         }
-                        case "challenger" ->
-                                value = mojang.getPlayerProfile(EyeOfOnyx.getPlugin().getConfig().getString("challenger")).getUsername();
-                        case "challenging" ->
-                                value = mojang.getPlayerProfile(EyeOfOnyx.getPlugin().getConfig().getString("challenging")).getUsername();
+                        case "challenger" -> {
+                            value = "N/A";
+                            UUID challengerUuid = RoyaltyBoard.getAttacker(tribeIndex, posIndex);
+                            if (challengerUuid != null) {
+                                value = io.github.stonley890.dreamvisitor.Utils.getUsernameOfUuid(challengerUuid);
+                            }
+                        }
+
+                        case "challenging" -> {
+                            value = "N/A";
+                            UUID challengingUuid = RoyaltyBoard.getAttacking(tribeIndex, posIndex);
+                            if (challengingUuid != null) {
+                                value = io.github.stonley890.dreamvisitor.Utils.getUsernameOfUuid(challengingUuid);
+                            }
+                        }
                     }
 
 
@@ -505,16 +570,16 @@ public class CmdRoyalty implements CommandExecutor {
                 String key = args[3];
                 String value = args[4];
 
-                String[] keys = {"name", "joined_time", "last_challenge_time", "challenger", "challenging"};
+                String[] keys = {"name", "joined_board", "joined_position", "last_challenge_time", "challenger", "challenging"};
                 if (Arrays.stream(keys).anyMatch(Predicate.isEqual(key))) {
 
                     switch (key) {
                         case "name" -> EyeOfOnyx.getPlugin().getConfig().set("name", value);
                         case "last_online" -> {
                             if (value.equals("now"))
-                                EyeOfOnyx.getPlugin().getConfig().set("last_online", LocalDateTime.now().toString());
+                                RoyaltyBoard.setLastOnline(tribeIndex, posIndex, LocalDateTime.now());
                             else if (value.equals("never"))
-                                EyeOfOnyx.getPlugin().getConfig().set("last_online", "none");
+                                RoyaltyBoard.setLastOnline(tribeIndex, posIndex, null);
                             else {
                                 sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Invalid arguments! /royalty manage <tribe> <position> last_online [now|never]");
                                 return;
@@ -522,11 +587,11 @@ public class CmdRoyalty implements CommandExecutor {
                         }
                         case "last_challenge_time" -> {
                             if (value.equals("now"))
-                                EyeOfOnyx.getPlugin().getConfig().set("last_challenge_time", LocalDateTime.now().toString());
+                                RoyaltyBoard.setLastChallengeDate(tribeIndex, posIndex, LocalDateTime.now());
                             else if (value.equals("never"))
-                                EyeOfOnyx.getPlugin().getConfig().set("last_challenge_time", "none");
+                                RoyaltyBoard.setLastChallengeDate(tribeIndex, posIndex, null);
                             else {
-                                sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Invalid arguments! /royalty manage <tribe> <position> last_online [now|never]");
+                                sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Invalid arguments! /royalty manage <tribe> <position> last_challenge_time [now|never]");
                                 return;
                             }
                         }
@@ -566,7 +631,7 @@ public class CmdRoyalty implements CommandExecutor {
 
                             for (Player target : targets) {
                                 // Success
-                                EyeOfOnyx.getPlugin().getConfig().set("challenger", target.getUniqueId().toString());
+                                RoyaltyBoard.setAttacker(tribeIndex, posIndex, target.getUniqueId());
                                 value = target.getName();
                             }
                         }
@@ -611,7 +676,7 @@ public class CmdRoyalty implements CommandExecutor {
 
                             for (Player target : targets) {
                                 // Success
-                                EyeOfOnyx.getPlugin().getConfig().set("challenging", target.getUniqueId().toString());
+                                RoyaltyBoard.setAttacking(tribeIndex, posIndex, target.getUniqueId());
                                 value = target.getName();
                             }
                         }

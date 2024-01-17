@@ -20,7 +20,6 @@ import net.luckperms.api.model.user.UserManager;
 import net.luckperms.api.node.Node;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.NotNull;
@@ -421,7 +420,7 @@ public class RoyaltyBoard {
                     name = ChatColor.stripColor(RoyaltyBoard.getOcName(tribeIndex, j));
                     if (name == null || name.equals("&c<No name set>")) name = username;
 
-                    joined = "<t:" + LocalDateTime.parse(RoyaltyBoard.getJoinedDate(tribeIndex, j).toString()).toEpochSecond(ZoneOffset.UTC) + ":d>";
+                    joined = "<t:" + LocalDateTime.parse(RoyaltyBoard.getJoinedPosDate(tribeIndex, j).toString()).toEpochSecond(ZoneOffset.UTC) + ":d>";
                 }
 
                 // Replace in message
@@ -913,8 +912,19 @@ public class RoyaltyBoard {
      * @param pos the position to fetch from.
      * @return the date joined located at the given location.
      */
-    public static LocalDateTime getJoinedDate(int tribe, int pos) {
+    public static LocalDateTime getJoinedPosDate(int tribe, int pos) {
         return royaltyBoard.get(tribe).getPos(pos).joinedPosition;
+    }
+
+    /**
+     * Get the date joined board of a spot on the board.
+     *
+     * @param tribe the tribe to fetch from.
+     * @param pos the position to fetch from.
+     * @return the date joined located at the given location.
+     */
+    public static LocalDateTime getJoinedBoardDate(int tribe, int pos) {
+        return royaltyBoard.get(tribe).getPos(pos).joinedBoard;
     }
 
     /**
@@ -929,6 +939,17 @@ public class RoyaltyBoard {
     }
 
     /**
+     * Set the date last online of a spot on the board.
+     *
+     * @param tribe the tribe to fetch from.
+     * @param pos the position to fetch from.
+     * @param time the date & time to set.
+     */
+    public static void setLastOnline(int tribe, int pos, LocalDateTime time) {
+        royaltyBoard.put(tribe, royaltyBoard.get(tribe).setLastOnline(pos, time));
+    }
+
+    /**
      * Get the date last challenged of a spot on the board.
      *
      * @param tribe    The tribe to fetch from.
@@ -937,6 +958,17 @@ public class RoyaltyBoard {
      */
     public static LocalDateTime getLastChallengeDate(int tribe, int pos) {
         return royaltyBoard.get(tribe).getPos(pos).lastChallenge;
+    }
+
+    /**
+     * Set the last challenge date of a spot on the board.
+     *
+     * @param tribe the tribe to fetch from.
+     * @param pos the position to fetch from.
+     * @param time the date & time to set.
+     */
+    public static void setLastChallengeDate(int tribe, int pos, LocalDateTime time) {
+        royaltyBoard.put(tribe, royaltyBoard.get(tribe).setLastChallenge(pos, time));
     }
 
     /**

@@ -1,6 +1,6 @@
 package io.github.stonley890.eyeofonyx.commands;
 
-import io.github.stonley890.dreamvisitor.Dreamvisitor;
+import io.github.stonley890.dreamvisitor.Utils;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import io.github.stonley890.eyeofonyx.files.*;
 import javassist.NotFoundException;
@@ -15,7 +15,6 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.io.InvalidObjectException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -49,8 +48,35 @@ public class CmdUpdatePlayer implements CommandExecutor {
 
             // Check if empty
             if (entities.isEmpty()) {
-                sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "No players were selected.");
-                return true;
+
+                // try offline search
+                UUID offlineUuid = Utils.getUUIDOfUsername(args[0]);
+                if (offlineUuid == null) {
+                    sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Could not find a player by that name.");
+                    return true;
+                }
+
+                String username = args[0];
+
+                try {
+
+                    doUpdate(offlineUuid);
+
+                    sender.sendMessage(EyeOfOnyx.EOO + "Updated " + username + ".");
+                    return true;
+
+                } catch (NotFoundException e) {
+
+                    sender.sendMessage(EyeOfOnyx.EOO + username + " does not have a tribe-associated team and is not online.");
+                    return true;
+
+                } catch (IOException | InvalidConfigurationException e) {
+
+                    sender.sendMessage(EyeOfOnyx.EOO + "There was a problem accessing one or more files. Check logs for stacktrace.");
+                    throw new RuntimeException(e);
+
+                }
+
             }
 
             // Check for non-players
@@ -71,60 +97,16 @@ public class CmdUpdatePlayer implements CommandExecutor {
         for (Player player : targets) {
             try {
 
-                Dreamvisitor.debug("Updating " + player.getName());
+                doUpdate(player.getUniqueId());
 
-                int originalTribe = PlayerTribe.getTribeOfPlayer(player.getUniqueId());
-
-                // Success
-                PlayerTribe.updateTribeOfPlayer(player.getUniqueId());
-
-                for (int t = 0; t < RoyaltyBoard.getTribes().length; t++) {
-                    for (int p = 0; p < RoyaltyBoard.getValidPositions().length; p++) {
-
-                        if (Objects.equals(RoyaltyBoard.getUuid(t,p), player.getUniqueId()) && t != PlayerTribe.getTribeOfPlayer(player.getUniqueId())) {
-
-                            // Notify attacker if exists
-                            UUID attacker = RoyaltyBoard.getAttacker(t,p);
-                            if (attacker != null) {
-                                int attackerPos = RoyaltyBoard.getPositionIndexOfUUID(attacker);
-                                RoyaltyBoard.setAttacking(t, attackerPos, null);
-                                new Notification(attacker, "Your challenge was canceled.", "The player you were challenging was removed from the royalty board, so your challenge was canceled.", NotificationType.GENERIC).create();
-                            }
-
-                            // Notify defender if exists
-                            if (p != RoyaltyBoard.RULER) {
-                                UUID attacking = RoyaltyBoard.getAttacking(t,p);
-                                if (attacking != null) {
-                                    int defenderPos = RoyaltyBoard.getPositionIndexOfUUID(attacking);
-                                    RoyaltyBoard.setAttacker(t, defenderPos, null);
-                                    new Notification(attacker, "Your challenge was canceled.", "The player who was challenging you was removed from the royalty board, so your challenge was canceled.", NotificationType.GENERIC).create();
-                                }
-                            }
-
-                            // Remove any challenges
-                            for (Challenge challenge : Challenge.getChallenges()) {
-                                if (challenge.defender.equals(player.getUniqueId()) || challenge.attacker.equals(player.getUniqueId())) Challenge.remove(challenge);
-                            }
-
-                            // Remove any challenge notifications
-                            for (Notification notification : Notification.getNotificationsOfPlayer(player.getUniqueId())) {
-                                if (notification.type == NotificationType.CHALLENGE_ACCEPTED || notification.type == NotificationType.CHALLENGE_REQUESTED) Notification.removeNotification(notification);
-                            }
-
-                            RoyaltyBoard.removePlayer(t, p, true);
-                            RoyaltyBoard.updateBoard(originalTribe, false);
-                            RoyaltyBoard.updateDiscordBoard(originalTribe);
-                            new Notification(player.getUniqueId(), "You have been removed from the royalty board.", "You were removed from the royalty board because you changed your tribe. Any pending challenges have been canceled.", NotificationType.GENERIC).create();
-                        }
-
-                    }
-                }
-
-            } catch (InvalidObjectException | NotFoundException e) {
-                // Player is offline
-                // Will not happen
             } catch (IOException | InvalidConfigurationException e) {
+
+                sender.sendMessage(EyeOfOnyx.EOO + "There was a problem accessing one or more files. Check logs for stacktrace.");
                 throw new RuntimeException(e);
+
+            } catch (NotFoundException e) {
+                sender.sendMessage(EyeOfOnyx.EOO + player.getName() + " does not have a tribe-associated team or tag.");
+                return true;
             }
         }
 
@@ -132,4 +114,53 @@ public class CmdUpdatePlayer implements CommandExecutor {
 
         return true;
     }
+
+    private static void doUpdate(UUID uuid) throws NotFoundException, IOException, InvalidConfigurationException {
+
+        // Success
+        PlayerTribe.updateTribeOfPlayer(uuid);
+
+        for (int t = 0; t < RoyaltyBoard.getTribes().length; t++) {
+            for (int p = 0; p < RoyaltyBoard.getValidPositions().length; p++) {
+
+                if (Objects.equals(RoyaltyBoard.getUuid(t,p), uuid) && t != PlayerTribe.getTribeOfPlayer(uuid)) {
+
+                    // Notify attacker if exists
+                    UUID attacker = RoyaltyBoard.getAttacker(t,p);
+                    if (attacker != null) {
+                        int attackerPos = RoyaltyBoard.getPositionIndexOfUUID(attacker);
+                        RoyaltyBoard.setAttacking(t, attackerPos, null);
+                        new Notification(attacker, "Your challenge was canceled.", "The player you were challenging was removed from the royalty board, so your challenge was canceled.", NotificationType.GENERIC).create();
+                    }
+
+                    // Notify defender if exists
+                    if (p != RoyaltyBoard.RULER) {
+                        UUID attacking = RoyaltyBoard.getAttacking(t,p);
+                        if (attacking != null) {
+                            int defenderPos = RoyaltyBoard.getPositionIndexOfUUID(attacking);
+                            RoyaltyBoard.setAttacker(t, defenderPos, null);
+                            new Notification(attacker, "Your challenge was canceled.", "The player who was challenging you was removed from the royalty board, so your challenge was canceled.", NotificationType.GENERIC).create();
+                        }
+                    }
+
+                    // Remove any challenges
+                    for (Challenge challenge : Challenge.getChallenges()) {
+                        if (challenge.defender.equals(uuid) || challenge.attacker.equals(uuid)) Challenge.remove(challenge);
+                    }
+
+                    // Remove any challenge notifications
+                    for (Notification notification : Notification.getNotificationsOfPlayer(uuid)) {
+                        if (notification.type == NotificationType.CHALLENGE_ACCEPTED || notification.type == NotificationType.CHALLENGE_REQUESTED) Notification.removeNotification(notification);
+                    }
+
+                    RoyaltyBoard.removePlayer(t, p, true);
+                    RoyaltyBoard.updateBoard(t, false);
+                    RoyaltyBoard.updateDiscordBoard(t);
+                    new Notification(uuid, "You have been removed from the royalty board.", "You were removed from the royalty board because you changed your tribe. Any pending challenges have been canceled.", NotificationType.GENERIC).create();
+                }
+
+            }
+        }
+    }
+
 }
