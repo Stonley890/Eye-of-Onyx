@@ -25,6 +25,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.shanerx.mojang.Mojang;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -200,6 +201,40 @@ public class RoyaltyBoard {
 
             if (logChannel != null) logChannel.sendMessageEmbeds(builder.build()).setActionRows(actionRow).queue();
         });
+    }
+
+    public static void report(@Nullable String executor, String content) {
+
+        // Run async
+        Bukkit.getScheduler().runTaskAsynchronously(EyeOfOnyx.getPlugin(), () -> {
+
+            // Build embed
+            EmbedBuilder builder = new EmbedBuilder();
+
+            long channelID = plugin.getConfig().getLong("royalty-log-channel");
+
+            // Null executor means it was automatic
+            String recordedExecutor = "Eye of Onyx";
+            if (executor != null) recordedExecutor = executor;
+
+            try {
+                long discordID = Long.parseLong(recordedExecutor);
+
+                net.dv8tion.jda.api.entities.User user = Bot.getJda().retrieveUserById(discordID).complete();
+                builder.setFooter("This action was performed by " + user.getName(), user.getAvatarUrl());
+
+            } catch (NumberFormatException e) {
+                builder.setFooter("This action was performed by " + recordedExecutor);
+            }
+
+            builder.setDescription(content);
+
+            TextChannel logChannel = Bot.getJda().getTextChannelById(channelID);
+
+            if (logChannel != null) logChannel.sendMessageEmbeds(builder.build()).queue();
+
+        });
+
     }
 
     private static @NotNull StringBuilder writeChanges(@NotNull BoardPosition position) {

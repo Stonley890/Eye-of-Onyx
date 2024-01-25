@@ -272,14 +272,15 @@ public class CmdChallenge implements CommandExecutor {
                             int nextEmptyPosition = CIVILIAN;
 
                             // Iterate through positions (start at ruler)
-                            for (int i = 0; i < positions.length; i++) {
-                                nextEmptyPosition = i;
-                                Dreamvisitor.debug("Next empty position: " + i);
+                            for (int posToCheck = 0; posToCheck < positions.length; posToCheck++) {
+                                nextEmptyPosition = posToCheck;
+                                Dreamvisitor.debug("Next empty position: " + posToCheck);
                                 // If position is empty, break
-                                if (getUuid(playerTribe, i) == null) {
-                                    Dreamvisitor.debug("Position " + i + "is empty");
+                                if (getUuid(playerTribe, posToCheck) == null) {
+                                    Dreamvisitor.debug("Position " + posToCheck + "is empty");
                                     break;
                                 }
+                                nextEmptyPosition = CIVILIAN;
                             }
 
                             // If a position is available, do that

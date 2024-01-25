@@ -581,6 +581,11 @@ public class Discord extends ListenerAdapter {
                     RoyaltyBoard.getBoard().put(royaltyAction.affectedTribe, royaltyAction.oldState);
                     RoyaltyBoard.saveToDisk();
                     RoyaltyBoard.updateBoard(royaltyAction.affectedTribe, false);
+                    try {
+                        RoyaltyBoard.updateDiscordBoard(royaltyAction.affectedTribe);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
                     event.reply("✅ Values reverted.").queue();
                     event.getInteraction().editButton(button.asDisabled()).queue();
                     break;

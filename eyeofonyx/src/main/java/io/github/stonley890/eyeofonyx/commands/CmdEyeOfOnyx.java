@@ -45,7 +45,10 @@ public class CmdEyeOfOnyx implements CommandExecutor {
                         sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You do not have permission to run that command.");
                     else {
                         // There must be at least 2 arguments: /eyeofonxy ban <username>
-                        if /* there is another argument */ (args.length > 1) {
+                        if /* there is another argument */ (args.length == 1) {
+                            sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Missing arguments. /eyeofonyx ban <player>");
+                        }  /* there are no other arguments */
+                        else {
 
                             UUID uuid;
 
@@ -89,6 +92,8 @@ public class CmdEyeOfOnyx implements CommandExecutor {
                                                 e.printStackTrace();
                                             }
 
+                                            RoyaltyBoard.report(sender.getName(),  args[1] + " was banned from participating in royalty.");
+
                                             RoyaltyBoard.removePlayer(tribe, pos, true);
                                             BoardState newBoard = RoyaltyBoard.getBoardOf(tribe).clone();
                                             RoyaltyBoard.reportChange(new RoyaltyAction(sender.getName(), tribe, oldBoard, newBoard));
@@ -115,8 +120,6 @@ public class CmdEyeOfOnyx implements CommandExecutor {
 
                             }
 
-                        } else /* there are no other arguments */ {
-                            sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Missing arguments. /eyeofonyx ban <player>");
                         }
                     }
 
@@ -126,24 +129,23 @@ public class CmdEyeOfOnyx implements CommandExecutor {
                     if (!sender.hasPermission("eyeofonxy.ban"))
                         sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You do not have permission to run that command.");
                     else {
-                        if /* there is another argument */ (args.length > 1) {
+                        if /* there is another argument */ (args.length <= 1) {
+                            sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Missing arguments. /eyeofonyx ban <player>");
+                        } else {
                             try {
                                 UUID uuid = UUID.fromString(Utils.formatUuid(mojang.getUUIDOfUsername(args[1])));
                                 if /* player is banned */ (Banned.isPlayerBanned(uuid)) {
                                     Banned.removePlayer(uuid);
                                     sender.sendMessage(EyeOfOnyx.EOO + args[1] + " has been unbanned.");
+                                    RoyaltyBoard.report(sender.getName(),  args[1] + " was unbanned from participating in royalty.");
                                 } else /* player is not banned */ {
                                     sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "That player is not banned.");
                                 }
                             } catch (IllegalArgumentException e) {
                                 sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "That user could not be found.");
                             }
-
-                        } else {
-                            sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Missing arguments. /eyeofonyx ban <player>");
                         }
                     }
-
                 }
                 case "banlist" -> {
                     if (!sender.hasPermission("eyeofonxy.ban"))
@@ -200,6 +202,7 @@ public class CmdEyeOfOnyx implements CommandExecutor {
                         } else {
                             sender.sendMessage(EyeOfOnyx.EOO + "Eye of Onyx will disable in five seconds. Run /disable again to cancel.");
                             disabling = true;
+                            RoyaltyBoard.report(sender.getName(),  "Eye of Onyx is being disabled."); // this is async, so it may or may not have time?
                             Bukkit.getScheduler().runTaskLater(EyeOfOnyx.getPlugin(), disable, 100L);
                         }
                     }
@@ -325,7 +328,9 @@ public class CmdEyeOfOnyx implements CommandExecutor {
                                                 }
                                             }
 
-                                            if (tribeIndex > -1) {
+                                            if (tribeIndex == -1) {
+                                                sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Not a valid tribe! Acceptable values: " + Arrays.toString(RoyaltyBoard.getTribes()));
+                                            } else {
 
                                                 List<Location> waitingRooms = (List<Location>) main.getConfig().getList(key);
 
@@ -339,8 +344,6 @@ public class CmdEyeOfOnyx implements CommandExecutor {
 
                                                 sender.sendMessage(EyeOfOnyx.EOO + RoyaltyBoard.getTribes()[tribeIndex].toUpperCase() + " waiting room set to " + x + ", " + y + ", " + z + " in " + world.getName());
 
-                                            } else {
-                                                sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Not a valid tribe! Acceptable values: " + Arrays.toString(RoyaltyBoard.getTribes()));
                                             }
 
                                         } catch (NumberFormatException e) {
@@ -387,9 +390,11 @@ public class CmdEyeOfOnyx implements CommandExecutor {
 
                     if (RoyaltyBoard.isFrozen()) {
                         RoyaltyBoard.setFrozen(false);
+                        RoyaltyBoard.report(sender.getName(),  "The royalty board is now unfrozen.");
                         sender.sendMessage(EyeOfOnyx.EOO + "The royalty board is now unfrozen.");
                     } else {
                         RoyaltyBoard.setFrozen(true);
+                        RoyaltyBoard.report(sender.getName(),  "The royalty board is now frozen.");
                         sender.sendMessage(EyeOfOnyx.EOO + "The royalty board is now frozen.");
                     }
 

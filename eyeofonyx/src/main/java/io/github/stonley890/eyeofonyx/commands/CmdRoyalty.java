@@ -252,28 +252,36 @@ public class CmdRoyalty implements CommandExecutor {
 
         // If no other arguments, build and send full board
         if (args.length < 2) {
-            // Init a StringBuilder to store message for building
-            StringBuilder boardMessage = new StringBuilder();
+            sender.sendMessage(EyeOfOnyx.EOO + "Please wait.");
 
-            // Build for each tribe
-            for (int i = 0; i < teamNames.length; i++) {
-                boardMessage.append(buildBoard(i));
-            }
+            Bukkit.getScheduler().runTaskAsynchronously(EyeOfOnyx.getPlugin(), () -> {
+                // Init a StringBuilder to store message for building
+                StringBuilder boardMessage = new StringBuilder();
 
-            // Send built message
-            sender.sendMessage(EyeOfOnyx.EOO + ChatColor.YELLOW + "ROYALTY BOARD" + boardMessage);
+                // Build for each tribe
+                for (int i = 0; i < teamNames.length; i++) {
+                    boardMessage.append(buildBoard(i));
+                }
+
+                // Send built message
+                sender.sendMessage(EyeOfOnyx.EOO + ChatColor.YELLOW + "ROYALTY BOARD" + boardMessage);
+            });
 
         } // If next argument is a tribe, send just that board
         else if (Arrays.stream(tribes).anyMatch(args[1]::contains)) {
+            sender.sendMessage(EyeOfOnyx.EOO + "Please wait.");
 
-            // Init a StringBuilder to store message for building
-            StringBuilder boardMessage;
+            Bukkit.getScheduler().runTaskAsynchronously(EyeOfOnyx.getPlugin(), () -> {
+                // Init a StringBuilder to store message for building
+                StringBuilder boardMessage;
 
-            // Find index of tribe and build
-            boardMessage = buildBoard(Arrays.binarySearch(tribes, args[1]));
+                // Find index of tribe and build
+                boardMessage = buildBoard(Arrays.binarySearch(tribes, args[1]));
 
-            // Send built message
-            sender.sendMessage(EyeOfOnyx.EOO + ChatColor.YELLOW + "ROYALTY BOARD" + boardMessage);
+                // Send built message
+                sender.sendMessage(EyeOfOnyx.EOO + ChatColor.YELLOW + "ROYALTY BOARD" + boardMessage);
+            });
+
 
         } else {
             // Invalid argument
