@@ -309,7 +309,7 @@ public class CmdChallenge implements CommandExecutor {
                             // Determine which position is being targeted
                             if (args[0].equals("position1")) {
                                 targetPosition = NOBLE_PRESUMPTIVE;
-                            } else if (args[0].equals("positionn2")) {
+                            } else if (args[0].equals("position2")) {
                                 targetPosition = NOBLE_APPARENT;
                             } else {
                                 builder.color(net.md_5.bungee.api.ChatColor.RED).append("Invalid arguments!");
@@ -322,7 +322,7 @@ public class CmdChallenge implements CommandExecutor {
                             // Determine which position is being targeted
                             if (args[0].equals("position1")) {
                                 targetPosition = HEIR_PRESUMPTIVE;
-                            } else if (args[0].equals("positionn2")) {
+                            } else if (args[0].equals("position2")) {
                                 targetPosition = HEIR_APPARENT;
                             } else {
                                 builder.color(net.md_5.bungee.api.ChatColor.RED).append("Invalid arguments!");
