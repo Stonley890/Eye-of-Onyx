@@ -137,9 +137,10 @@ public class CmdChallenge implements CommandExecutor {
                     for (int i = 0; i < positions.length; i++) {
                         nextEmptyPosition = i;
                         // If position is empty, break
-                        if (RoyaltyBoard.getUuid(playerTribe, i) == null) {
+                        if (RoyaltyBoard.isPositionEmpty(playerTribe, i)) {
                             break;
                         }
+                        nextEmptyPosition = CIVILIAN;
                     }
 
                     // If a position is available, offer
