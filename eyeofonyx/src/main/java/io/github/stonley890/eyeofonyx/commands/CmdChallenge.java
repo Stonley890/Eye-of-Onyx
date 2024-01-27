@@ -186,7 +186,7 @@ public class CmdChallenge implements CommandExecutor {
 
                         builder.append(button)
                                 .color(net.md_5.bungee.api.ChatColor.RESET)
-                                .append("\n \n")
+                                .append("\n \n").reset()
                                 .append(positions[NOBLE_APPARENT].toUpperCase().replace('_', ' '))
                                 .append("\n")
                                 .append(mojang.getPlayerProfile(RoyaltyBoard.getUuid(playerTribe, NOBLE_APPARENT).toString()).getUsername())
@@ -210,7 +210,7 @@ public class CmdChallenge implements CommandExecutor {
                     button.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/challenge position1"));
 
                     builder.append(button)
-                            .append("\n \n")
+                            .append("\n \n").reset()
                             .append(positions[HEIR_APPARENT].toUpperCase().replace('_', ' '))
                             .append("\n")
                             .append(mojang.getPlayerProfile(RoyaltyBoard.getUuid(playerTribe, HEIR_APPARENT).toString()).getUsername())
