@@ -4,6 +4,7 @@ import io.github.stonley890.dreamvisitor.Dreamvisitor;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.jetbrains.annotations.NotNull;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
@@ -34,7 +35,7 @@ public class BoardState {
      * @param boardStates the {@code Map<Integer, BoardState>} to convert.
      * @return a {@link FileConfiguration} with the data.
      */
-    public static YamlConfiguration createYamlConfiguration(Map<Integer, BoardState> boardStates) {
+    public static @NotNull YamlConfiguration createYamlConfiguration(Map<Integer, BoardState> boardStates) {
 
         YamlConfiguration config = new YamlConfiguration();
 
@@ -87,7 +88,7 @@ public class BoardState {
      * @param config a {@link FileConfiguration} that contains royalty board information.
      * @return a {@code Map<Integer, BoardState>}.
      */
-    public static Map<Integer, BoardState> fromYamlConfig(FileConfiguration config) {
+    public static @NotNull Map<Integer, BoardState> fromYamlConfig(FileConfiguration config) {
 
         Map<Integer, BoardState> yamlBoard = new HashMap<>(10);
 

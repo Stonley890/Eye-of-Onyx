@@ -15,7 +15,7 @@ import java.nio.charset.StandardCharsets;
 
 public class AvailabilityHandler implements HttpHandler {
     @Override
-    public void handle(HttpExchange httpExchange) throws IOException {
+    public void handle(@NotNull HttpExchange httpExchange) throws IOException {
 
         // Load the Thymeleaf template engine with the correct template resolver
         TemplateEngine templateEngine = new TemplateEngine();

@@ -188,9 +188,9 @@ public class CmdChallenge implements CommandExecutor {
                                 .color(net.md_5.bungee.api.ChatColor.RESET)
                                 .append("\n \n").reset()
                                 .append(positions[NOBLE_APPARENT].toUpperCase().replace('_', ' '))
-                                .append("\n")
+                                .append(" ")
                                 .append(mojang.getPlayerProfile(RoyaltyBoard.getUuid(playerTribe, NOBLE_APPARENT).toString()).getUsername())
-                                .append(" ");
+                                .append("\n");
 
                         button.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/challenge position2"));
 
@@ -212,9 +212,9 @@ public class CmdChallenge implements CommandExecutor {
                     builder.append(button)
                             .append("\n \n").reset()
                             .append(positions[HEIR_APPARENT].toUpperCase().replace('_', ' '))
-                            .append("\n")
+                            .append(" ")
                             .append(mojang.getPlayerProfile(RoyaltyBoard.getUuid(playerTribe, HEIR_APPARENT).toString()).getUsername())
-                            .append(" ");
+                            .append("\n");
 
                     button.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/challenge position2"));
 
@@ -405,7 +405,7 @@ public class CmdChallenge implements CommandExecutor {
                         TextComponent link = new TextComponent("[Submit Availability]");
                         link.setColor(net.md_5.bungee.api.ChatColor.YELLOW);
                         link.setUnderlined(true);
-                        link.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "http://" + EyeOfOnyx.getPlugin().getConfig().getString("address") + ":8000/availability"));
+                        link.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "http://" + EyeOfOnyx.getPlugin().getConfig().getString("address") + ":" + EyeOfOnyx.getPlugin().getConfig().getInt("port") + "/availability"));
                         link.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("Click to open the web form.")));
 
                         String id = String.format("%04d", new Random().nextInt(10000));

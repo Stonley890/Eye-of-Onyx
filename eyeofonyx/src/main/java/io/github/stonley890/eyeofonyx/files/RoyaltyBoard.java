@@ -925,7 +925,7 @@ public class RoyaltyBoard {
      * @param pos The position to fetch from.
      * @return The String UUID located at the given location.
      */
-    public static java.util.UUID getUuid(int tribe, int pos) {
+    public static @Nullable java.util.UUID getUuid(int tribe, int pos) {
         return royaltyBoard.get(tribe).getPos(pos).player;
     }
 
@@ -936,7 +936,7 @@ public class RoyaltyBoard {
      * @param pos the position to fetch from.
      * @return the character name located at the given location.
      */
-    public static String getOcName(int tribe, int pos) {
+    public static @Nullable String getOcName(int tribe, int pos) {
         return royaltyBoard.get(tribe).getPos(pos).name;
     }
 
@@ -947,7 +947,7 @@ public class RoyaltyBoard {
      * @param pos the position to fetch from.
      * @return the date joined located at the given location.
      */
-    public static LocalDateTime getJoinedPosDate(int tribe, int pos) {
+    public static @Nullable LocalDateTime getJoinedPosDate(int tribe, int pos) {
         return royaltyBoard.get(tribe).getPos(pos).joinedPosition;
     }
 
@@ -958,7 +958,7 @@ public class RoyaltyBoard {
      * @param pos the position to fetch from.
      * @return the date joined located at the given location.
      */
-    public static LocalDateTime getJoinedBoardDate(int tribe, int pos) {
+    public static @Nullable LocalDateTime getJoinedBoardDate(int tribe, int pos) {
         return royaltyBoard.get(tribe).getPos(pos).joinedBoard;
     }
 
@@ -969,7 +969,7 @@ public class RoyaltyBoard {
      * @param pos the position to fetch from.
      * @return The date joined last online at the given location.
      */
-    public static LocalDateTime getLastOnline(int tribe, int pos) {
+    public static @Nullable LocalDateTime getLastOnline(int tribe, int pos) {
         return royaltyBoard.get(tribe).getPos(pos).lastOnline;
     }
 
@@ -991,7 +991,7 @@ public class RoyaltyBoard {
      * @param pos The position to fetch from.
      * @return The date last challenged at the given location.
      */
-    public static LocalDateTime getLastChallengeDate(int tribe, int pos) {
+    public static @Nullable LocalDateTime getLastChallengeDate(int tribe, int pos) {
         return royaltyBoard.get(tribe).getPos(pos).lastChallenge;
     }
 
@@ -1013,7 +1013,7 @@ public class RoyaltyBoard {
      * @param pos The position to fetch from.
      * @return The attacker at the given location.
      */
-    public static UUID getAttacker(int tribe, int pos) {
+    public static @Nullable UUID getAttacker(int tribe, int pos) {
         return royaltyBoard.get(tribe).getPos(pos).challenger;
     }
 
@@ -1034,7 +1034,7 @@ public class RoyaltyBoard {
      * @param tribe    The tribe to fetch from.
      * @param pos The position to fetch from.
      */
-    public static UUID getAttacking(int tribe, int pos) {
+    public static @Nullable UUID getAttacking(int tribe, int pos) {
         return royaltyBoard.get(tribe).getPos(pos).challenging;
     }
 

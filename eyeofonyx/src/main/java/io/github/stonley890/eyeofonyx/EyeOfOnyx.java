@@ -152,57 +152,58 @@ public class EyeOfOnyx extends JavaPlugin {
                 }
 
                 // Check for unnoticed challenges
-                for (int tribe = 0; tribe < 10; tribe++) {
-                    for (int pos = 0; pos < 5; pos++) {
+                for (int tribe = 0; tribe < RoyaltyBoard.getTribes().length; tribe++) {
+                    for (int pos = 0; pos < RoyaltyBoard.getValidPositions().length; pos++) {
                         UUID uuid = RoyaltyBoard.getUuid(tribe, pos);
-                        try {
-                            List<Notification> notifications = Notification.getNotificationsOfPlayer(uuid);
+                        if (uuid != null)
+                            try {
+                                List<Notification> notifications = Notification.getNotificationsOfPlayer(uuid);
 
-                            for (Notification notification : notifications) {
-                                // If notification is CHALLENGE_REQUESTED and time is beyond challenge-acknowledgement-time
-                                if (notification.type == NotificationType.CHALLENGE_REQUESTED && notification.time.isBefore(LocalDateTime.now().minusDays(getConfig().getInt("challenge-acknowledgement-time")))) {
+                                for (Notification notification : notifications) {
+                                    // If notification is CHALLENGE_REQUESTED and time is beyond challenge-acknowledgement-time
+                                    if (notification.type == NotificationType.CHALLENGE_REQUESTED && notification.time.isBefore(LocalDateTime.now().minusDays(getConfig().getInt("challenge-acknowledgement-time")))) {
 
-                                    // Check if it was seen or not
-                                    if (!notification.seen) {
+                                        // Check if it was seen or not
+                                        if (!notification.seen) {
 
-                                        // If seen, cancel the challenge.
-                                        Challenge.removeChallengesOfPlayers(uuid, RoyaltyBoard.getAttacker(tribe, pos));
+                                            // If seen, cancel the challenge.
+                                            Challenge.removeChallengesOfPlayers(uuid, RoyaltyBoard.getAttacker(tribe, pos));
 
-                                        // Send expired notification to defender
-                                        Notification.removeNotification(notification);
-                                        new Notification(uuid, "You missed a challenge notification.", "You did not acknowledge a challenge request within the allowed time, but you will remain on the royalty board because you were unable to receive it.", NotificationType.GENERIC).create();
+                                            // Send expired notification to defender
+                                            Notification.removeNotification(notification);
+                                            new Notification(uuid, "You missed a challenge notification.", "You did not acknowledge a challenge request within the allowed time, but you will remain on the royalty board because you were unable to receive it.", NotificationType.GENERIC).create();
 
-                                        // Send notification to attacker
-                                        UUID attackerUuid = RoyaltyBoard.getAttacker(PlayerTribe.getTribeOfPlayer(uuid), RoyaltyBoard.getPositionIndexOfUUID(uuid));
-                                        if (attackerUuid != null) {
-                                            String defenderUsername = new Mojang().connect().getPlayerProfile(uuid.toString()).getUsername();
-                                            new Notification(attackerUuid, "Your challenge to " + defenderUsername + " was not seen.", "Your challenge request was nullified because the user you challenged was unable to receive the notification.", NotificationType.GENERIC).create();
+                                            // Send notification to attacker
+                                            UUID attackerUuid = RoyaltyBoard.getAttacker(PlayerTribe.getTribeOfPlayer(uuid), RoyaltyBoard.getPositionIndexOfUUID(uuid));
+                                            if (attackerUuid != null) {
+                                                String defenderUsername = new Mojang().connect().getPlayerProfile(uuid.toString()).getUsername();
+                                                new Notification(attackerUuid, "Your challenge to " + defenderUsername + " was not seen.", "Your challenge request was nullified because the user you challenged was unable to receive the notification.", NotificationType.GENERIC).create();
+                                            }
+
+                                            // Set data
+                                            RoyaltyBoard.setAttacker(tribe, pos, null);
+
+                                        } else {
+                                            // Kick from board if seen and ignored.
+
+                                            // Remove all notifications that are CHALLENGE_REQUESTED
+                                            Notification.removeNotificationsOfPlayer(uuid, NotificationType.CHALLENGE_REQUESTED);
+
+                                            new Notification(uuid, "You were removed from the royalty board!", "You did not acknowledge a challenge request within the allowed time.", NotificationType.GENERIC).create();
+
+                                            RoyaltyBoard.removePlayer(tribe, pos, true);
+                                            RoyaltyBoard.updateBoard(tribe, false);
+                                            RoyaltyBoard.updateDiscordBoard(tribe);
+
+                                            break;
                                         }
 
-                                        // Set data
-                                        RoyaltyBoard.setAttacker(tribe, pos, null);
-
-                                    } else {
-                                        // Kick from board if seen and ignored.
-
-                                        // Remove all notifications that are CHALLENGE_REQUESTED
-                                        Notification.removeNotificationsOfPlayer(uuid, NotificationType.CHALLENGE_REQUESTED);
-
-                                        new Notification(uuid, "You were removed from the royalty board!", "You did not acknowledge a challenge request within the allowed time.", NotificationType.GENERIC).create();
-
-                                        RoyaltyBoard.removePlayer(tribe, pos, true);
-                                        RoyaltyBoard.updateBoard(tribe, false);
-                                        RoyaltyBoard.updateDiscordBoard(tribe);
-
-                                        break;
                                     }
-
                                 }
-                            }
 
-                        } catch (IOException | InvalidConfigurationException | NotFoundException e) {
-                            throw new RuntimeException(e);
-                        }
+                            } catch (IOException | InvalidConfigurationException | NotFoundException e) {
+                                throw new RuntimeException(e);
+                            }
                     }
                 }
 

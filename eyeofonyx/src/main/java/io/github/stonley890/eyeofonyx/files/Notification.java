@@ -72,7 +72,7 @@ public class Notification {
      * @param notification The notification to save.
      * @throws IOException If file could not be accessed.
      */
-    public static void saveNotification(Notification notification) throws IOException, InvalidConfigurationException {
+    public static void saveNotification(@NotNull Notification notification) throws IOException, InvalidConfigurationException {
 
         /* Notifications in notification.yml are saved as a list of string lists for each player
 
@@ -126,7 +126,7 @@ public class Notification {
      * @throws IOException If the file could not be accessed.
      * @throws InvalidConfigurationException If the configuration is invalid.
      */
-    public static @NotNull List<Notification> getNotificationsOfPlayer(UUID uuid) throws IOException, InvalidConfigurationException {
+    public static @NotNull List<Notification> getNotificationsOfPlayer(@NotNull UUID uuid) throws IOException, InvalidConfigurationException {
 
         fileConfig.load(file);
 
@@ -139,9 +139,6 @@ public class Notification {
         } catch (NullPointerException e) {
             return notifications;
         }
-
-
-
 
         if (yamlNotifications == null || yamlNotifications.isEmpty()) {
             notifications = new ArrayList<>();
@@ -169,7 +166,7 @@ public class Notification {
         return notifications;
     }
 
-    public static void removeNotification(Notification notification) throws IOException, InvalidConfigurationException {
+    public static void removeNotification(@NotNull Notification notification) throws IOException, InvalidConfigurationException {
         fileConfig.load(file);
 
         // Get list of notifications of given player
@@ -369,7 +366,7 @@ public class Notification {
         }
     }
 
-    public static void removeNotificationsOfPlayer(UUID uuid, NotificationType type) {
+    public static void removeNotificationsOfPlayer(@NotNull UUID uuid, NotificationType type) {
         try {
             for (Notification notification : Notification.getNotificationsOfPlayer(uuid)) {
                 if (notification.type == type)
