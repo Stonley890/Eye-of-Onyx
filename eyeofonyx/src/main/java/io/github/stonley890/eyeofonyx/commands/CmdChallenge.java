@@ -383,7 +383,7 @@ public class CmdChallenge implements CommandExecutor {
                             if (playerPosition != 5) RoyaltyBoard.setAttacking(playerTribe, playerPosition, targetUuid);
 
                             BoardState newBoard = RoyaltyBoard.getBoardOf(playerTribe).clone();
-                            RoyaltyBoard.reportChange(new RoyaltyAction(sender.getName(), playerTribe, oldBoard, newBoard));
+                            if (!oldBoard.equals(newBoard)) RoyaltyBoard.reportChange(new RoyaltyAction(sender.getName(), playerTribe, oldBoard, newBoard));
 
                             // create notification for target
                             String title = "You've been challenged!";

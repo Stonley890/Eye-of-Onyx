@@ -360,7 +360,13 @@ public class RoyaltyBoard {
 
                     // Notify the user who has moved
                     if (royaltyBoard.get(tribe).getPos(emptyPosition).player != null) {
-                        new Notification(royaltyBoard.get(tribe).getPos(emptyPosition).player, "You've been promoted!", "A player was removed from the royalty board and you moved into a higher position.", NotificationType.GENERIC).create();
+                        new Notification(royaltyBoard.get(tribe).getPos(emptyPosition).player, "You've been promoted!", "A player was removed from the royalty board and you moved into a higher position. Because of this, any challenges have been canceled.", NotificationType.GENERIC).create();
+
+                        // Remove challenges
+                        Challenge.removeChallengesOfPlayer(royaltyBoard.get(tribe).getPos(emptyPosition).player, null);
+
+                        // Remove notifications
+                        Notification.removeNotificationsOfPlayer(uuid, NotificationType.CHALLENGE_REQUESTED);
                     }
 
                     // This position is now empty
