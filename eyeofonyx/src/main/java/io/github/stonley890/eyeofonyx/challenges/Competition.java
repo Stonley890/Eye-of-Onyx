@@ -1,6 +1,6 @@
 package io.github.stonley890.eyeofonyx.challenges;
 
-import io.github.stonley890.dreamvisitor.Dreamvisitor;
+import io.github.stonley890.dreamvisitor.Main;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import io.github.stonley890.eyeofonyx.files.Challenge;
 import io.github.stonley890.eyeofonyx.files.ChallengeType;
@@ -28,7 +28,7 @@ public class Competition {
 
     public static void call(Challenge challenge) throws IOException, InvalidConfigurationException {
 
-        Dreamvisitor.debug("Challenge " + challenge.attacker + " vs " + challenge.defender + " is getting ready to start.");
+        Main.debug("Challenge " + challenge.attacker + " vs " + challenge.defender + " is getting ready to start.");
         // Add to activeChallenges list
         try {
             activeChallenge = new Competition(challenge);
@@ -52,7 +52,7 @@ public class Competition {
 
     public void callToJoin() {
 
-        Dreamvisitor.debug("Calling to join...");
+        Main.debug("Calling to join...");
 
         ComponentBuilder message = new ComponentBuilder(EyeOfOnyx.EOO);
         message.append("Your challenge is starting!\n");
@@ -63,15 +63,15 @@ public class Competition {
         message.append(button);
         message.append("\n");
 
-        Dreamvisitor.debug("Message built. Sending to " + this.attacker + " and " + this.defender + ".");
+        Main.debug("Message built. Sending to " + this.attacker + " and " + this.defender + ".");
 
         if (Bukkit.getPlayer(this.attacker) != null) {
             Bukkit.getPlayer(this.attacker).spigot().sendMessage(message.create());
-            Dreamvisitor.debug("Send message to attacker.");
+            Main.debug("Send message to attacker.");
         }
         if (Bukkit.getPlayer(this.defender) != null) {
             Bukkit.getPlayer(this.defender).spigot().sendMessage(message.create());
-            Dreamvisitor.debug("Send message to defender.");
+            Main.debug("Send message to defender.");
         }
     }
 

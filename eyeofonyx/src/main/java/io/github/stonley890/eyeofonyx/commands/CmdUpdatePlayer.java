@@ -1,6 +1,6 @@
 package io.github.stonley890.eyeofonyx.commands;
 
-import io.github.stonley890.dreamvisitor.Utils;
+import io.github.stonley890.dreamvisitor.data.PlayerUtility;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import io.github.stonley890.eyeofonyx.files.*;
 import javassist.NotFoundException;
@@ -50,7 +50,7 @@ public class CmdUpdatePlayer implements CommandExecutor {
             if (entities.isEmpty()) {
 
                 // try offline search
-                UUID offlineUuid = Utils.getUUIDOfUsername(args[0]);
+                UUID offlineUuid = PlayerUtility.getUUIDOfUsername(args[0]);
                 if (offlineUuid == null) {
                     sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Could not find a player by that name.");
                     return true;

@@ -14,11 +14,8 @@ import org.jetbrains.annotations.NotNull;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-
-import static io.github.stonley890.dreamvisitor.Dreamvisitor.plugin;
 
 public class Utils {
 

@@ -1,6 +1,5 @@
 package io.github.stonley890.eyeofonyx.files;
 
-import io.github.stonley890.dreamvisitor.Dreamvisitor;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import org.bukkit.Bukkit;
 

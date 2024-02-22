@@ -1,6 +1,8 @@
 package io.github.stonley890.eyeofonyx.commands;
 
-import io.github.stonley890.dreamvisitor.Dreamvisitor;
+import io.github.stonley890.dreamvisitor.Bot;
+import io.github.stonley890.dreamvisitor.Main;
+import io.github.stonley890.dreamvisitor.data.PlayerUtility;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import io.github.stonley890.eyeofonyx.Utils;
 import io.github.stonley890.eyeofonyx.files.*;
@@ -293,7 +295,7 @@ public class CmdRoyalty implements CommandExecutor {
     // royalty clear <tribe> <position>
     static void clear(CommandSender sender, String @NotNull [] args) {
 
-        Dreamvisitor.debug("Clearing...");
+        Main.debug("Clearing...");
 
         String tribe = args[1];
         String pos = args[2];
@@ -373,7 +375,7 @@ public class CmdRoyalty implements CommandExecutor {
                 String challenging = "N/A";
 
                 if (uuid != null) {
-                    username = io.github.stonley890.dreamvisitor.Utils.getUsernameOfUuid(uuid);
+                    username = PlayerUtility.getUsernameOfUuid(uuid);
                     name = RoyaltyBoard.getOcName(tribeIndex, posIndex);
                     joinedPos = RoyaltyBoard.getJoinedPosDate(tribeIndex, posIndex).toString();
                     joinedBoard = RoyaltyBoard.getJoinedBoardDate(tribeIndex, posIndex).toString();
@@ -552,7 +554,7 @@ public class CmdRoyalty implements CommandExecutor {
                             value = "N/A";
                             UUID challengerUuid = RoyaltyBoard.getAttacker(tribeIndex, posIndex);
                             if (challengerUuid != null) {
-                                value = io.github.stonley890.dreamvisitor.Utils.getUsernameOfUuid(challengerUuid);
+                                value = PlayerUtility.getUsernameOfUuid(challengerUuid);
                             }
                         }
 
@@ -560,7 +562,7 @@ public class CmdRoyalty implements CommandExecutor {
                             value = "N/A";
                             UUID challengingUuid = RoyaltyBoard.getAttacking(tribeIndex, posIndex);
                             if (challengingUuid != null) {
-                                value = io.github.stonley890.dreamvisitor.Utils.getUsernameOfUuid(challengingUuid);
+                                value = PlayerUtility.getUsernameOfUuid(challengingUuid);
                             }
                         }
                     }
@@ -697,7 +699,7 @@ public class CmdRoyalty implements CommandExecutor {
                         RoyaltyBoard.updateDiscordBoard(tribeIndex);
                     } catch (IOException e) {
                         sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "An I/O error occurred while attempting to update Discord board.");
-                        if (Dreamvisitor.debug) e.printStackTrace();
+                        if (Main.debugMode) e.printStackTrace();
                     }
                     sender.sendMessage(EyeOfOnyx.EOO + "Set " + key.toUpperCase() + " for " + teamNames[tribeIndex] + " " + validPositions[posIndex].replaceAll("_", " ") + " to " + ChatColor.YELLOW + value);
 

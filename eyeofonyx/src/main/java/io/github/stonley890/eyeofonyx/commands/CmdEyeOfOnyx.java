@@ -1,6 +1,6 @@
 package io.github.stonley890.eyeofonyx.commands;
 
-import io.github.stonley890.dreamvisitor.Dreamvisitor;
+import io.github.stonley890.dreamvisitor.Main;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import io.github.stonley890.eyeofonyx.Utils;
 import io.github.stonley890.eyeofonyx.files.*;
@@ -55,7 +55,7 @@ public class CmdEyeOfOnyx implements CommandExecutor {
                             try {
                                 // Get UUID
                                 String stringUuid = mojang.getUUIDOfUsername(args[1]);
-                                Dreamvisitor.debug("Checking username: " + args[1] + " - " + stringUuid);
+                                Main.debug("Checking username: " + args[1] + " - " + stringUuid);
                                 uuid = UUID.fromString(Utils.formatUuid(mojang.getUUIDOfUsername(args[1])));
 
                             } catch (IllegalArgumentException e) {
@@ -401,7 +401,7 @@ public class CmdEyeOfOnyx implements CommandExecutor {
                 } case "senddiscord" -> {
 
                     // Clear list of recorded messages
-                    List<Long> messages = Dreamvisitor.getPlugin().getConfig().getLongList("royalty-board-message");
+                    List<Long> messages = Main.getPlugin().getConfig().getLongList("royalty-board-message");
                     messages.clear();
                     EyeOfOnyx.getPlugin().getConfig().set("royalty-board-message", messages);
                     EyeOfOnyx.getPlugin().saveConfig();

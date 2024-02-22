@@ -1,9 +1,9 @@
 package io.github.stonley890.eyeofonyx;
 
 import io.github.stonley890.dreamvisitor.Bot;
-import io.github.stonley890.dreamvisitor.Dreamvisitor;
-import io.github.stonley890.dreamvisitor.Utils;
+import io.github.stonley890.dreamvisitor.Main;
 import io.github.stonley890.dreamvisitor.data.AccountLink;
+import io.github.stonley890.dreamvisitor.data.PlayerUtility;
 import io.github.stonley890.eyeofonyx.files.*;
 import javassist.NotFoundException;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -220,7 +220,7 @@ public class Discord extends ListenerAdapter {
                         event.reply("Required teams do not exist!").queue();
                     } catch (NotFoundException e) {
                         event.reply("Player is not associated with a tribe!").queue();
-                        if (Dreamvisitor.debug) e.printStackTrace();
+                        if (Main.debugMode) e.printStackTrace();
                     }
 
 
@@ -531,14 +531,14 @@ public class Discord extends ListenerAdapter {
 
                         // OLD
                         if (position.player != null) uuid = position.player.toString();
-                        if (position.player != null) username = Utils.getUsernameOfUuid(uuid);
+                        if (position.player != null) username = PlayerUtility.getUsernameOfUuid(uuid);
                         if (position.name != null) ocName = position.name;
                         if (position.lastOnline != null) lastOnline = position.lastOnline.toString();
                         if (position.lastChallenge != null) lastChallenge = position.lastChallenge.toString();
                         if (position.joinedBoard != null) joinedBoard = position.joinedBoard.toString();
                         if (position.joinedPosition != null) joinedPos = position.joinedPosition.toString();
-                        if (position.challenger != null) challenger = Utils.getUsernameOfUuid(position.challenger.toString());
-                        if (position.challenging != null) challenging = Utils.getUsernameOfUuid(position.challenging.toString());
+                        if (position.challenger != null) challenger = PlayerUtility.getUsernameOfUuid(position.challenger.toString());
+                        if (position.challenging != null) challenging = PlayerUtility.getUsernameOfUuid(position.challenging.toString());
 
                         String discordUser = "N/A";
 
@@ -550,16 +550,16 @@ public class Discord extends ListenerAdapter {
                             // No user
                         }
 
-                        values.append("\nPlayer: ").append(io.github.stonley890.dreamvisitor.Utils.escapeMarkdownFormatting(username))
+                        values.append("\nPlayer: ").append(Bot.escapeMarkdownFormatting(username))
                                 .append("\nUUID: ").append(uuid)
                                 .append("\nUser: ").append(discordUser)
-                                .append("\nOC Name: ").append(io.github.stonley890.dreamvisitor.Utils.escapeMarkdownFormatting(ocName))
+                                .append("\nOC Name: ").append(Bot.escapeMarkdownFormatting(ocName))
                                 .append("\nLast Online: ").append(lastOnline)
                                 .append("\nLast Challenge: ").append(lastChallenge)
                                 .append("\nDate Joined Board: ").append(joinedBoard)
                                 .append("\nDate Joined Position: ").append(joinedPos)
-                                .append("\nChallenger: ").append(io.github.stonley890.dreamvisitor.Utils.escapeMarkdownFormatting(challenger))
-                                .append("\nChallenging: ").append(io.github.stonley890.dreamvisitor.Utils.escapeMarkdownFormatting(challenging));
+                                .append("\nChallenger: ").append(Bot.escapeMarkdownFormatting(challenger))
+                                .append("\nChallenging: ").append(Bot.escapeMarkdownFormatting(challenging));
 
                         embed.addField(RoyaltyBoard.getValidPositions()[pos].replace("_", " ").toUpperCase(), values.toString(), false);
 

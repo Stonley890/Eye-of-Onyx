@@ -1,6 +1,6 @@
 package io.github.stonley890.eyeofonyx.commands;
 
-import io.github.stonley890.dreamvisitor.Dreamvisitor;
+import io.github.stonley890.dreamvisitor.Main;
 import io.github.stonley890.dreamvisitor.data.AccountLink;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import io.github.stonley890.eyeofonyx.challenges.Competition;
@@ -249,14 +249,14 @@ public class CmdChallenge implements CommandExecutor {
                 switch (args[0]) {
                     case "position1", "position2" -> {
 
-                        Dreamvisitor.debug("Initiating challenge");
+                        Main.debug("Initiating challenge");
 
                         ComponentBuilder builder = new ComponentBuilder();
                         builder.append(EyeOfOnyx.EOO);
 
                         int targetPosition;
 
-                        Dreamvisitor.debug("Checking for validity");
+                         Main.debug("Checking for validity");
 
                         // Check for active challenge
                         if (Competition.activeChallenge != null) {
@@ -267,7 +267,7 @@ public class CmdChallenge implements CommandExecutor {
                         // Make sure challenge is valid
                         if (playerPosition == CIVILIAN) {
 
-                            Dreamvisitor.debug("Player is civilian");
+                            Main.debug("Player is civilian");
 
                             // Check for any empty positions
                             int nextEmptyPosition = CIVILIAN;
@@ -275,10 +275,10 @@ public class CmdChallenge implements CommandExecutor {
                             // Iterate through positions (start at ruler)
                             for (int posToCheck = 0; posToCheck < positions.length; posToCheck++) {
                                 nextEmptyPosition = posToCheck;
-                                Dreamvisitor.debug("Next empty position: " + posToCheck);
+                                Main.debug("Next empty position: " + posToCheck);
                                 // If position is empty, break
                                 if (getUuid(playerTribe, posToCheck) == null) {
-                                    Dreamvisitor.debug("Position " + posToCheck + "is empty");
+                                    Main.debug("Position " + posToCheck + "is empty");
                                     break;
                                 }
                                 nextEmptyPosition = CIVILIAN;
@@ -286,14 +286,14 @@ public class CmdChallenge implements CommandExecutor {
 
                             // If a position is available, do that
                             if (nextEmptyPosition < CIVILIAN) {
-                                Dreamvisitor.debug("Position available. Skipping challenge process.");
+                                Main.debug("Position available. Skipping challenge process.");
 
                                 BoardState oldBoard = getBoardOf(playerTribe).clone();
                                 RoyaltyBoard.set(playerTribe, nextEmptyPosition, new BoardPosition(player.getUniqueId(), null, LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now(), null, null));
                                 BoardState newBoard = getBoardOf(playerTribe).clone();
                                 reportChange(new RoyaltyAction(player.getName(), playerTribe, oldBoard, newBoard));
                                 updateBoard(playerTribe, false);
-                                Dreamvisitor.debug("Board updated.");
+                                Main.debug("Board updated.");
 
                                 sender.sendMessage(EyeOfOnyx.EOO + "You are now " + getValidPositions()[nextEmptyPosition].toUpperCase().replace("_", " ") + " of the " + getTeamNames()[playerTribe].toUpperCase() + "s!");
                                 try {
@@ -304,7 +304,7 @@ public class CmdChallenge implements CommandExecutor {
                                 return true;
                             }
 
-                            Dreamvisitor.debug("No extra positions available.");
+                            Main.debug("No extra positions available.");
 
                             // Determine which position is being targeted
                             if (args[0].equals("position1")) {
@@ -362,6 +362,7 @@ public class CmdChallenge implements CommandExecutor {
                                 // Get last challenge
                                 LocalDateTime targetChallenge = RoyaltyBoard.getLastChallengeDate(playerTribe, targetPosition);
                                 // Compare with cooldown time
+                                assert targetChallenge != null;
                                 targetChallenge = targetChallenge.plusDays(EyeOfOnyx.getPlugin().getConfig().getInt("challenge-cool-down"));
                                 if (RoyaltyBoard.isOnCoolDown(playerTribe, targetPosition)) {
                                     builder.append("That player is on movement cooldown until ")

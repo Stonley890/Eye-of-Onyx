@@ -2,7 +2,7 @@ package io.github.stonley890.eyeofonyx;
 
 import com.sun.net.httpserver.HttpServer;
 import io.github.stonley890.dreamvisitor.Bot;
-import io.github.stonley890.dreamvisitor.Dreamvisitor;
+import io.github.stonley890.dreamvisitor.Main;
 import io.github.stonley890.eyeofonyx.challenges.Competition;
 import io.github.stonley890.eyeofonyx.commands.*;
 import io.github.stonley890.eyeofonyx.commands.tabcomplete.TabCompetition;
@@ -79,11 +79,11 @@ public class EyeOfOnyx extends JavaPlugin {
             Bukkit.getLogger().warning("An I/O exception of some sort has occurred. Eye of Onyx could not initialize files. Does the server have write access?");
         }
 
-        Dreamvisitor.debug("Restoring settings.");
+        Main.debug("Restoring settings.");
         // Restore frozen state
         RoyaltyBoard.setFrozen(getConfig().getBoolean("frozen"));
 
-        Dreamvisitor.debug("Setting up commands.");
+        Main.debug("Setting up commands.");
         // Initialize command executors
         Objects.requireNonNull(getCommand("eyeofonyx")).setExecutor(new CmdEyeOfOnyx());
         Objects.requireNonNull(getCommand("royalty")).setExecutor(new CmdRoyalty());
@@ -102,11 +102,11 @@ public class EyeOfOnyx extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new ListenJoin(), this);
         getServer().getPluginManager().registerEvents(new ListenLeave(), this);
 
-        Dreamvisitor.debug("Creating Discord commands.");
+        Main.debug("Creating Discord commands.");
         // Add commands
         Discord.initCommands();
 
-        Dreamvisitor.debug("Starting web server.");
+        Main.debug("Starting web server.");
         // Web server
         try {
             server = HttpServer.create(new InetSocketAddress(getConfig().getInt("port")), 0);
@@ -135,13 +135,13 @@ public class EyeOfOnyx extends JavaPlugin {
                 try {
                     List<Challenge> challenges = Challenge.getChallenges();
 
-                    Dreamvisitor.debug("Checking for challenges.");
+                    Main.debug("Checking for challenges.");
 
                     if (!challenges.isEmpty()) {
-                        Dreamvisitor.debug("There are/is " + challenges.size() + " challenge(s) pending.");
+                        Main.debug("There are/is " + challenges.size() + " challenge(s) pending.");
                         for (Challenge challenge : challenges) {
                             if (challenge.time.size() == 1 && challenge.time.get(0).isBefore(LocalDateTime.now()) && challenge.finalized) {
-                                Dreamvisitor.debug("Challenge ready to be called.");
+                                Main.debug("Challenge ready to be called.");
                                 Competition.call(challenge);
                             }
                         }
@@ -228,7 +228,7 @@ public class EyeOfOnyx extends JavaPlugin {
 
                         } catch (IOException e) {
                             Bukkit.getLogger().warning("Eye of Onyx was unable to edit the Discord royalty board!");
-                            if (Dreamvisitor.debug) e.printStackTrace();
+                            if (Main.debugMode) e.printStackTrace();
                         }
                     }
                 }
