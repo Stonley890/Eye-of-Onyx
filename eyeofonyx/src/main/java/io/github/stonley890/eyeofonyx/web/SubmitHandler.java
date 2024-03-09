@@ -190,10 +190,17 @@ public class SubmitHandler implements HttpHandler {
                         }
                         Main.debug("Set data in board.yml");
 
-                        // Create challenge
+                        // Modify challenge
                         UUID finalAttackerUuid = attackerUuid;
                         Player finalPlayer = player;
-                        Bukkit.getScheduler().runTaskAsynchronously(EyeOfOnyx.getPlugin(), () -> new Challenge(finalAttackerUuid, finalPlayer.getUniqueId(), ChallengeType.UNKNOWN, availabilities).save());
+                        Bukkit.getScheduler().runTaskAsynchronously(EyeOfOnyx.getPlugin(), () -> {
+                            Challenge challenge = Challenge.getChallengeOfPlayers(finalAttackerUuid, finalPlayer.getUniqueId());
+                            if (challenge == null) {
+                                finalPlayer.sendMessage(EyeOfOnyx.EOO + net.md_5.bungee.api.ChatColor.RED + "Your challenge could not be found! Contact a staff member.");
+                                return;
+                            }
+                            challenge.state = Challenge.State.ACCEPTED;
+                        });
 
                         Main.debug("Created the challenge");
 

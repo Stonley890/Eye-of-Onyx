@@ -2,14 +2,12 @@ package io.github.stonley890.eyeofonyx.commands;
 
 import io.github.stonley890.dreamvisitor.Main;
 import io.github.stonley890.dreamvisitor.data.AccountLink;
+import io.github.stonley890.dreamvisitor.data.PlayerUtility;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import io.github.stonley890.eyeofonyx.challenges.Competition;
 import io.github.stonley890.eyeofonyx.files.*;
 import javassist.NotFoundException;
-import net.md_5.bungee.api.chat.ClickEvent;
-import net.md_5.bungee.api.chat.ComponentBuilder;
-import net.md_5.bungee.api.chat.HoverEvent;
-import net.md_5.bungee.api.chat.TextComponent;
+import net.md_5.bungee.api.chat.*;
 import net.md_5.bungee.api.chat.hover.content.Text;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -21,8 +19,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.shanerx.mojang.Mojang;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -39,12 +35,11 @@ public class CmdChallenge implements CommandExecutor {
     String[] teams = RoyaltyBoard.getTeamNames();
     String[] positions = RoyaltyBoard.getValidPositions();
 
-    Mojang mojang = new Mojang().connect();
-
     public static List<Player> playersOnForm = new ArrayList<>();
     public static List<String> codesOnForm = new ArrayList<>();
 
     @Override
+    @SuppressWarnings("unchecked")
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
 
         if (sender instanceof Player player) {
@@ -83,11 +78,12 @@ public class CmdChallenge implements CommandExecutor {
 
                 return true;
 
-            } else if (playerPosition != 5 && RoyaltyBoard.isOnCoolDown(playerTribe, playerPosition)) {
+            } else if (playerPosition != CIVILIAN && RoyaltyBoard.isOnCoolDown(playerTribe, playerPosition)) {
 
                 // Player is on cooldown. They cannot challenge
                 ComponentBuilder builder = new ComponentBuilder();
                 LocalDateTime challengeDate = RoyaltyBoard.getLastChallengeDate(playerTribe, playerPosition);
+                assert challengeDate != null;
                 challengeDate = challengeDate.plusDays(EyeOfOnyx.getPlugin().getConfig().getInt("challenge-cool-down"));
 
                 builder.append(EyeOfOnyx.EOO)
@@ -122,11 +118,11 @@ public class CmdChallenge implements CommandExecutor {
                 builder.append(EyeOfOnyx.EOO + "CHALLENGE MENU")
                         .append("\nYou are currently ");
                 String position = "CIVILIAN";
-                if (playerPosition != 5) position = positions[playerPosition];
+                if (playerPosition != CIVILIAN) position = positions[playerPosition];
                 builder.append(position.replace('_', ' ')).color(net.md_5.bungee.api.ChatColor.YELLOW)
                         .append(" of the ").color(net.md_5.bungee.api.ChatColor.WHITE)
                         .append(teams[playerTribe]).color(net.md_5.bungee.api.ChatColor.YELLOW).append("s").color(net.md_5.bungee.api.ChatColor.YELLOW)
-                        .append(".\nSelect a position:\n \n").color(net.md_5.bungee.api.ChatColor.WHITE);
+                        .append(".\nSelect a position:\n").color(net.md_5.bungee.api.ChatColor.WHITE);
 
                 if /* Player is a civilian */ (playerPosition == CIVILIAN) {
 
@@ -174,66 +170,22 @@ public class CmdChallenge implements CommandExecutor {
 
                          */
 
-                        builder.append(positions[NOBLE_PRESUMPTIVE].toUpperCase().replace('_', ' '))
-                                .append(" ")
-                                .append(mojang.getPlayerProfile(RoyaltyBoard.getUuid(playerTribe, NOBLE_PRESUMPTIVE).toString()).getUsername()).color(net.md_5.bungee.api.ChatColor.YELLOW)
-                                .append("\n");
-
-                        TextComponent button = new TextComponent("[ Initiate Challenge ]");
-                        button.setUnderlined(true);
-                        button.setColor(net.md_5.bungee.api.ChatColor.GREEN);
-                        button.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/challenge position1"));
-
-                        builder.append(button)
-                                .color(net.md_5.bungee.api.ChatColor.RESET)
-                                .append("\n \n").reset()
-                                .append(positions[NOBLE_APPARENT].toUpperCase().replace('_', ' '))
-                                .append(" ")
-                                .append(mojang.getPlayerProfile(RoyaltyBoard.getUuid(playerTribe, NOBLE_APPARENT).toString()).getUsername())
-                                .append("\n");
-
-                        button.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/challenge position2"));
-
-                        builder.append(button);
+                        builder.append(challengeEntry(playerTribe, NOBLE1, "position1"))
+                                .append(challengeEntry(playerTribe, NOBLE2, "position2"))
+                                .append(challengeEntry(playerTribe, NOBLE3, "position3"))
+                                .append(challengeEntry(playerTribe, NOBLE4, "position4"))
+                                .append(challengeEntry(playerTribe, NOBLE5, "position5"));
 
                     }
-                } else if /* Player is a noble */ (playerPosition == NOBLE_PRESUMPTIVE || playerPosition == NOBLE_APPARENT) {
+                } else if /* Player is a noble */ (playerPosition == NOBLE2 || playerPosition == NOBLE1) {
 
-                    builder.append(positions[HEIR_PRESUMPTIVE].toUpperCase().replace('_', ' '))
-                            .append(" ")
-                            .append(mojang.getPlayerProfile(RoyaltyBoard.getUuid(playerTribe, HEIR_PRESUMPTIVE).toString()).getUsername()).color(net.md_5.bungee.api.ChatColor.YELLOW)
-                            .append("\n");
+                    builder.append(challengeEntry(playerTribe, HEIR1, "position1"))
+                            .append(challengeEntry(playerTribe, HEIR2, "position2"))
+                            .append(challengeEntry(playerTribe, HEIR3, "position3"));
 
-                    TextComponent button = new TextComponent("[ Initiate Challenge ]");
-                    button.setUnderlined(true);
-                    button.setColor(net.md_5.bungee.api.ChatColor.GREEN);
-                    button.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/challenge position1"));
+                } else if /* Player is an heir */ (playerPosition == HEIR2 || playerPosition == HEIR1) {
 
-                    builder.append(button)
-                            .append("\n \n").reset()
-                            .append(positions[HEIR_APPARENT].toUpperCase().replace('_', ' '))
-                            .append(" ")
-                            .append(mojang.getPlayerProfile(RoyaltyBoard.getUuid(playerTribe, HEIR_APPARENT).toString()).getUsername())
-                            .append("\n");
-
-                    button.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/challenge position2"));
-
-                    builder.append(button)
-                            .color(net.md_5.bungee.api.ChatColor.RESET);
-
-                } else if /* Player is an heir */ (playerPosition == HEIR_PRESUMPTIVE || playerPosition == HEIR_APPARENT) {
-
-                    builder.append(positions[RULER].toUpperCase().replace('_', ' '))
-                            .append(" ")
-                            .append(mojang.getPlayerProfile(RoyaltyBoard.getUuid(playerTribe, RULER).toString()).getUsername()).color(net.md_5.bungee.api.ChatColor.YELLOW)
-                            .append("\n");
-
-                    TextComponent button = new TextComponent("[Initiate Challenge]");
-                    button.setUnderlined(true);
-                    button.setColor(net.md_5.bungee.api.ChatColor.GREEN);
-                    button.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/challenge position1"));
-
-                    builder.append(button);
+                    builder.append(challengeEntry(playerTribe, RULER, "position1"));
 
                 } else if /* Player is ruler */ (playerPosition == RULER) {
 
@@ -247,7 +199,7 @@ public class CmdChallenge implements CommandExecutor {
             } else {
 
                 switch (args[0]) {
-                    case "position1", "position2" -> {
+                    case "position1", "position2", "position3", "position4", "position5" -> {
 
                         Main.debug("Initiating challenge");
 
@@ -307,33 +259,36 @@ public class CmdChallenge implements CommandExecutor {
                             Main.debug("No extra positions available.");
 
                             // Determine which position is being targeted
-                            if (args[0].equals("position1")) {
-                                targetPosition = NOBLE_PRESUMPTIVE;
-                            } else if (args[0].equals("position2")) {
-                                targetPosition = NOBLE_APPARENT;
-                            } else {
-                                builder.color(net.md_5.bungee.api.ChatColor.RED).append("Invalid arguments!");
-                                sender.spigot().sendMessage(builder.create());
-                                return true;
+                            switch (args[0]) {
+                                case "position1" -> targetPosition = NOBLE1;
+                                case "position2" -> targetPosition = NOBLE2;
+                                case "position3" -> targetPosition = NOBLE3;
+                                case "position4" -> targetPosition = NOBLE4;
+                                case "position5" -> targetPosition = NOBLE5;
+                                default -> {
+                                    builder.color(net.md_5.bungee.api.ChatColor.RED).append("Invalid arguments!");
+                                    sender.spigot().sendMessage(builder.create());
+                                    return true;
+                                }
                             }
 
-                        } else if (playerPosition == NOBLE_PRESUMPTIVE || playerPosition == NOBLE_APPARENT) {
+                        } else if (playerPosition >= NOBLE1 && playerPosition <= NOBLE5) {
 
                             // Determine which position is being targeted
-                            if (args[0].equals("position1")) {
-                                targetPosition = HEIR_PRESUMPTIVE;
-                            } else if (args[0].equals("position2")) {
-                                targetPosition = HEIR_APPARENT;
-                            } else {
-                                builder.color(net.md_5.bungee.api.ChatColor.RED).append("Invalid arguments!");
-                                sender.spigot().sendMessage(builder.create());
-                                return true;
+                            switch (args[0]) {
+                                case "position1" -> targetPosition = HEIR1;
+                                case "position2" -> targetPosition = HEIR2;
+                                case "position3" -> targetPosition = HEIR3;
+                                default -> {
+                                    builder.color(net.md_5.bungee.api.ChatColor.RED).append("Invalid arguments!");
+                                    sender.spigot().sendMessage(builder.create());
+                                    return true;
+                                }
                             }
 
 
-                        } else if (playerPosition == HEIR_PRESUMPTIVE || playerPosition == HEIR_APPARENT) {
+                        } else if (playerPosition >= HEIR1 && playerPosition <= HEIR3) {
 
-                            // Determine which position is being targeted
                             targetPosition = RULER;
 
                         } else if (playerPosition == RULER) {
@@ -345,7 +300,7 @@ public class CmdChallenge implements CommandExecutor {
                         }
 
                         // Check that target is not being challenged
-                        if (!(RoyaltyBoard.getAttacker(playerTribe, targetPosition) == null || (targetPosition != 0 && RoyaltyBoard.getAttacking(playerTribe, targetPosition) != null))) {
+                        if (!(RoyaltyBoard.getAttacker(playerTribe, targetPosition) == null || (targetPosition != RULER && RoyaltyBoard.getAttacking(playerTribe, targetPosition) != null))) {
 
                             player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
                             builder.append("That player is already in a challenge!");
@@ -359,17 +314,10 @@ public class CmdChallenge implements CommandExecutor {
                             // Unless position is empty...
                             if (!RoyaltyBoard.isPositionEmpty(playerTribe, targetPosition)) {
 
-                                // Get last challenge
-                                LocalDateTime targetChallenge = RoyaltyBoard.getLastChallengeDate(playerTribe, targetPosition);
-                                // Compare with cooldown time
-                                assert targetChallenge != null;
-                                targetChallenge = targetChallenge.plusDays(EyeOfOnyx.getPlugin().getConfig().getInt("challenge-cool-down"));
                                 if (RoyaltyBoard.isOnCoolDown(playerTribe, targetPosition)) {
                                     builder.append("That player is on movement cooldown until ")
-                                            .append(targetChallenge.format(DateTimeFormatter.ISO_DATE));
-
+                                            .append(Objects.requireNonNull(getCooldownEnd(playerTribe, targetPosition)).format(DateTimeFormatter.ISO_DATE));
                                     sender.spigot().sendMessage(builder.create());
-
                                     return true;
                                 }
                             }
@@ -390,6 +338,12 @@ public class CmdChallenge implements CommandExecutor {
                             String title = "You've been challenged!";
                             String content = player.getName() + " has challenged your position for " + positions[targetPosition].replace('_', ' ') + ".";
                             new Notification(targetUuid, title, content, NotificationType.CHALLENGE_REQUESTED).create();
+
+                            // create challenge
+                            new Challenge(player.getUniqueId(), targetUuid, null, Challenge.State.PROPOSED).passiveSave();
+
+                            assert targetUuid != null;
+                            report(player.getName(), player.getName() + " initiated a challenge against " + PlayerUtility.getUsernameOfUuid(targetUuid) + ".");
 
                             builder.append("Challenge initiated!");
                             sender.spigot().sendMessage(builder.create());
@@ -507,14 +461,14 @@ public class CmdChallenge implements CommandExecutor {
                     }
                     case "date" -> {
 
-                        Challenge playerChallenge = getChallenge(player);
+                        Challenge playerChallenge = Challenge.getChallenge(player);
 
                         if (playerChallenge == null) {
                             sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You are not in any scheduled challenges!");
                             return true;
                         }
 
-                        if (playerChallenge.finalized) {
+                        if (playerChallenge.state == Challenge.State.SCHEDULED) {
                             sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "This challenge is already finalized!");
                             return true;
                         }
@@ -542,12 +496,14 @@ public class CmdChallenge implements CommandExecutor {
                         LocalDateTime selectedTime = playerChallenge.time.get(selectedTimeIndex);
                         playerChallenge.time.clear();
                         playerChallenge.time.add(selectedTime);
-                        playerChallenge.finalized = true;
+                        playerChallenge.state = Challenge.State.SCHEDULED;
 
                         playerChallenge.passiveSave();
 
+                        report(player.getName(), player.getName() + "'s challenge with " + PlayerUtility.getUsernameOfUuid(playerChallenge.defender) + " has been scheduled for " + selectedTime.format(DateTimeFormatter.ofPattern("MM/dd hh:mm a")));
+
                         sender.sendMessage(EyeOfOnyx.EOO + "Time confirmed! Your challenge will take place " + selectedTime.format(DateTimeFormatter.ofPattern("MM/dd hh:mm a")) + "!");
-                        new Notification(playerChallenge.defender, "Challenge date confirmed!", "The time of your challenge with " + mojang.getPlayerProfile(playerChallenge.attacker.toString()).getUsername() + " will be " + selectedTime.format(DateTimeFormatter.ofPattern("MM/dd hh:mm a")) + ".", NotificationType.GENERIC).create();
+                        new Notification(playerChallenge.defender, "Challenge date confirmed!", "The time of your challenge with " + PlayerUtility.getUsernameOfUuid(playerChallenge.attacker.toString()) + " will be " + selectedTime.format(DateTimeFormatter.ofPattern("MM/dd hh:mm a")) + ".", NotificationType.GENERIC).create();
 
                         // Remove CHALLENGE_ACCEPTED notification
                         try {
@@ -570,21 +526,39 @@ public class CmdChallenge implements CommandExecutor {
         return true;
     }
 
-    @Nullable
-    private static Challenge getChallenge(Player player) {
-        Challenge playerChallenge = null;
+    private static BaseComponent[] challengeEntry(int tribe, int pos, String command) {
+        ComponentBuilder builder = new ComponentBuilder();
 
-        try {
-            for (Challenge challenge : Challenge.getChallenges()) {
-                if (Objects.equals(challenge.attacker, player.getUniqueId())) {
-                    playerChallenge = challenge;
-                    break;
-                }
-            }
-        } catch (IOException | InvalidConfigurationException e) {
-            throw new RuntimeException(e);
-        }
-        return playerChallenge;
+        TextComponent challengeButton = new TextComponent("[ Initiate Challenge ]");
+        challengeButton.setUnderlined(true);
+        challengeButton.setColor(net.md_5.bungee.api.ChatColor.GREEN);
+        challengeButton.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("Initiate a challenge with this player for their royalty position.")));
+        challengeButton.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/challenge " + command));
+
+        TextComponent quickChallengeButton = new TextComponent("[ Quick Challenge ]");
+        quickChallengeButton.setUnderlined(true);
+        quickChallengeButton.setColor(net.md_5.bungee.api.ChatColor.YELLOW);
+        quickChallengeButton.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("Execute an immediate challenge with this player. They can deny this if they choose.")));
+        quickChallengeButton.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/challenge " + command + " quick"));
+
+        TextComponent disabledQuickChallengeButton = new TextComponent("[ Quick Challenge ]");
+        disabledQuickChallengeButton.setUnderlined(false);
+        disabledQuickChallengeButton.setColor(net.md_5.bungee.api.ChatColor.GRAY);
+        disabledQuickChallengeButton.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("This player is not online.")));
+
+        builder.append("\n").reset().append(getValidPositions()[pos].toUpperCase().replace('_', ' '))
+                .append(" ")
+                .append(PlayerUtility.getUsernameOfUuid(Objects.requireNonNull(getUuid(tribe, pos)))).color(net.md_5.bungee.api.ChatColor.YELLOW)
+                .append("\n");
+
+        builder.append(challengeButton)
+                .color(net.md_5.bungee.api.ChatColor.RESET)
+                .append(" ").reset();
+
+        if (Bukkit.getPlayer(Objects.requireNonNull(getUuid(tribe, pos))) == null) builder.append(disabledQuickChallengeButton);
+        else builder.append(quickChallengeButton);
+
+        return builder.append("\n").reset().create();
     }
 
 }

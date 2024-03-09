@@ -1,21 +1,16 @@
 package io.github.stonley890.eyeofonyx.commands.tabcomplete;
 
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-
-import io.github.stonley890.eyeofonyx.web.IpUtils;
+import io.github.stonley890.eyeofonyx.files.RoyaltyBoard;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
-
-import io.github.stonley890.eyeofonyx.files.RoyaltyBoard;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class TabRoyalty implements TabCompleter {
 
@@ -23,7 +18,7 @@ public class TabRoyalty implements TabCompleter {
     static String[] positions = RoyaltyBoard.getValidPositions();
 
     @Override
-    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
+    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String @NotNull [] args) {
 
         List<String> suggestions = new ArrayList<>();
 

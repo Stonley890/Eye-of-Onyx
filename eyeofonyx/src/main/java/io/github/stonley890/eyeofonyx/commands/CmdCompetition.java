@@ -17,6 +17,7 @@ import org.jetbrains.annotations.NotNull;
 import org.shanerx.mojang.Mojang;
 
 import java.io.IOException;
+import java.util.Objects;
 
 
 public class CmdCompetition implements CommandExecutor {
@@ -24,7 +25,7 @@ public class CmdCompetition implements CommandExecutor {
     private final Mojang mojang = new Mojang().connect();
 
     @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String s, @NotNull String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String s, @NotNull String @NotNull [] args) {
 
         if (args.length == 0) {
             // Send information
@@ -43,7 +44,7 @@ public class CmdCompetition implements CommandExecutor {
                     sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Attacker does not have an associated tribe!");
                 }
                 String attackerPos;
-                if (attackerPosIndex == 5) {
+                if (attackerPosIndex == RoyaltyBoard.CIVILIAN) {
                     attackerPos = "CIVILIAN";
                 } else {
                     attackerPos = RoyaltyBoard.getValidPositions()[attackerPosIndex].toUpperCase().replace('_', ' ');
@@ -53,8 +54,7 @@ public class CmdCompetition implements CommandExecutor {
                     builder.append("Competition Information\n")
                             .append("Tribe: ").append(RoyaltyBoard.getTribes()[Competition.activeChallenge.tribe])
                             .append("Attacker: ").append(attackerPos).append(" ").append(mojang.getPlayerProfile(Competition.activeChallenge.attacker.toString()).getUsername())
-                            .append("Defender: ").append(RoyaltyBoard.getValidPositions()[RoyaltyBoard.getPositionIndexOfUUID(Competition.activeChallenge.defender)].toUpperCase().replace('_', ' ')).append(" ").append(mojang.getPlayerProfile(Competition.activeChallenge.attacker.toString()).getUsername())
-                            .append("Type: ").append(Competition.activeChallenge.type.toString());
+                            .append("Defender: ").append(RoyaltyBoard.getValidPositions()[RoyaltyBoard.getPositionIndexOfUUID(Competition.activeChallenge.defender)].toUpperCase().replace('_', ' ')).append(" ").append(mojang.getPlayerProfile(Competition.activeChallenge.attacker.toString()).getUsername());
                 } catch (NotFoundException e) {
                     // Attacker does not have an associate tribe (should not happen)
                     sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Attacker does not have an associated tribe!");
@@ -95,8 +95,8 @@ public class CmdCompetition implements CommandExecutor {
                             }
 
                             // Add scoreboard tags
-                            Bukkit.getScoreboardManager().getMainScoreboard().getTeam("eoo.attacker").addEntry(attacker.getName());
-                            Bukkit.getScoreboardManager().getMainScoreboard().getTeam("eoo.defender").addEntry(defender.getName());
+                            Objects.requireNonNull(Objects.requireNonNull(Bukkit.getScoreboardManager()).getMainScoreboard().getTeam("eoo.attacker")).addEntry(attacker.getName());
+                            Objects.requireNonNull(Bukkit.getScoreboardManager().getMainScoreboard().getTeam("eoo.defender")).addEntry(defender.getName());
                             // Start challenge
                             Competition.activeChallenge.started = true;
 
@@ -139,8 +139,8 @@ public class CmdCompetition implements CommandExecutor {
                         RoyaltyBoard.reportChange(new RoyaltyAction(sender.getName(), tribe, oldBoard, newBoard));
 
                         // Set teams back
-                        Bukkit.getScoreboardManager().getMainScoreboard().getTeam(RoyaltyBoard.getTeamNames()[tribe]).addEntry(Bukkit.getPlayer(Competition.activeChallenge.attacker).getName());
-                        Bukkit.getScoreboardManager().getMainScoreboard().getTeam(RoyaltyBoard.getTeamNames()[tribe]).addEntry(Bukkit.getPlayer(Competition.activeChallenge.defender).getName());
+                        Objects.requireNonNull(Objects.requireNonNull(Bukkit.getScoreboardManager()).getMainScoreboard().getTeam(RoyaltyBoard.getTeamNames()[tribe])).addEntry(Objects.requireNonNull(Bukkit.getPlayer(Competition.activeChallenge.attacker)).getName());
+                        Objects.requireNonNull(Bukkit.getScoreboardManager().getMainScoreboard().getTeam(RoyaltyBoard.getTeamNames()[tribe])).addEntry(Objects.requireNonNull(Bukkit.getPlayer(Competition.activeChallenge.defender)).getName());
 
                         Competition.activeChallenge = null;
 
@@ -199,8 +199,8 @@ public class CmdCompetition implements CommandExecutor {
                             }
 
                             // Set teams back
-                            Bukkit.getScoreboardManager().getMainScoreboard().getTeam(RoyaltyBoard.getTeamNames()[tribe]).addEntry(Bukkit.getPlayer(Competition.activeChallenge.attacker).getName());
-                            Bukkit.getScoreboardManager().getMainScoreboard().getTeam(RoyaltyBoard.getTeamNames()[tribe]).addEntry(Bukkit.getPlayer(Competition.activeChallenge.defender).getName());
+                            Objects.requireNonNull(Objects.requireNonNull(Bukkit.getScoreboardManager()).getMainScoreboard().getTeam(RoyaltyBoard.getTeamNames()[tribe])).addEntry(Objects.requireNonNull(Bukkit.getPlayer(Competition.activeChallenge.attacker)).getName());
+                            Objects.requireNonNull(Bukkit.getScoreboardManager().getMainScoreboard().getTeam(RoyaltyBoard.getTeamNames()[tribe])).addEntry(Objects.requireNonNull(Bukkit.getPlayer(Competition.activeChallenge.defender)).getName());
 
                             Competition.activeChallenge = null;
 

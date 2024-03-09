@@ -18,7 +18,7 @@ import java.time.ZonedDateTime;
 import java.util.HashMap;
 
 public class IpUtils {
-    static HashMap<String, JSONObject> ipStorage = new HashMap<String, JSONObject>();
+    static HashMap<String, JSONObject> ipStorage = new HashMap<>();
 
     /**
      * Gets the ZonedDateTime of a given IP address.
@@ -50,7 +50,7 @@ public class IpUtils {
     }
 
     public static String getCityName(String ip) {
-        JSONObject obj = null;
+        JSONObject obj;
         if (ipStorage.containsKey(ip)) {
             obj = ipStorage.get(ip);
         } else {
@@ -63,7 +63,7 @@ public class IpUtils {
     }
 
     public static String getStateName(String ip) {
-        JSONObject obj = null;
+        JSONObject obj;
         if (ipStorage.containsKey(ip)) {
             obj = ipStorage.get(ip);
         } else {
@@ -76,7 +76,7 @@ public class IpUtils {
     }
 
     public static String getCountryName(String ip) {
-        JSONObject obj = null;
+        JSONObject obj;
         if (ipStorage.containsKey(ip)) {
             obj = ipStorage.get(ip);
         } else {
@@ -93,7 +93,7 @@ public class IpUtils {
     }
 
     public static String getCountryCode(String ip) {
-        JSONObject obj = null;
+        JSONObject obj;
         if (ipStorage.containsKey(ip)) {
             obj = ipStorage.get(ip);
         } else {
@@ -102,8 +102,7 @@ public class IpUtils {
             obj = object;
             ipStorage.put(ip, object);
         }
-        String country = (String) obj.get("countryCode");
-        return country;
+        return (String) obj.get("countryCode");
     }
 
     public static void clearCache(String ip) {
@@ -123,7 +122,7 @@ public class IpUtils {
         URLConnection yc = null;
         try {
             yc = url2.openConnection();
-        } catch (IOException e) {
+        } catch (IOException ignored) {
         } catch (NullPointerException e) {
             Bukkit.getLogger().info("Could not get details of page " + url);
         }

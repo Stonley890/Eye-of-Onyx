@@ -76,14 +76,6 @@ public class BoardPosition {
         return this;
     }
 
-    @Contract(value = "!null -> param1", pure = true)
-    private @NotNull Object noneIfNull(Object object) {
-
-        if (object == null) return "none";
-        else return object;
-
-    }
-
     public boolean equals(@NotNull BoardPosition that) {
         if (this.player != that.player) return false;
         if (!Objects.equals(this.name, that.name)) return false;

@@ -8,28 +8,16 @@ import net.luckperms.api.model.user.User;
 import net.luckperms.api.model.user.UserManager;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 public class Utils {
-
-    /**
-     * Adds the hyphens back into a String UUID.
-     * @param uuid the UUID as a string without hyphens.
-     * @return a UUID as a string with hyphens.
-     */
-    @Contract(pure = true)
-    public static @NotNull String formatUuid(@NotNull String uuid) {
-        return uuid.replaceFirst(
-                "(\\p{XDigit}{8})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}+)",
-                "$1-$2-$3-$4-$5");
-    }
 
     /**
      * Convert a local time to a player's time.
@@ -39,7 +27,7 @@ public class Utils {
      * @throws NotFoundException if the player time could not be determined by {@link IpUtils}.
      */
     public static @NotNull ZonedDateTime localTimeToPlayerTime(LocalDateTime time, @NotNull Player player) throws NotFoundException {
-        ZonedDateTime playerTime = IpUtils.ipToTime(player.getAddress().getAddress().getHostAddress());
+        ZonedDateTime playerTime = IpUtils.ipToTime(Objects.requireNonNull(player.getAddress()).getAddress().getHostAddress());
         if (playerTime == null) throw new NotFoundException("Player time could not be determined.");
         ZoneId playerOffset = playerTime.getOffset();
         return ZonedDateTime.of(time, ZoneId.systemDefault()).withZoneSameLocal(playerOffset);
@@ -52,7 +40,7 @@ public class Utils {
      * @throws NotFoundException if the player's time could not be retrieved.
      */
     public static ZoneId getZoneIdOfPlayer(@NotNull Player player) throws NotFoundException {
-        ZonedDateTime playerTime = IpUtils.ipToTime(player.getAddress().getAddress().getHostAddress());
+        ZonedDateTime playerTime = IpUtils.ipToTime(Objects.requireNonNull(player.getAddress()).getAddress().getHostAddress());
         if (playerTime == null) throw new NotFoundException("Player time could not be determined.");
         return playerTime.getZone();
     }

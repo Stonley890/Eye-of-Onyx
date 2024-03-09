@@ -1,6 +1,5 @@
 package io.github.stonley890.eyeofonyx.commands;
 
-import io.github.stonley890.dreamvisitor.Bot;
 import io.github.stonley890.dreamvisitor.Main;
 import io.github.stonley890.dreamvisitor.data.PlayerUtility;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
@@ -19,7 +18,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-import org.shanerx.mojang.Mojang;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -31,9 +29,6 @@ import java.util.*;
 import java.util.function.Predicate;
 
 public class CmdRoyalty implements CommandExecutor {
-
-    // Get Mojang services
-    private static final Mojang mojang = new Mojang().connect();
 
     // Team names
     private static final String[] teamNames = RoyaltyBoard.getTeamNames();
@@ -115,13 +110,9 @@ public class CmdRoyalty implements CommandExecutor {
                 return;
             }
         } else {
-            try {
-                // Try to get online Player, otherwise lookup OfflinePlayer
-                targetPlayerUUID = UUID.fromString(mojang.getUUIDOfUsername(target).replaceFirst(
-                        "(\\p{XDigit}{8})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}+)",
-                        "$1-$2-$3-$4-$5"));
-            } catch (NullPointerException e) {
-                sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Player not found.");
+            targetPlayerUUID = PlayerUtility.getUUIDOfUsername(target);
+            if (targetPlayerUUID == null) {
+                sender.sendMessage(EyeOfOnyx.EOO + net.md_5.bungee.api.ChatColor.RED + "Player not found.");
                 return;
             }
         }
@@ -139,7 +130,7 @@ public class CmdRoyalty implements CommandExecutor {
             int playerTribe = PlayerTribe.getTribeOfPlayer(targetPlayerUUID);
 
             // Make sure player is not already on the board
-            if (RoyaltyBoard.getPositionIndexOfUUID(playerTribe, targetPlayerUUID) != 5) {
+            if (RoyaltyBoard.getPositionIndexOfUUID(playerTribe, targetPlayerUUID) != RoyaltyBoard.CIVILIAN) {
                 sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "That player is already on the royalty board!");
                 return;
             }
@@ -223,10 +214,15 @@ public class CmdRoyalty implements CommandExecutor {
         Challenge.removeChallengesOfPlayer(pos1.player, "The player who was in your challenge was moved to a different position.");
         Challenge.removeChallengesOfPlayer(pos2.player, "The player who was in your challenge was moved to a different position.");
 
-        Notification.removeNotificationsOfPlayer(pos1.player, NotificationType.CHALLENGE_ACCEPTED);
-        Notification.removeNotificationsOfPlayer(pos1.player, NotificationType.CHALLENGE_REQUESTED);
-        Notification.removeNotificationsOfPlayer(pos2.player, NotificationType.CHALLENGE_ACCEPTED);
-        Notification.removeNotificationsOfPlayer(pos2.player, NotificationType.CHALLENGE_REQUESTED);
+        if (pos1.player != null) {
+            Notification.removeNotificationsOfPlayer(pos1.player, NotificationType.CHALLENGE_ACCEPTED);
+            Notification.removeNotificationsOfPlayer(pos1.player, NotificationType.CHALLENGE_REQUESTED);
+        }
+        if (pos2.player != null) {
+            Notification.removeNotificationsOfPlayer(pos2.player, NotificationType.CHALLENGE_ACCEPTED);
+            Notification.removeNotificationsOfPlayer(pos2.player, NotificationType.CHALLENGE_REQUESTED);
+        }
+
 
         // Apply change
         RoyaltyBoard.set(tribeIndex, RoyaltyBoard.getBoardOf(tribeIndex).swap(posIndex1, posIndex2));
@@ -300,7 +296,7 @@ public class CmdRoyalty implements CommandExecutor {
         String tribe = args[1];
         String pos = args[2];
 
-        int tribeIndex = Utils.tribeIndexFromString(tribe);;
+        int tribeIndex = Utils.tribeIndexFromString(tribe);
         int posIndex = Utils.posIndexFromString(pos);
 
         if (tribeIndex == -1) {
@@ -377,10 +373,10 @@ public class CmdRoyalty implements CommandExecutor {
                 if (uuid != null) {
                     username = PlayerUtility.getUsernameOfUuid(uuid);
                     name = RoyaltyBoard.getOcName(tribeIndex, posIndex);
-                    joinedPos = RoyaltyBoard.getJoinedPosDate(tribeIndex, posIndex).toString();
-                    joinedBoard = RoyaltyBoard.getJoinedBoardDate(tribeIndex, posIndex).toString();
-                    lastOnline = RoyaltyBoard.getLastOnline(tribeIndex, posIndex).toString();
-                    lastChallenge = RoyaltyBoard.getLastChallengeDate(tribeIndex, posIndex).toString();
+                    joinedPos = Objects.requireNonNull(RoyaltyBoard.getJoinedPosDate(tribeIndex, posIndex)).toString();
+                    joinedBoard = Objects.requireNonNull(RoyaltyBoard.getJoinedBoardDate(tribeIndex, posIndex)).toString();
+                    lastOnline = Objects.requireNonNull(RoyaltyBoard.getLastOnline(tribeIndex, posIndex)).toString();
+                    lastChallenge = Objects.requireNonNull(RoyaltyBoard.getLastChallengeDate(tribeIndex, posIndex)).toString();
                     challenger = String.valueOf(RoyaltyBoard.getAttacker(tribeIndex, posIndex));
                     if (challenger == null || challenger.equals("null")) challenger = "N/A";
                     if (posIndex != RoyaltyBoard.RULER) {
@@ -392,7 +388,7 @@ public class CmdRoyalty implements CommandExecutor {
                 ZoneId offset = ZoneOffset.systemDefault();
 
                 if (sender instanceof Player player) {
-                    ZonedDateTime playerTime = IpUtils.ipToTime(player.getAddress().getAddress().getHostAddress());
+                    ZonedDateTime playerTime = IpUtils.ipToTime(Objects.requireNonNull(player.getAddress()).getAddress().getHostAddress());
                     if (playerTime != null) offset = playerTime.getZone();
                 }
 
@@ -757,8 +753,12 @@ public class CmdRoyalty implements CommandExecutor {
                     strBuild.append(RoyaltyBoard.getOcName(tribe, position));
                 }
 
-                strBuild.append(ChatColor.WHITE).append(" (").append(mojang.getPlayerProfile(RoyaltyBoard.getUuid(tribe, position).toString())
-                        .getUsername()).append(")");
+                UUID uuid = RoyaltyBoard.getUuid(tribe, position);
+                String username;
+                if (uuid == null) username = "N/A";
+                else username = PlayerUtility.getUsernameOfUuid(uuid);
+
+                strBuild.append(ChatColor.WHITE).append(" (").append(username).append(")");
             }
         }
         return strBuild;

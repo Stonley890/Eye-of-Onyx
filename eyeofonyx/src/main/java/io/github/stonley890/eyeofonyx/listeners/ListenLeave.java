@@ -12,6 +12,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.UUID;
 
 public class ListenLeave implements Listener {
@@ -22,7 +23,7 @@ public class ListenLeave implements Listener {
         Player player = event.getPlayer();
 
         // Clear stored IP address data
-        IpUtils.clearCache(player.getAddress().getAddress().getHostAddress());
+        IpUtils.clearCache(Objects.requireNonNull(player.getAddress()).getAddress().getHostAddress());
 
         // update last online
         UUID uuid = player.getUniqueId();

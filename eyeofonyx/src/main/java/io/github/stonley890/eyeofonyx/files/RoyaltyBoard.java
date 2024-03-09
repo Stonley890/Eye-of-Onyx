@@ -9,7 +9,10 @@ import io.github.stonley890.eyeofonyx.Utils;
 import javassist.NotFoundException;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.exceptions.ErrorHandler;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
@@ -24,7 +27,6 @@ import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.NotNull;
-import org.shanerx.mojang.Mojang;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -43,7 +45,6 @@ public class RoyaltyBoard {
     private static File file;
     private static FileConfiguration boardFile;
     private static final EyeOfOnyx plugin = EyeOfOnyx.getPlugin();
-    private static final Mojang mojang = new Mojang().connect();
     private static TextChannel boardChannel;
     /**
      * Whether the royalty board is frozen
@@ -65,7 +66,7 @@ public class RoyaltyBoard {
 
     // Valid positions
     private static final String[] validPositions = {
-            "ruler", "heir_apparent", "heir_presumptive", "noble_apparent", "noble_presumptive"
+            "ruler", "crown_heir", "apparent_heir", "presumptive_heir", "crown_noble", "grand_noble", "high_noble", "apparent_noble", "presumptive_noble"
     };
 
     // Stored values
@@ -74,11 +75,15 @@ public class RoyaltyBoard {
 
 
     public static final int RULER = 0;
-    public static final int HEIR_APPARENT = 1;
-    public static final int HEIR_PRESUMPTIVE = 2;
-    public static final int NOBLE_APPARENT = 3;
-    public static final int NOBLE_PRESUMPTIVE = 4;
-    public static final int CIVILIAN = 5;
+    public static final int HEIR1 = 1;
+    public static final int HEIR2 = 2;
+    public static final int HEIR3 = 3;
+    public static final int NOBLE1 = 4;
+    public static final int NOBLE2 = 5;
+    public static final int NOBLE3 = 6;
+    public static final int NOBLE4 = 7;
+    public static final int NOBLE5 = 8;
+    public static final int CIVILIAN = 9;
 
     public static String[] getTeamNames() {
         return teamNames;
@@ -195,7 +200,7 @@ public class RoyaltyBoard {
             }
 
             // If no fields have been written, something has gone wrong because there were no changes by this action
-            if (builder.getFields().isEmpty()) builder.addField("Something went wrong!","That's odd... It looks like there aren't any changes.", false);
+            if (builder.getFields().isEmpty()) builder.addField("Something went wrong!","That's odd... It looks like someone filed a report without any changes.", false);
 
             TextChannel logChannel = Bot.getJda().getTextChannelById(channelID);
             ActionRow actionRow = ActionRow.of(Button.danger("revertaction-" + action.id, "Revert"));
@@ -251,16 +256,15 @@ public class RoyaltyBoard {
         String challenger = "N/A";
         String challenging = "N/A";
 
-        // OLD
         if (position.player != null) uuid = position.player.toString();
-        if (position.player != null) username = mojang.getPlayerProfile(uuid).getUsername();
+        if (position.player != null) username = PlayerUtility.getUsernameOfUuid(uuid);
         if (position.name != null) ocName = position.name;
         if (position.lastOnline != null) lastOnline = position.lastOnline.toString();
         if (position.lastChallenge != null) lastChallenge = position.lastChallenge.toString();
         if (position.joinedBoard != null) joinedBoard = position.joinedBoard.toString();
         if (position.joinedPosition != null) joinedPos = position.joinedPosition.toString();
-        if (position.challenger != null) challenger = mojang.getPlayerProfile(position.challenger.toString()).getUsername();
-        if (position.challenging != null) challenging = mojang.getPlayerProfile(position.challenging.toString()).getUsername();
+        if (position.challenger != null) challenger = PlayerUtility.getUsernameOfUuid(position.challenger);
+        if (position.challenging != null) challenging = PlayerUtility.getUsernameOfUuid(position.challenging);
 
         String discordUser = "N/A";
 
@@ -318,7 +322,7 @@ public class RoyaltyBoard {
 
             // If last_online is before inactivity period, clear position
             last_online = getLastOnline(tribe, pos);
-            if (last_online != null && last_online.isBefore(LocalDateTime.now().minusDays(30))) {
+            if (last_online != null && last_online.isBefore(LocalDateTime.now().minusDays(plugin.getConfig().getInt("inactivity-timer")))) {
                 RoyaltyBoard.set(tribe, pos, royaltyBoard.get(tribe).getPos(positionsEmpty).setLastOnline(null));
             }
 
@@ -335,13 +339,13 @@ public class RoyaltyBoard {
                     } catch (NotFoundException e) {
                         // no tribe
                     }
+
+                    // Remove challenges
+                    Challenge.removeChallengesOfPlayer(uuid, "The player you were challenging was removed from the royalty board for inactivity.");
+
+                    // Remove notifications
+                    Notification.removeNotificationsOfPlayer(uuid, NotificationType.CHALLENGE_REQUESTED);
                 }
-
-                // Remove challenges
-                Challenge.removeChallengesOfPlayer(uuid, "The player you were challenging was removed from the royalty board for inactivity.");
-
-                // Remove notifications
-                Notification.removeNotificationsOfPlayer(uuid, NotificationType.CHALLENGE_REQUESTED);
 
                 // Clear data
                 RoyaltyBoard.removePlayer(tribe, pos, true);
@@ -360,14 +364,15 @@ public class RoyaltyBoard {
                     RoyaltyBoard.replace(tribe, pos, emptyPosition);
 
                     // Notify the user who has moved
-                    if (royaltyBoard.get(tribe).getPos(emptyPosition).player != null) {
-                        new Notification(royaltyBoard.get(tribe).getPos(emptyPosition).player, "You've been promoted!", "A player was removed from the royalty board and you moved into a higher position. Because of this, any challenges have been canceled.", NotificationType.GENERIC).create();
+                    java.util.UUID movedUser = royaltyBoard.get(tribe).getPos(emptyPosition).player;
+                    if (movedUser != null) {
+                        new Notification(movedUser, "You've been promoted!", "A player was removed from the royalty board and you moved into a higher position. Because of this, any challenges have been canceled.", NotificationType.GENERIC).create();
 
                         // Remove challenges
-                        Challenge.removeChallengesOfPlayer(royaltyBoard.get(tribe).getPos(emptyPosition).player, null);
+                        Challenge.removeChallengesOfPlayer(movedUser, null);
 
                         // Remove notifications
-                        Notification.removeNotificationsOfPlayer(uuid, NotificationType.CHALLENGE_REQUESTED);
+                        Notification.removeNotificationsOfPlayer(movedUser, NotificationType.CHALLENGE_REQUESTED);
                     }
 
                     // This position is now empty
@@ -412,8 +417,8 @@ public class RoyaltyBoard {
 
     /**
      * Updates the Discord royalty boards
-     * @param tribeIndex
-     * @throws IOException
+     * @param tribeIndex the tribe whose board to update
+     * @throws IOException if messageformat.txt cannot be retrieved
      */
     public static void updateDiscordBoard(int tribeIndex) throws IOException {
 
@@ -454,15 +459,18 @@ public class RoyaltyBoard {
                 Main.debug("Getting info for tribe " + tribeIndex + " position " + j);
 
                 // Get info if not empty
-                if (RoyaltyBoard.getUuid(tribeIndex, j) != null) {
+                java.util.UUID uuid = RoyaltyBoard.getUuid(tribeIndex, j);
+                if (uuid != null) {
                     Main.debug("Player here");
 
-                    username = mojang.getPlayerProfile(RoyaltyBoard.getUuid(tribeIndex, j).toString()).getUsername();
+                    username = PlayerUtility.getUsernameOfUuid(uuid);
 
                     name = ChatColor.stripColor(RoyaltyBoard.getOcName(tribeIndex, j));
                     if (name == null || name.equals("&c<No name set>")) name = username;
 
-                    joined = "<t:" + LocalDateTime.parse(RoyaltyBoard.getJoinedPosDate(tribeIndex, j).toString()).toEpochSecond(ZoneOffset.UTC) + ":d>";
+                    LocalDateTime joinedPosDate = RoyaltyBoard.getJoinedPosDate(tribeIndex, j);
+                    if (joinedPosDate == null) joined = "(No join time)";
+                    else joined = "<t:" + joinedPosDate.toEpochSecond(ZoneOffset.UTC) + ":d>";
                 }
 
                 // Replace in message
@@ -508,7 +516,7 @@ public class RoyaltyBoard {
 
         java.util.UUID uuid = AccountLink.getUuid(user.getIdLong());
         int tribe = -1;
-        int pos = 5;
+        int pos = CIVILIAN;
 
         // Get tribe and position if possible.
         // If not, that is ok.
@@ -547,14 +555,14 @@ public class RoyaltyBoard {
                 Main.debug("Is ruler role null? " + (rulerRole != null));
                 Main.debug("Does roles contain ruler? " + (member.getRoles().contains(rulerRole)));
                 if (finalPos != RULER && rulerRole != null && member.getRoles().contains(rulerRole)) mainGuild.removeRoleFromMember(member, rulerRole).queue();
-                if (finalPos != HEIR_APPARENT && finalPos != HEIR_PRESUMPTIVE && heirRole != null && member.getRoles().contains(heirRole)) mainGuild.removeRoleFromMember(member, heirRole).queue();
-                if (finalPos != NOBLE_APPARENT && finalPos != NOBLE_PRESUMPTIVE && nobleRole != null && member.getRoles().contains(nobleRole)) mainGuild.removeRoleFromMember(member, nobleRole).queue();
+                if (finalPos != HEIR1 && finalPos != HEIR2 && finalPos != HEIR3 && heirRole != null && member.getRoles().contains(heirRole)) mainGuild.removeRoleFromMember(member, heirRole).queue();
+                if (finalPos != NOBLE1 && finalPos != NOBLE2 && finalPos != NOBLE3 && finalPos != NOBLE4 && finalPos != NOBLE5 && nobleRole != null && member.getRoles().contains(nobleRole)) mainGuild.removeRoleFromMember(member, nobleRole).queue();
 
                 // Add roles if applicable
                 Main.debug("Adding main guild roles if needed.");
                 if (finalPos == RULER && rulerRole != null && !member.getRoles().contains(rulerRole)) mainGuild.addRoleToMember(member, rulerRole).queue();
-                if ((finalPos == HEIR_APPARENT || finalPos == HEIR_PRESUMPTIVE) && heirRole != null && !member.getRoles().contains(heirRole)) mainGuild.addRoleToMember(member, heirRole).queue();
-                if ((finalPos == NOBLE_APPARENT || finalPos == NOBLE_PRESUMPTIVE) && nobleRole != null && !member.getRoles().contains(nobleRole)) mainGuild.addRoleToMember(member, nobleRole).queue();
+                if ((finalPos == HEIR1 || finalPos == HEIR2 || finalPos == HEIR3) && heirRole != null && !member.getRoles().contains(heirRole)) mainGuild.addRoleToMember(member, heirRole).queue();
+                if ((finalPos == NOBLE1 || finalPos == NOBLE2 || finalPos == NOBLE3 || finalPos == NOBLE4 || finalPos == NOBLE5) && nobleRole != null && !member.getRoles().contains(nobleRole)) mainGuild.addRoleToMember(member, nobleRole).queue();
             }
 
         });
@@ -583,8 +591,8 @@ public class RoyaltyBoard {
                 // Add role if applicable
                 for (int tribeRole = 0; tribeRole < tribes.length; tribeRole++) {
                     Role role = sisterRoyaltyRoles.get(tribeRole);
-                    if (finalPos1 == 5 || finalTribe != tribeRole && member.getRoles().contains(role)) sisterGuild.removeRoleFromMember(member, role).queue();
-                    if (finalPos1 != 5 && finalTribe == tribeRole && !member.getRoles().contains(role)) sisterGuild.addRoleToMember(member, role).queue();
+                    if (finalPos1 == CIVILIAN || finalTribe != tribeRole && member.getRoles().contains(role)) sisterGuild.removeRoleFromMember(member, role).queue();
+                    if (finalPos1 != CIVILIAN && finalTribe == tribeRole && !member.getRoles().contains(role)) sisterGuild.addRoleToMember(member, role).queue();
                 }
             }
         });
@@ -637,8 +645,8 @@ public class RoyaltyBoard {
             } else {
                 // Remove roles if applicable
                 if (pos != RULER && rulerRole != null && member.getRoles().contains(rulerRole)) mainGuild.removeRoleFromMember(member, rulerRole).complete();
-                if (pos != HEIR_APPARENT && pos != HEIR_PRESUMPTIVE && heirRole != null && member.getRoles().contains(heirRole)) mainGuild.removeRoleFromMember(member, heirRole).complete();
-                if (pos != NOBLE_APPARENT && pos != NOBLE_PRESUMPTIVE && nobleRole != null && member.getRoles().contains(nobleRole)) mainGuild.removeRoleFromMember(member, nobleRole).complete();
+                if (pos != HEIR1 && pos != HEIR2 && pos != HEIR3 && heirRole != null && member.getRoles().contains(heirRole)) mainGuild.removeRoleFromMember(member, heirRole).complete();
+                if (pos != NOBLE1 && pos != NOBLE2 && pos != NOBLE3 && pos != NOBLE4 && pos != NOBLE5 && nobleRole != null && member.getRoles().contains(nobleRole)) mainGuild.removeRoleFromMember(member, nobleRole).complete();
             }
 
         }
@@ -698,7 +706,7 @@ public class RoyaltyBoard {
             // Get recorded user ID
             try {
                 Main.debug("Getting ID");
-                long userId = AccountLink.getDiscordId(getUuid(tribe, pos));
+                long userId = AccountLink.getDiscordId(Objects.requireNonNull(getUuid(tribe, pos)));
                 Member member;
 
                 // Get user and add role
@@ -715,9 +723,9 @@ public class RoyaltyBoard {
 
                 // Get appropriate role
                 Role royaltyRole = null;
-                if (pos == 0) royaltyRole = rulerRole;
-                if (pos == 1 || pos == 2) royaltyRole = heirRole;
-                if (pos == 3 || pos == 4) royaltyRole = nobleRole;
+                if (pos == RULER) royaltyRole = rulerRole;
+                if (pos >= HEIR1) royaltyRole = heirRole;
+                if (pos >= NOBLE1) royaltyRole = nobleRole;
                 // Add to user
                 member = mainGuild.retrieveMemberById(userId).complete();
                 if (royaltyRole != null) mainGuild.addRoleToMember(member, royaltyRole).complete();
@@ -726,7 +734,7 @@ public class RoyaltyBoard {
 
             } catch (NullPointerException e) {
 
-                String username = PlayerUtility.getUsernameOfUuid(getUuid(tribe, pos));
+                String username = PlayerUtility.getUsernameOfUuid(Objects.requireNonNull(getUuid(tribe, pos)));
 
                 Bukkit.getLogger().warning(username + " is on the royalty board but does not have an associated Discord ID!");
             }
@@ -741,7 +749,7 @@ public class RoyaltyBoard {
             CompletableFuture<User> userFuture = userManager.loadUser(uuid);
 
             int playerTribe = -1;
-            int playerPos = 5;
+            int playerPos = CIVILIAN;
 
             try {
                 playerTribe = PlayerTribe.getTribeOfPlayer(uuid);
@@ -776,11 +784,11 @@ public class RoyaltyBoard {
                 // Now that all have been removed, add the correct one
 
                 String group = null;
-                if (finalPlayerPos == 0) {
+                if (finalPlayerPos == RULER) {
                     group = "ruler";
-                } else if (finalPlayerPos < 3) {
+                } else if (finalPlayerPos < HEIR3) {
                     group = "heir";
-                } else if (finalPlayerPos < 5) {
+                } else if (finalPlayerPos < NOBLE5) {
                     group = "noble";
                 }
 
@@ -816,12 +824,13 @@ public class RoyaltyBoard {
             for (int p = 0; p < validPositions.length; p++) {
 
                 // Only update if there is a player in the position
-                if (getUuid(tribe, p) != null) {
+                java.util.UUID uuid = getUuid(tribe, p);
+                if (uuid != null) {
 
-                    Main.debug("Checking permissions of tribe " + tribe + " pos " + p + ", which is occupied by UUID " + getUuid(tribe, p));
+                    Main.debug("Checking permissions of tribe " + tribe + " pos " + p + ", which is occupied by UUID " + uuid);
 
                     // Get user at tribe t and position p
-                    CompletableFuture<User> userFuture = userManager.loadUser(getUuid(tribe, p));
+                    CompletableFuture<User> userFuture = userManager.loadUser(uuid);
 
                     // Run async
                     int finalP = p;
@@ -848,9 +857,9 @@ public class RoyaltyBoard {
                         // Now that all have been removed, add the correct one
 
                         String group;
-                        if (finalP == 0) {
+                        if (finalP == RULER) {
                             group = "ruler";
-                        } else if (finalP < 3) {
+                        } else if (finalP <= HEIR3) {
                             group = "heir";
                         } else {
                             group = "noble";
@@ -886,7 +895,7 @@ public class RoyaltyBoard {
         // Get player tribe
         int playerTribe = PlayerTribe.getTribeOfPlayer(player);
 
-        // Position is 5 by default (citizen)
+        // Position is citizen by default
         int playerPosition = CIVILIAN;
 
         // Iterate though positions to search for target player
@@ -910,7 +919,7 @@ public class RoyaltyBoard {
      */
     public static int getPositionIndexOfUUID(int tribe, UUID player) {
 
-        // Position is 5 by default (citizen)
+        // Position is citizen by default
         int playerPosition = CIVILIAN;
 
         // Iterate though positions to search for target player
@@ -1064,7 +1073,16 @@ public class RoyaltyBoard {
      */
     public static boolean isOnCoolDown(int tribe, int pos) {
         LocalDateTime lastChallenge = getLastChallengeDate(tribe, pos);
-        return lastChallenge.isAfter(LocalDateTime.now().minusDays(plugin.getConfig().getInt("challenge-cool-down")));
+        if (lastChallenge != null) {
+            return lastChallenge.isAfter(LocalDateTime.now().minusDays(plugin.getConfig().getInt("challenge-cool-down")));
+        } else return false;
+    }
+
+    public static @org.jetbrains.annotations.Nullable LocalDateTime getCooldownEnd(int tribe, int pos) {
+        LocalDateTime lastChallenge = getLastChallengeDate(tribe, pos);
+        if (lastChallenge != null) {
+            return LocalDateTime.now().minusDays(plugin.getConfig().getInt("challenge-cool-down"));
+        } else return null;
     }
 
     private RoyaltyBoard() {

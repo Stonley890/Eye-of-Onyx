@@ -6,6 +6,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.shanerx.mojang.Mojang;
@@ -16,6 +17,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 public class Challenge {
@@ -26,22 +28,44 @@ public class Challenge {
 
     public final UUID attacker;
     public final UUID defender;
-    public final ChallengeType type;
     public final List<LocalDateTime> time;
-    public boolean finalized = false;
+    public State state;
+
+    @Nullable
+    public static Challenge getChallenge(Player player) {
+        Challenge playerChallenge = null;
+
+        try {
+            for (Challenge challenge : getChallenges()) {
+                if (Objects.equals(challenge.attacker, player.getUniqueId())) {
+                    playerChallenge = challenge;
+                    break;
+                }
+            }
+        } catch (IOException | InvalidConfigurationException e) {
+            throw new RuntimeException(e);
+        }
+        return playerChallenge;
+    }
+
+    public enum State {
+        PROPOSED,
+        ACCEPTED,
+        SCHEDULED,
+        ACTIVE
+    }
 
     /**
      * Create a new challenge.
      * @param attackerUUID The UUID of the attacking player.
      * @param defenderUUID The UUID of the defending player.
      * @param challengeTimes The possible dates/times of the challenge.
-     * @param challengeType The competition to be played.
      */
-    public Challenge(UUID attackerUUID, UUID defenderUUID, ChallengeType challengeType, List<LocalDateTime> challengeTimes) {
+    public Challenge(UUID attackerUUID, UUID defenderUUID, List<LocalDateTime> challengeTimes, State challengeState) {
         attacker = attackerUUID;
         defender = defenderUUID;
-        type = challengeType;
         time = challengeTimes;
+        state = challengeState;
     }
 
     public static void remove(Challenge challenge) throws IOException, InvalidConfigurationException {
@@ -58,7 +82,6 @@ public class Challenge {
             Main.debug("Converting to YAML...");
             yamlChallenge.add(challenge1.attacker);
             yamlChallenge.add(challenge1.defender);
-            yamlChallenge.add(challenge1.type.toString());
 
             List<String> dateTimes = new ArrayList<>();
 
@@ -66,7 +89,7 @@ public class Challenge {
                 dateTimes.add(dateTime.format(DateTimeFormatter.ISO_DATE_TIME));
             }
             yamlChallenge.add(dateTimes);
-            yamlChallenge.add(challenge1.finalized);
+            yamlChallenge.add(challenge1.state);
 
             // Add the given challenge
             yamlChallenges.add(yamlChallenge);
@@ -122,8 +145,28 @@ public class Challenge {
     }
 
     /**
+     * Get all challenges that contain both the given players.
+     * @param attacker the first player whose challenges to delete.
+     * @param defender the second player whose challenges to delete.
+     */
+    public static @Nullable Challenge getChallengeOfPlayers(UUID attacker, UUID defender) {
+        try {
+            for (Challenge challenge : getChallenges()) {
+                if (challenge.attacker == attacker && challenge.defender == defender) {
+                    return challenge;
+                }
+            }
+        } catch (IOException | InvalidConfigurationException e) {
+            Bukkit.getLogger().severe("Unable to access challenges.yml file!");
+        }
+
+        return null;
+    }
+
+    /**
      * Saves the challenge to challenge.yml on disk
       */
+    @SuppressWarnings("unchecked")
     public void save() {
 
         Main.debug("Creating new challenge...");
@@ -163,7 +206,6 @@ public class Challenge {
         Main.debug("Converting to YAML...");
         yamlChallenge.add(this.attacker);
         yamlChallenge.add(this.defender);
-        yamlChallenge.add(this.type.toString());
 
         List<String> dateTimes = new ArrayList<>();
 
@@ -171,7 +213,7 @@ public class Challenge {
             dateTimes.add(dateTime.format(DateTimeFormatter.ISO_DATE_TIME));
         }
         yamlChallenge.add(dateTimes);
-        yamlChallenge.add(finalized);
+        yamlChallenge.add(this.state);
 
         // Add the given challenge
         challenges.add(yamlChallenge);
@@ -198,6 +240,7 @@ public class Challenge {
      * @throws IOException If the file could not be accessed.
      * @throws InvalidConfigurationException If the configuration is invalid.
      */
+    @SuppressWarnings("unchecked")
     public static @NotNull List<Challenge> getChallenges() throws IOException, InvalidConfigurationException {
 
         fileConfig.load(file);
@@ -213,7 +256,6 @@ public class Challenge {
                 // Get saved values
                 UUID attacker = UUID.fromString((String) yamlChallenge.get(0));
                 UUID defender = UUID.fromString((String) yamlChallenge.get(1));
-                ChallengeType type = ChallengeType.valueOf((String) yamlChallenge.get(2));
 
                 List<String> dateTimes = (List<String>) yamlChallenge.get(3);
                 List<LocalDateTime> parsedTimes = new ArrayList<>();
@@ -222,11 +264,10 @@ public class Challenge {
                     parsedTimes.add(LocalDateTime.parse(dateTime));
                 }
 
-                boolean finalized = (boolean) yamlChallenge.get(4);
+                State state = (State) yamlChallenge.get(4);
 
                 // Add to a Challenge object
-                Challenge challenge = new Challenge(attacker, defender, type, parsedTimes);
-                challenge.finalized = finalized;
+                Challenge challenge = new Challenge(attacker, defender, parsedTimes, state);
 
                 // Add to list
                 challenges.add(challenge);
@@ -266,6 +307,7 @@ public class Challenge {
         }
     }
 
+    @SuppressWarnings("unchecked")
     public void passiveSave() {
         // Get the list of challenges
         List<List<Object>> challenges = (List<List<Object>>) fileConfig.getList("challenges");
@@ -283,7 +325,6 @@ public class Challenge {
         Main.debug("Converting to YAML...");
         yamlChallenge.add(this.attacker);
         yamlChallenge.add(this.defender);
-        yamlChallenge.add(this.type.toString());
 
         List<String> dateTimes = new ArrayList<>();
 
@@ -291,7 +332,7 @@ public class Challenge {
             dateTimes.add(dateTime.format(DateTimeFormatter.ISO_DATE_TIME));
         }
         yamlChallenge.add(dateTimes);
-        yamlChallenge.add(finalized);
+        yamlChallenge.add(state);
 
         // Add the given challenge
         challenges.add(yamlChallenge);

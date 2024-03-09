@@ -43,7 +43,7 @@ public class DashboardHandler implements HttpHandler {
 
         // Parse the code
         String encodedCode = formData.split("code=")[1].split("&state=")[0]; // Extracting code value from the form data
-        String code = URLDecoder.decode(encodedCode, StandardCharsets.UTF_8.name());
+        String code = URLDecoder.decode(encodedCode, StandardCharsets.UTF_8);
 
         Main.debug(encodedCode + "AND" + code);
 

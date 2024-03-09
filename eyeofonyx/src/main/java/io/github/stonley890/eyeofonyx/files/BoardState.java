@@ -12,7 +12,7 @@ import java.util.*;
 
 public class BoardState {
 
-    private final Map<Integer, BoardPosition> positions = new HashMap<>(5);
+    private final Map<Integer, BoardPosition> positions = new HashMap<>(9);
 
     public BoardState() {}
 
@@ -42,32 +42,39 @@ public class BoardState {
         for (int i = 0; i < RoyaltyBoard.getTribes().length; i++) {
             for (int p = 0; p < RoyaltyBoard.getValidPositions().length; p++) {
                 String uuid = "none";
-                if (boardStates.get(i).positions.get(p).player != null)
-                    uuid = boardStates.get(i).positions.get(p).player.toString();
+                UUID player = boardStates.get(i).positions.get(p).player;
+                if (player != null)
+                    uuid = player.toString();
 
                 String joinedBoard = "none";
-                if (boardStates.get(i).positions.get(p).joinedBoard != null)
-                    joinedBoard = boardStates.get(i).positions.get(p).joinedBoard.toString();
+                LocalDateTime joinedBoardTime = boardStates.get(i).positions.get(p).joinedBoard;
+                if (joinedBoardTime != null)
+                    joinedBoard = joinedBoardTime.toString();
 
                 String joinedTime = "none";
-                if (boardStates.get(i).positions.get(p).joinedPosition != null)
-                    joinedTime = boardStates.get(i).positions.get(p).joinedPosition.toString();
+                LocalDateTime joinedPosition = boardStates.get(i).positions.get(p).joinedPosition;
+                if (joinedPosition != null)
+                    joinedTime = joinedPosition.toString();
 
                 String lastOnline = "none";
-                if (boardStates.get(i).positions.get(p).lastOnline != null)
-                    lastOnline = boardStates.get(i).positions.get(p).lastOnline.toString();
+                LocalDateTime lastOnlineTime = boardStates.get(i).positions.get(p).lastOnline;
+                if (lastOnlineTime != null)
+                    lastOnline = lastOnlineTime.toString();
 
                 String lastChallenge = "none";
-                if (boardStates.get(i).positions.get(p).lastChallenge != null)
-                    lastChallenge = boardStates.get(i).positions.get(p).lastChallenge.toString();
+                LocalDateTime lastChallengeTime = boardStates.get(i).positions.get(p).lastChallenge;
+                if (lastChallengeTime != null)
+                    lastChallenge = lastChallengeTime.toString();
 
                 String challenger = "none";
-                if (boardStates.get(i).positions.get(p).challenger != null)
-                    challenger = boardStates.get(i).positions.get(p).challenger.toString();
+                UUID challengerUuid = boardStates.get(i).positions.get(p).challenger;
+                if (challengerUuid != null)
+                    challenger = challengerUuid.toString();
 
                 String challenging = "none";
-                if (boardStates.get(i).positions.get(p).challenging != null)
-                    challenging = boardStates.get(i).positions.get(p).challenging.toString();
+                UUID challengingUuid = boardStates.get(i).positions.get(p).challenging;
+                if (challengingUuid != null)
+                    challenging = challengingUuid.toString();
 
                 config.set(RoyaltyBoard.getTribes()[i] + "." + RoyaltyBoard.getValidPositions()[p] + ".uuid", uuid);
                 config.set(RoyaltyBoard.getTribes()[i] + "." + RoyaltyBoard.getValidPositions()[p] + ".name", boardStates.get(i).positions.get(p).name);

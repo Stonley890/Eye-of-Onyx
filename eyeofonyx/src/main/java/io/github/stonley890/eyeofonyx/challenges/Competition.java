@@ -3,7 +3,6 @@ package io.github.stonley890.eyeofonyx.challenges;
 import io.github.stonley890.dreamvisitor.Main;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import io.github.stonley890.eyeofonyx.files.Challenge;
-import io.github.stonley890.eyeofonyx.files.ChallengeType;
 import io.github.stonley890.eyeofonyx.files.PlayerTribe;
 import javassist.NotFoundException;
 import net.md_5.bungee.api.ChatColor;
@@ -12,8 +11,10 @@ import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.InvalidConfigurationException;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
+import java.util.Objects;
 import java.util.UUID;
 
 public class Competition {
@@ -23,10 +24,9 @@ public class Competition {
     public UUID attacker;
     public UUID defender;
     public int tribe;
-    public ChallengeType type;
     public boolean started = false;
 
-    public static void call(Challenge challenge) throws IOException, InvalidConfigurationException {
+    public static void call(@NotNull Challenge challenge) throws IOException, InvalidConfigurationException {
 
         Main.debug("Challenge " + challenge.attacker + " vs " + challenge.defender + " is getting ready to start.");
         // Add to activeChallenges list
@@ -43,11 +43,10 @@ public class Competition {
 
     }
 
-    private Competition(Challenge challenge) throws NotFoundException {
+    private Competition(@NotNull Challenge challenge) throws NotFoundException {
         attacker = challenge.attacker;
         defender = challenge.defender;
         tribe = PlayerTribe.getTribeOfPlayer(attacker);
-        type = challenge.type;
     }
 
     public void callToJoin() {
@@ -66,11 +65,11 @@ public class Competition {
         Main.debug("Message built. Sending to " + this.attacker + " and " + this.defender + ".");
 
         if (Bukkit.getPlayer(this.attacker) != null) {
-            Bukkit.getPlayer(this.attacker).spigot().sendMessage(message.create());
+            Objects.requireNonNull(Bukkit.getPlayer(this.attacker)).spigot().sendMessage(message.create());
             Main.debug("Send message to attacker.");
         }
         if (Bukkit.getPlayer(this.defender) != null) {
-            Bukkit.getPlayer(this.defender).spigot().sendMessage(message.create());
+            Objects.requireNonNull(Bukkit.getPlayer(this.defender)).spigot().sendMessage(message.create());
             Main.debug("Send message to defender.");
         }
     }

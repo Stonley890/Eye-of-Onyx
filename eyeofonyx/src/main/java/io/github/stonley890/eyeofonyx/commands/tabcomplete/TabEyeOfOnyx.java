@@ -1,5 +1,6 @@
 package io.github.stonley890.eyeofonyx.commands.tabcomplete;
 
+import io.github.stonley890.dreamvisitor.data.PlayerUtility;
 import io.github.stonley890.eyeofonyx.files.Banned;
 import io.github.stonley890.eyeofonyx.files.RoyaltyBoard;
 import org.bukkit.Bukkit;
@@ -10,16 +11,11 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.shanerx.mojang.Mojang;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class TabEyeOfOnyx implements TabCompleter {
-
-
-
-    Mojang mojang = new Mojang().connect();
 
     @Nullable
     @Override
@@ -53,7 +49,7 @@ public class TabEyeOfOnyx implements TabCompleter {
                 case "unban" -> {
                     if (sender.hasPermission("eyeofonyx.ban"))
                         for (String bannedPlayer : Banned.getBannedPlayers()) {
-                            String name = mojang.getPlayerProfile(bannedPlayer).getUsername();
+                            String name = PlayerUtility.getUsernameOfUuid(bannedPlayer);
                             suggestions.add(name);
                         }
                 }

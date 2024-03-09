@@ -44,10 +44,14 @@ public class Discord extends ListenerAdapter {
                                 .addOptions(new OptionData(OptionType.STRING, "position", "The position to set the user to.", true)
                                         .setAutoComplete(false)
                                         .addChoice("Ruler", "ruler")
-                                        .addChoice("Heir Apparent", "heir_apparent")
-                                        .addChoice("Heir Presumptive", "heir_presumptive")
-                                        .addChoice("Noble Apparent", "noble_apparent")
-                                        .addChoice("Noble Presumptive", "noble_presumptive")
+                                        .addChoice("Crown Heir", "crown_heir")
+                                        .addChoice("Apparent Heir", "apparent_heir")
+                                        .addChoice("Presumptive Heir", "presumptive_heir")
+                                        .addChoice("Crown Noble", "crown_noble")
+                                        .addChoice("Grand Noble", "grand_noble")
+                                        .addChoice("High Noble", "high_noble")
+                                        .addChoice("Apparent Noble", "apparent_noble")
+                                        .addChoice("Presumptive Noble", "presumptive_noble")
                                 ),
                         new SubcommandData("swap", "Swap two players on the royalty board.")
                                 .addOptions(new OptionData(OptionType.STRING, "tribe", "The tribe to target.", true)
@@ -66,18 +70,26 @@ public class Discord extends ListenerAdapter {
                                 .addOptions(new OptionData(OptionType.STRING, "position-1", "The first position to swap.", true)
                                         .setAutoComplete(false)
                                         .addChoice("Ruler", "ruler")
-                                        .addChoice("Heir Apparent", "heir_apparent")
-                                        .addChoice("Heir Presumptive", "heir_presumptive")
-                                        .addChoice("Noble Apparent", "noble_apparent")
-                                        .addChoice("Noble Presumptive", "noble_presumptive")
+                                        .addChoice("Crown Heir", "crown_heir")
+                                        .addChoice("Apparent Heir", "apparent_heir")
+                                        .addChoice("Presumptive Heir", "presumptive_heir")
+                                        .addChoice("Crown Noble", "crown_noble")
+                                        .addChoice("Grand Noble", "grand_noble")
+                                        .addChoice("High Noble", "high_noble")
+                                        .addChoice("Apparent Noble", "apparent_noble")
+                                        .addChoice("Presumptive Noble", "presumptive_noble")
                                 )
                                 .addOptions(new OptionData(OptionType.STRING, "position-2", "The second position to swap.", true)
                                         .setAutoComplete(false)
                                         .addChoice("Ruler", "ruler")
-                                        .addChoice("Heir Apparent", "heir_apparent")
-                                        .addChoice("Heir Presumptive", "heir_presumptive")
-                                        .addChoice("Noble Apparent", "noble_apparent")
-                                        .addChoice("Noble Presumptive", "noble_presumptive")
+                                        .addChoice("Crown Heir", "crown_heir")
+                                        .addChoice("Apparent Heir", "apparent_heir")
+                                        .addChoice("Presumptive Heir", "presumptive_heir")
+                                        .addChoice("Crown Noble", "crown_noble")
+                                        .addChoice("Grand Noble", "grand_noble")
+                                        .addChoice("High Noble", "high_noble")
+                                        .addChoice("Apparent Noble", "apparent_noble")
+                                        .addChoice("Presumptive Noble", "presumptive_noble")
                                 ),
                         new SubcommandData("clear", "Remove the player at the specified position.")
                                 .addOptions(new OptionData(OptionType.STRING, "tribe", "The tribe to target.", true)
@@ -96,10 +108,14 @@ public class Discord extends ListenerAdapter {
                                 .addOptions(new OptionData(OptionType.STRING, "position", "The position to target.", true)
                                         .setAutoComplete(false)
                                         .addChoice("Ruler", "ruler")
-                                        .addChoice("Heir Apparent", "heir_apparent")
-                                        .addChoice("Heir Presumptive", "heir_presumptive")
-                                        .addChoice("Noble Apparent", "noble_apparent")
-                                        .addChoice("Noble Presumptive", "noble_presumptive")
+                                        .addChoice("Crown Heir", "crown_heir")
+                                        .addChoice("Apparent Heir", "apparent_heir")
+                                        .addChoice("Presumptive Heir", "presumptive_heir")
+                                        .addChoice("Crown Noble", "crown_noble")
+                                        .addChoice("Grand Noble", "grand_noble")
+                                        .addChoice("High Noble", "high_noble")
+                                        .addChoice("Apparent Noble", "apparent_noble")
+                                        .addChoice("Presumptive Noble", "presumptive_noble")
                                 ),
                         new SubcommandData("update", "Reload and force update the royalty board.")
                 ).setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MANAGE_ROLES)));
@@ -200,7 +216,7 @@ public class Discord extends ListenerAdapter {
 
                             // Log update
                             BoardState newBoard = RoyaltyBoard.getBoardOf(playerTribe).clone();
-                            RoyaltyBoard.reportChange(new RoyaltyAction(event.getMember().getId(), playerTribe, oldBoard, newBoard));
+                            RoyaltyBoard.reportChange(new RoyaltyAction(Objects.requireNonNull(event.getMember()).getId(), playerTribe, oldBoard, newBoard));
 
                             event.reply("✅ " + targetUser.getAsMention() + " is now " + position.toUpperCase().replace('_', ' ')).queue();
 
@@ -222,9 +238,6 @@ public class Discord extends ListenerAdapter {
                         event.reply("Player is not associated with a tribe!").queue();
                         if (Main.debugMode) e.printStackTrace();
                     }
-
-
-
                 }
                 case "clear" -> {
 
@@ -268,7 +281,7 @@ public class Discord extends ListenerAdapter {
                     RoyaltyBoard.removePlayer(tribeIndex, posIndex, true);
 
                     BoardState newBoard = RoyaltyBoard.getBoardOf(tribeIndex).clone();
-                    RoyaltyBoard.reportChange(new RoyaltyAction(event.getMember().getId(), tribeIndex, oldBoard, newBoard));
+                    RoyaltyBoard.reportChange(new RoyaltyAction(Objects.requireNonNull(event.getMember()).getId(), tribeIndex, oldBoard, newBoard));
                     RoyaltyBoard.updateBoard(tribeIndex, false);
                     try {
                         RoyaltyBoard.updateDiscordBoard(tribeIndex);
@@ -315,10 +328,15 @@ public class Discord extends ListenerAdapter {
                     Challenge.removeChallengesOfPlayer(pos1.player, "The player who was in your challenge was moved to a different position.");
                     Challenge.removeChallengesOfPlayer(pos2.player, "The player who was in your challenge was moved to a different position.");
 
-                    Notification.removeNotificationsOfPlayer(pos1.player, NotificationType.CHALLENGE_ACCEPTED);
-                    Notification.removeNotificationsOfPlayer(pos1.player, NotificationType.CHALLENGE_REQUESTED);
-                    Notification.removeNotificationsOfPlayer(pos2.player, NotificationType.CHALLENGE_ACCEPTED);
-                    Notification.removeNotificationsOfPlayer(pos2.player, NotificationType.CHALLENGE_REQUESTED);
+                    if (pos1.player != null) {
+                        Notification.removeNotificationsOfPlayer(pos1.player, NotificationType.CHALLENGE_ACCEPTED);
+                        Notification.removeNotificationsOfPlayer(pos1.player, NotificationType.CHALLENGE_REQUESTED);
+                    }
+                    if (pos2.player != null) {
+                        Notification.removeNotificationsOfPlayer(pos2.player, NotificationType.CHALLENGE_ACCEPTED);
+                        Notification.removeNotificationsOfPlayer(pos2.player, NotificationType.CHALLENGE_REQUESTED);
+                    }
+
 
                     // Apply change
                     RoyaltyBoard.set(tribeIndex, RoyaltyBoard.getBoardOf(tribeIndex).swap(posIndex1, posIndex2));
@@ -331,6 +349,9 @@ public class Discord extends ListenerAdapter {
                     BoardState newBoard = RoyaltyBoard.getBoardOf(tribeIndex).clone();
                     RoyaltyBoard.reportChange(new RoyaltyAction(event.getUser().getId(), tribeIndex, oldBoard, newBoard));
 
+                    assert position1 != null;
+                    assert position2 != null;
+                    assert tribe != null;
                     event.reply("Swapped " + position1.toUpperCase() + " and " + position2.toUpperCase() + " of " + tribe.toUpperCase()).queue();
 
                     RoyaltyBoard.updateBoard(tribeIndex, false);
@@ -512,7 +533,7 @@ public class Discord extends ListenerAdapter {
                             .setDescription("Reverting this action will revert all values of this tribe to the values they were set to before this change.")
                             .setFooter("This action cannot be undone.");
 
-                    for (int pos = 0; pos < 5; pos++) {
+                    for (int pos = 0; pos < RoyaltyBoard.CIVILIAN; pos++) {
 
 
                         BoardPosition position = royaltyAction.oldState.getPos(pos);

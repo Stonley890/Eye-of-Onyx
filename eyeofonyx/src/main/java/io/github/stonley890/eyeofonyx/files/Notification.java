@@ -22,6 +22,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 public class Notification {
@@ -72,6 +73,7 @@ public class Notification {
      * @param notification The notification to save.
      * @throws IOException If file could not be accessed.
      */
+    @SuppressWarnings("unchecked")
     public static void saveNotification(@NotNull Notification notification) throws IOException, InvalidConfigurationException {
 
         /* Notifications in notification.yml are saved as a list of string lists for each player
@@ -126,6 +128,7 @@ public class Notification {
      * @throws IOException If the file could not be accessed.
      * @throws InvalidConfigurationException If the configuration is invalid.
      */
+    @SuppressWarnings("unchecked")
     public static @NotNull List<Notification> getNotificationsOfPlayer(@NotNull UUID uuid) throws IOException, InvalidConfigurationException {
 
         fileConfig.load(file);
@@ -247,11 +250,6 @@ public class Notification {
 
              */
 
-            // Mark notification as seen
-            removeNotification(this);
-            this.seen = true;
-            Notification.saveNotification(this);
-
             // Create message
             ComponentBuilder message = new ComponentBuilder();
             message.append(EyeOfOnyx.EOO).append(time.format(DateTimeFormatter.ISO_DATE)).append(" ").append(time.format(DateTimeFormatter.ofPattern("hh:mm a")))
@@ -283,6 +281,8 @@ public class Notification {
                 buttons.add(accept);
                 buttons.add(deny);
 
+                RoyaltyBoard.report(onlinePlayer.getName(), onlinePlayer.getName() + " has been shown the notification for their challenge request.");
+
             } else if (type == NotificationType.CHALLENGE_ACCEPTED) {
 
                 // Add buttons for dates
@@ -308,7 +308,7 @@ public class Notification {
                 List<LocalDateTime> dates = challenge.time;
                 List<ZonedDateTime> offsetDates = new ArrayList<>();
 
-                ZonedDateTime playerTime =  IpUtils.ipToTime(onlinePlayer.getAddress().getAddress().getHostAddress());
+                ZonedDateTime playerTime =  IpUtils.ipToTime(Objects.requireNonNull(onlinePlayer.getAddress()).getAddress().getHostAddress());
                 if (playerTime != null) {
                     ZoneId playerOffset = playerTime.getZone();
 
@@ -342,6 +342,8 @@ public class Notification {
 
                 buttons.add(deny);
 
+                RoyaltyBoard.report(onlinePlayer.getName(), onlinePlayer.getName() + " has been shown the notification for their challenge scheduling.");
+
             }   else if (type == NotificationType.GENERIC) {
 
                 // Do not show notification again
@@ -359,6 +361,11 @@ public class Notification {
 
             // Send the message to player
             onlinePlayer.spigot().sendMessage(message.create());
+
+            // Mark notification as seen
+            removeNotification(this);
+            this.seen = true;
+            Notification.saveNotification(this);
 
             return true;
         } else {

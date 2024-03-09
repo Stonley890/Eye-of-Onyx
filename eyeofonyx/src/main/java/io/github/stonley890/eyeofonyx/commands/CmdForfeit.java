@@ -37,7 +37,7 @@ public class CmdForfeit implements CommandExecutor {
                 return true;
             }
 
-            if (posIndex == 5) {
+            if (posIndex == RoyaltyBoard.CIVILIAN) {
                 sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You are not in a royalty position!");
                 return true;
             }

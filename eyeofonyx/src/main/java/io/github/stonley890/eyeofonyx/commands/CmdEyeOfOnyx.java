@@ -1,8 +1,8 @@
 package io.github.stonley890.eyeofonyx.commands;
 
 import io.github.stonley890.dreamvisitor.Main;
+import io.github.stonley890.dreamvisitor.data.PlayerUtility;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
-import io.github.stonley890.eyeofonyx.Utils;
 import io.github.stonley890.eyeofonyx.files.*;
 import javassist.NotFoundException;
 import net.md_5.bungee.api.ChatColor;
@@ -28,11 +28,10 @@ import java.util.*;
 public class CmdEyeOfOnyx implements CommandExecutor {
 
     EyeOfOnyx main = EyeOfOnyx.getPlugin();
-    Mojang mojang = new Mojang().connect();
-
     boolean disabling = false;
 
     @Override
+    @SuppressWarnings("unchecked")
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String @NotNull [] args) {
 
         if (args.length == 0) {
@@ -50,15 +49,9 @@ public class CmdEyeOfOnyx implements CommandExecutor {
                         }  /* there are no other arguments */
                         else {
 
-                            UUID uuid;
-
-                            try {
-                                // Get UUID
-                                String stringUuid = mojang.getUUIDOfUsername(args[1]);
-                                Main.debug("Checking username: " + args[1] + " - " + stringUuid);
-                                uuid = UUID.fromString(Utils.formatUuid(mojang.getUUIDOfUsername(args[1])));
-
-                            } catch (IllegalArgumentException e) {
+                            // Get UUID
+                            UUID uuid = PlayerUtility.getUUIDOfUsername(args[1]);
+                            if (uuid == null) {
                                 sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "That user could not be found.");
                                 return true;
                             }
@@ -129,20 +122,20 @@ public class CmdEyeOfOnyx implements CommandExecutor {
                     if (!sender.hasPermission("eyeofonxy.ban"))
                         sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You do not have permission to run that command.");
                     else {
-                        if /* there is another argument */ (args.length <= 1) {
+                        if /* there is another argument */ (args.length == 1) {
                             sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Missing arguments. /eyeofonyx ban <player>");
                         } else {
-                            try {
-                                UUID uuid = UUID.fromString(Utils.formatUuid(mojang.getUUIDOfUsername(args[1])));
-                                if /* player is banned */ (Banned.isPlayerBanned(uuid)) {
-                                    Banned.removePlayer(uuid);
-                                    sender.sendMessage(EyeOfOnyx.EOO + args[1] + " has been unbanned.");
-                                    RoyaltyBoard.report(sender.getName(),  args[1] + " was unbanned from participating in royalty.");
-                                } else /* player is not banned */ {
-                                    sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "That player is not banned.");
-                                }
-                            } catch (IllegalArgumentException e) {
+                            UUID uuid = PlayerUtility.getUUIDOfUsername(args[1]);
+                            if (uuid == null) {
                                 sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "That user could not be found.");
+                                return true;
+                            }
+                            if /* player is banned */ (Banned.isPlayerBanned(uuid)) {
+                                Banned.removePlayer(uuid);
+                                sender.sendMessage(EyeOfOnyx.EOO + args[1] + " has been unbanned.");
+                                RoyaltyBoard.report(sender.getName(),  args[1] + " was unbanned from participating in royalty.");
+                            } else /* player is not banned */ {
+                                sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "That player is not banned.");
                             }
                         }
                     }

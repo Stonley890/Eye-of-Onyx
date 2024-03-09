@@ -15,8 +15,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InvalidObjectException;
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.UUID;
 
 public class PlayerTribe {
@@ -57,13 +57,6 @@ public class PlayerTribe {
         } catch (Exception e) {
             Bukkit.getLogger().severe("Error saving player-tribes.yml file:");
         }
-    }
-
-    /**
-     * Reloads data from file.
-     */
-    public static void reload() throws IOException, InvalidConfigurationException {
-        fileConfig.load(file);
     }
 
     /**
@@ -123,7 +116,7 @@ public class PlayerTribe {
 
         online = player != null;
 
-        Scoreboard scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
+        Scoreboard scoreboard = Objects.requireNonNull(Bukkit.getScoreboardManager()).getMainScoreboard();
 
         int playerTribe;
 

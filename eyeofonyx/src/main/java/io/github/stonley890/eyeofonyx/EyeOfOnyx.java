@@ -140,7 +140,7 @@ public class EyeOfOnyx extends JavaPlugin {
                     if (!challenges.isEmpty()) {
                         Main.debug("There are/is " + challenges.size() + " challenge(s) pending.");
                         for (Challenge challenge : challenges) {
-                            if (challenge.time.size() == 1 && challenge.time.get(0).isBefore(LocalDateTime.now()) && challenge.finalized) {
+                            if (challenge.time.size() == 1 && challenge.time.get(0).isBefore(LocalDateTime.now()) && challenge.state == Challenge.State.SCHEDULED) {
                                 Main.debug("Challenge ready to be called.");
                                 Competition.call(challenge);
                             }
@@ -254,23 +254,4 @@ public class EyeOfOnyx extends JavaPlugin {
         return plugin;
     }
 
-    public static void createTeams() {
-        // Check for and create missing teams
-        Scoreboard scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
-        for (String teamName : RoyaltyBoard.getTeamNames()) {
-            if (scoreboard.getTeam(teamName) == null) {
-
-                scoreboard.registerNewTeam(teamName);
-                Bukkit.getLogger().info(EyeOfOnyx.EOO + "Created missing " + teamName + " team.");
-            }
-        }
-        if (scoreboard.getTeam("eoo.attacker") == null) {
-            scoreboard.registerNewTeam("eoo.attacker");
-            Bukkit.getLogger().info(EyeOfOnyx.EOO + "Created missing " + "Attacker" + " team.");
-        }
-        if (scoreboard.getTeam("eoo.defender") == null) {
-            scoreboard.registerNewTeam("eoo.defender");
-            Bukkit.getLogger().info(EyeOfOnyx.EOO + "Created missing " + "Defender" + " team.");
-        }
-    }
 }

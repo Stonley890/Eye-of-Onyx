@@ -4,6 +4,7 @@ import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -50,7 +51,7 @@ public class Banned {
      * Adds a UUID to the ban list.
      * @param uuid The UUID to add.
      */
-    public static void addPlayer(UUID uuid) {
+    public static void addPlayer(@NotNull UUID uuid) {
         List<String> banlist = fileConfig.getStringList("banned");
         banlist.add(uuid.toString());
         fileConfig.set("banned", banlist);
@@ -61,7 +62,7 @@ public class Banned {
      * Removes a UUID from the ban list.
      * @param uuid The UUID to remove.
      */
-    public static void removePlayer(UUID uuid) {
+    public static void removePlayer(@NotNull UUID uuid) {
         List<String> banlist = fileConfig.getStringList("banned");
         banlist.remove(uuid.toString());
         fileConfig.set("banned", banlist);
@@ -73,7 +74,7 @@ public class Banned {
      * @param uuid The player UUID to check.
      * @return Whether the UUID is on the ban list.
      */
-    public static boolean isPlayerBanned(UUID uuid) {
+    public static boolean isPlayerBanned(@NotNull UUID uuid) {
         List<String> banlist = fileConfig.getStringList("banned");
         boolean isBanned;
         isBanned = banlist.contains(uuid.toString());
@@ -84,7 +85,7 @@ public class Banned {
      * Get the list of banned UUIDs
      * @return A list of String UUIDs
      */
-    public static List<String> getBannedPlayers() {
+    public static @NotNull List<String> getBannedPlayers() {
         return fileConfig.getStringList("banned");
     }
 }
