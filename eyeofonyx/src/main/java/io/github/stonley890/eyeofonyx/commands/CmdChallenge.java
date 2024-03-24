@@ -7,10 +7,10 @@ import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import io.github.stonley890.eyeofonyx.challenges.Competition;
 import io.github.stonley890.eyeofonyx.files.*;
 import javassist.NotFoundException;
+import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.*;
 import net.md_5.bungee.api.chat.hover.content.Text;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.command.Command;
@@ -23,10 +23,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Random;
+import java.util.*;
 
 import static io.github.stonley890.eyeofonyx.files.RoyaltyBoard.*;
 
@@ -72,13 +69,42 @@ public class CmdChallenge implements CommandExecutor {
             int playerPosition = RoyaltyBoard.getPositionIndexOfUUID(playerTribe, player.getUniqueId());
 
             if (Banned.isPlayerBanned(player.getUniqueId())) {
-
                 // Player is banned from royalty board
                 sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You are not allowed to initiate a challenge!");
-
                 return true;
+            }
 
-            } else if (playerPosition != CIVILIAN && RoyaltyBoard.isOnCoolDown(playerTribe, playerPosition)) {
+            Challenge challenge = Challenge.getChallenge(player);
+            if (challenge != null) {
+
+                boolean attacker = true;
+                java.util.UUID opponentUuid = challenge.attacker;
+                if (opponentUuid.equals(player.getUniqueId())) {
+                    opponentUuid = challenge.defender;
+                    attacker = false;
+                }
+                String opponentName = PlayerUtility.getUsernameOfUuid(opponentUuid);
+                
+                ComponentBuilder builder = new ComponentBuilder();
+                builder.append(EyeOfOnyx.EOO).append("You are currently challenging ").append(opponentName).append(".\n");
+                
+                builder.append("[").color(ChatColor.WHITE).append("✓").color(ChatColor.GREEN).append("] Proposed\n[").color(ChatColor.WHITE);
+                if (challenge.isAccepted()) builder.append("✓").color(ChatColor.GREEN);
+                else builder.append("-").color(ChatColor.RED);
+                builder.append("] Accepted\n[").color(ChatColor.WHITE);
+                if (challenge.isScheduled()) builder.append("✓").color(ChatColor.GREEN);
+                else builder.append("-").color(ChatColor.RED);
+                builder.append("] Scheduled\n[").color(ChatColor.WHITE);
+                if (challenge.isActive()) builder.append("✓").color(ChatColor.GREEN);
+                else builder.append("-").color(ChatColor.RED);
+                builder.append("] Active\n[").color(ChatColor.WHITE)
+                        .append("Cancel");
+                if ((attacker && !challenge.isAttackerCanceled()) || (!attacker && !challenge.isDefenderCanceled())) builder.underlined(true).color(ChatColor.RED).event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("If both you and your opponent agree, the challenge will be canceled."))).event(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/challenge cancel"));
+                else builder.color(ChatColor.GRAY).event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("You already pressed cancel.")));
+                builder.append("]").color(ChatColor.WHITE).underlined(false);
+            }
+            
+            if (playerPosition != CIVILIAN && RoyaltyBoard.isOnCoolDown(playerTribe, playerPosition)) {
 
                 // Player is on cooldown. They cannot challenge
                 ComponentBuilder builder = new ComponentBuilder();
@@ -87,7 +113,7 @@ public class CmdChallenge implements CommandExecutor {
                 challengeDate = challengeDate.plusDays(EyeOfOnyx.getPlugin().getConfig().getInt("challenge-cool-down"));
 
                 builder.append(EyeOfOnyx.EOO)
-                        .color(net.md_5.bungee.api.ChatColor.RED)
+                        .color(ChatColor.RED)
                         .append("You are on movement cooldown until ")
                         .append(challengeDate.format(DateTimeFormatter.ISO_DATE));
 
@@ -119,10 +145,10 @@ public class CmdChallenge implements CommandExecutor {
                         .append("\nYou are currently ");
                 String position = "CIVILIAN";
                 if (playerPosition != CIVILIAN) position = positions[playerPosition];
-                builder.append(position.replace('_', ' ')).color(net.md_5.bungee.api.ChatColor.YELLOW)
-                        .append(" of the ").color(net.md_5.bungee.api.ChatColor.WHITE)
-                        .append(teams[playerTribe]).color(net.md_5.bungee.api.ChatColor.YELLOW).append("s").color(net.md_5.bungee.api.ChatColor.YELLOW)
-                        .append(".\nSelect a position:\n").color(net.md_5.bungee.api.ChatColor.WHITE);
+                builder.append(position.replace('_', ' ')).color(ChatColor.YELLOW)
+                        .append(" of the ").color(ChatColor.WHITE)
+                        .append(teams[playerTribe]).color(ChatColor.YELLOW).append("s").color(ChatColor.YELLOW)
+                        .append(".\nSelect a position:\n").color(ChatColor.WHITE);
 
                 if /* Player is a civilian */ (playerPosition == CIVILIAN) {
 
@@ -156,7 +182,7 @@ public class CmdChallenge implements CommandExecutor {
 
                         TextComponent button = new TextComponent("[ Assume Position ]");
                         button.setUnderlined(true);
-                        button.setColor(net.md_5.bungee.api.ChatColor.GREEN);
+                        button.setColor(ChatColor.GREEN);
                         button.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/challenge position1"));
 
                         builder.append(button);
@@ -189,7 +215,7 @@ public class CmdChallenge implements CommandExecutor {
 
                 } else if /* Player is ruler */ (playerPosition == RULER) {
 
-                    builder.color(net.md_5.bungee.api.ChatColor.RED).append("You are ruler! No one to challenge.");
+                    builder.color(ChatColor.RED).append("You are ruler! No one to challenge.");
 
                 }
 
@@ -266,7 +292,7 @@ public class CmdChallenge implements CommandExecutor {
                                 case "position4" -> targetPosition = NOBLE4;
                                 case "position5" -> targetPosition = NOBLE5;
                                 default -> {
-                                    builder.color(net.md_5.bungee.api.ChatColor.RED).append("Invalid arguments!");
+                                    builder.color(ChatColor.RED).append("Invalid arguments!");
                                     sender.spigot().sendMessage(builder.create());
                                     return true;
                                 }
@@ -280,7 +306,7 @@ public class CmdChallenge implements CommandExecutor {
                                 case "position2" -> targetPosition = HEIR2;
                                 case "position3" -> targetPosition = HEIR3;
                                 default -> {
-                                    builder.color(net.md_5.bungee.api.ChatColor.RED).append("Invalid arguments!");
+                                    builder.color(ChatColor.RED).append("Invalid arguments!");
                                     sender.spigot().sendMessage(builder.create());
                                     return true;
                                 }
@@ -358,7 +384,7 @@ public class CmdChallenge implements CommandExecutor {
                         builder.append(EyeOfOnyx.EOO).append("One more thing! Use the link below to select times that you are available to attend the challenge. You'll need the code below too.").append("\n");
 
                         TextComponent link = new TextComponent("[Submit Availability]");
-                        link.setColor(net.md_5.bungee.api.ChatColor.YELLOW);
+                        link.setColor(ChatColor.YELLOW);
                         link.setUnderlined(true);
                         link.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "http://" + EyeOfOnyx.getPlugin().getConfig().getString("address") + ":" + EyeOfOnyx.getPlugin().getConfig().getInt("port") + "/availability"));
                         link.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("Click to open the web form.")));
@@ -366,13 +392,13 @@ public class CmdChallenge implements CommandExecutor {
                         String id = String.format("%04d", new Random().nextInt(10000));
 
                         TextComponent code = new TextComponent("[" + id + "]");
-                        code.setColor(net.md_5.bungee.api.ChatColor.YELLOW);
+                        code.setColor(ChatColor.YELLOW);
                         code.setUnderlined(true);
                         code.setClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, id));
                         code.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("Click to copy the code.")));
 
                         builder.append(link).append(" ").reset().append(code).append("\n").reset()
-                                .append("The code will expire in five minutes.").color(net.md_5.bungee.api.ChatColor.RED).append("\n");
+                                .append("The code will expire in five minutes.").color(ChatColor.RED).append("\n");
 
                         playersOnForm.add(player);
                         codesOnForm.add(id);
@@ -393,18 +419,18 @@ public class CmdChallenge implements CommandExecutor {
                         player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
                         ComponentBuilder builder = new ComponentBuilder();
                         builder.append(EyeOfOnyx.EOO).append("Are you sure you want to forfeit your role and remove yourself from the royalty board? ")
-                                .append("This action cannot be undone.").color(net.md_5.bungee.api.ChatColor.RED).append("\n");
+                                .append("This action cannot be undone.").color(ChatColor.RED).append("\n");
 
                         // Add accept and forfeit buttons
                         TextComponent accept = new TextComponent();
                         accept.setText("[Accept Challenge]");
-                        accept.setColor(net.md_5.bungee.api.ChatColor.GREEN);
+                        accept.setColor(ChatColor.GREEN);
                         accept.setUnderlined(true);
                         accept.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/challenge accept"));
 
                         TextComponent deny = new TextComponent();
                         deny.setText("[Forfeit]");
-                        deny.setColor(net.md_5.bungee.api.ChatColor.RED);
+                        deny.setColor(ChatColor.RED);
                         deny.setUnderlined(true);
                         deny.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/challenge denyconfirm"));
 
@@ -461,7 +487,7 @@ public class CmdChallenge implements CommandExecutor {
                     }
                     case "date" -> {
 
-                        Challenge playerChallenge = Challenge.getChallenge(player);
+                        Challenge playerChallenge = challenge;
 
                         if (playerChallenge == null) {
                             sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You are not in any scheduled challenges!");
@@ -515,6 +541,17 @@ public class CmdChallenge implements CommandExecutor {
                             throw new RuntimeException(e);
                         }
                     }
+                    case "cancel" -> {
+                        if (challenge != null) {
+                            try {
+                                if (challenge.attacker.equals(player.getUniqueId())) challenge.cancelAttacker();
+                                if (challenge.defender.equals(player.getUniqueId())) challenge.cancelDefender();
+                                sender.sendMessage(EyeOfOnyx.EOO + "Cancel request sent.");
+                            } catch (IOException | InvalidConfigurationException e) {
+                                player.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "A problem occurred with changing the details of you challenge.");
+                            }
+                        }
+                    }
                     default ->
                             sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Incorrect arguments! Use the text GUI with /challenge");
                 }
@@ -531,28 +568,28 @@ public class CmdChallenge implements CommandExecutor {
 
         TextComponent challengeButton = new TextComponent("[ Initiate Challenge ]");
         challengeButton.setUnderlined(true);
-        challengeButton.setColor(net.md_5.bungee.api.ChatColor.GREEN);
+        challengeButton.setColor(ChatColor.GREEN);
         challengeButton.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("Initiate a challenge with this player for their royalty position.")));
         challengeButton.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/challenge " + command));
 
         TextComponent quickChallengeButton = new TextComponent("[ Quick Challenge ]");
         quickChallengeButton.setUnderlined(true);
-        quickChallengeButton.setColor(net.md_5.bungee.api.ChatColor.YELLOW);
+        quickChallengeButton.setColor(ChatColor.YELLOW);
         quickChallengeButton.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("Execute an immediate challenge with this player. They can deny this if they choose.")));
         quickChallengeButton.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/challenge " + command + " quick"));
 
         TextComponent disabledQuickChallengeButton = new TextComponent("[ Quick Challenge ]");
         disabledQuickChallengeButton.setUnderlined(false);
-        disabledQuickChallengeButton.setColor(net.md_5.bungee.api.ChatColor.GRAY);
+        disabledQuickChallengeButton.setColor(ChatColor.GRAY);
         disabledQuickChallengeButton.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("This player is not online.")));
 
         builder.append("\n").reset().append(getValidPositions()[pos].toUpperCase().replace('_', ' '))
                 .append(" ")
-                .append(PlayerUtility.getUsernameOfUuid(Objects.requireNonNull(getUuid(tribe, pos)))).color(net.md_5.bungee.api.ChatColor.YELLOW)
+                .append(PlayerUtility.getUsernameOfUuid(Objects.requireNonNull(getUuid(tribe, pos)))).color(ChatColor.YELLOW)
                 .append("\n");
 
         builder.append(challengeButton)
-                .color(net.md_5.bungee.api.ChatColor.RESET)
+                .color(ChatColor.RESET)
                 .append(" ").reset();
 
         if (Bukkit.getPlayer(Objects.requireNonNull(getUuid(tribe, pos))) == null) builder.append(disabledQuickChallengeButton);

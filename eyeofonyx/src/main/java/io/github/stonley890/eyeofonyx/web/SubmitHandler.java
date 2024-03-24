@@ -210,6 +210,9 @@ public class SubmitHandler implements HttpHandler {
 
                         player.sendMessage(EyeOfOnyx.EOO + "Your availabilities have been recorded!");
 
+                        // report
+                        RoyaltyBoard.report(player.getName(), player.getName() + " chose possible times for their challenge.");
+
                         break;
                     }
                 }

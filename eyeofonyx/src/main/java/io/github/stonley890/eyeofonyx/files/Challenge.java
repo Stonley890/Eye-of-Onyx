@@ -1,6 +1,7 @@
 package io.github.stonley890.eyeofonyx.files;
 
 import io.github.stonley890.dreamvisitor.Main;
+import io.github.stonley890.dreamvisitor.data.PlayerUtility;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.InvalidConfigurationException;
@@ -30,6 +31,8 @@ public class Challenge {
     public final UUID defender;
     public final List<LocalDateTime> time;
     public State state;
+    private boolean attackerCanceled = false;
+    private boolean defenderCanceled = false;
 
     @Nullable
     public static Challenge getChallenge(Player player) {
@@ -53,6 +56,16 @@ public class Challenge {
         ACCEPTED,
         SCHEDULED,
         ACTIVE
+    }
+
+    public boolean isAccepted() {
+        return (state == State.ACCEPTED || state == State.SCHEDULED || state == State.ACTIVE);
+    }
+    public boolean isScheduled() {
+        return (state == State.SCHEDULED || state == State.ACTIVE);
+    }
+    public boolean isActive() {
+        return (state == State.ACTIVE);
     }
 
     /**
@@ -101,6 +114,32 @@ public class Challenge {
 
         Main.debug("Saving to file");
         saveFile(fileConfig);
+    }
+
+    public void cancelAttacker() throws IOException, InvalidConfigurationException {
+        attackerCanceled = true;
+        if (defenderCanceled) cancel();
+        else new Notification(defender, "Your opponent wants to cancel their challenge", "Your opponent, " + PlayerUtility.getUsernameOfUuid(attacker) + ", wants to cancel their challenge. Run /challenge to open the details of your challenge and complete the cancellation.", NotificationType.GENERIC).create();
+    }
+    public void cancelDefender() throws IOException, InvalidConfigurationException {
+        defenderCanceled = true;
+        if (attackerCanceled) cancel();
+        else new Notification(attacker, "Your opponent wants to cancel their challenge", "Your opponent, " + PlayerUtility.getUsernameOfUuid(defender) + ", wants to cancel their challenge. Run /challenge to open the details of your challenge and complete the cancellation.", NotificationType.GENERIC).create();
+    }
+
+    private void cancel() throws IOException, InvalidConfigurationException {
+        String attackerUsername = PlayerUtility.getUsernameOfUuid(attacker);
+        String defenderUsername = PlayerUtility.getUsernameOfUuid(defender);
+        RoyaltyBoard.report(null, "The challenge between " + attackerUsername + " and " + defenderUsername + " was canceled upon agreement.");
+        Challenge.remove(this);
+        new Notification(attacker, "Your challenge was canceled", "You and your opponent, " + defenderUsername + ", both agreed to cancel the challenge.", NotificationType.GENERIC).create();
+        new Notification(defender, "Your challenge was canceled", "You and your opponent, " + attackerUsername + ", both agreed to cancel the challenge.", NotificationType.GENERIC).create();
+    }
+    public boolean isAttackerCanceled() {
+        return attackerCanceled;
+    }
+    public boolean isDefenderCanceled() {
+        return defenderCanceled;
     }
 
     /**
@@ -265,9 +304,13 @@ public class Challenge {
                 }
 
                 State state = (State) yamlChallenge.get(4);
+                boolean attackerCanceled = (boolean) yamlChallenge.get(5);
+                boolean defenderCanceled = (boolean) yamlChallenge.get(6);
 
                 // Add to a Challenge object
                 Challenge challenge = new Challenge(attacker, defender, parsedTimes, state);
+                challenge.attackerCanceled = attackerCanceled;
+                challenge.defenderCanceled = defenderCanceled;
 
                 // Add to list
                 challenges.add(challenge);
@@ -333,6 +376,8 @@ public class Challenge {
         }
         yamlChallenge.add(dateTimes);
         yamlChallenge.add(state);
+        yamlChallenge.add(attackerCanceled);
+        yamlChallenge.add(defenderCanceled);
 
         // Add the given challenge
         challenges.add(yamlChallenge);
