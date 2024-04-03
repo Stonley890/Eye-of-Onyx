@@ -21,6 +21,7 @@ commands:
   challenge:
     description: Initiate a challenge.
     usage: /<command>
+    permission: eyeofonyx.challenge
   competition:
     description: Control challenges.
     usage: /<command> <player> type <challenge type>
@@ -28,12 +29,19 @@ commands:
   updateplayer:
     description: Update stored player tribes in Eye of Onyx.
     usage: /<command> <targets>
-    permission: eyeofonyx.op
+    permission: op
   forfeit:
     description: Remove yourself from the royalty board.
     usage: /<command>
+  royalinfo:
+    description: Get information about a royalty position.
+    usage: /<command> <tribe> <position>
+    permission: eyeofonyx.royalinfo
 
 permissions:
+  eyeofonyx.challenge:
+    description: Allows the /challenge command.
+    default: true
   eyeofonyx.manageboard:
     description: Allows editing the royalty board.
     default: op
@@ -43,3 +51,6 @@ permissions:
   eyeofonyx.managechallenge:
     description: Manage challenges.
     default: op
+  eyeofonyx.royalinfo:
+    description: Allows the /royalinfo command.
+    default: true

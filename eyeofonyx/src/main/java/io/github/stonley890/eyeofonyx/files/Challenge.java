@@ -1,6 +1,6 @@
 package io.github.stonley890.eyeofonyx.files;
 
-import io.github.stonley890.dreamvisitor.Main;
+import io.github.stonley890.dreamvisitor.Dreamvisitor;
 import io.github.stonley890.dreamvisitor.data.PlayerUtility;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import org.bukkit.Bukkit;
@@ -92,7 +92,7 @@ public class Challenge {
             // Challenge -> List
             List<Object> yamlChallenge = new ArrayList<>();
 
-            Main.debug("Converting to YAML...");
+            Dreamvisitor.debug("Converting to YAML...");
             yamlChallenge.add(challenge1.attacker);
             yamlChallenge.add(challenge1.defender);
 
@@ -108,11 +108,11 @@ public class Challenge {
             yamlChallenges.add(yamlChallenge);
         }
 
-        Main.debug("Added to List");
+        Dreamvisitor.debug("Added to List");
 
         fileConfig.set("challenges", yamlChallenges);
 
-        Main.debug("Saving to file");
+        Dreamvisitor.debug("Saving to file");
         saveFile(fileConfig);
     }
 
@@ -208,7 +208,7 @@ public class Challenge {
     @SuppressWarnings("unchecked")
     public void save() {
 
-        Main.debug("Creating new challenge...");
+        Dreamvisitor.debug("Creating new challenge...");
 
         /* Challenges in challenges.yml are saved as a list of string lists
 
@@ -231,18 +231,18 @@ public class Challenge {
 
         // Get the list of challenges
         List<List<Object>> challenges = (List<List<Object>>) fileConfig.getList("challenges");
-        Main.debug("Got list of challenges.");
+        Dreamvisitor.debug("Got list of challenges.");
 
         // Init if null or empty
         if (challenges == null || challenges.isEmpty()) {
-            Main.debug("No challenges; creating a new list");
+            Dreamvisitor.debug("No challenges; creating a new list");
             challenges = new ArrayList<>();
         }
 
         // Challenge -> List
         List<Object> yamlChallenge = new ArrayList<>();
 
-        Main.debug("Converting to YAML...");
+        Dreamvisitor.debug("Converting to YAML...");
         yamlChallenge.add(this.attacker);
         yamlChallenge.add(this.defender);
 
@@ -256,17 +256,17 @@ public class Challenge {
 
         // Add the given challenge
         challenges.add(yamlChallenge);
-        Main.debug("Added to List");
+        Dreamvisitor.debug("Added to List");
 
         fileConfig.set("challenges", challenges);
 
-        Main.debug("Creating notification...");
+        Dreamvisitor.debug("Creating notification...");
         Mojang mojang = new Mojang().connect();
 
         String defenderUsername = mojang.getPlayerProfile(defender.toString()).getUsername();
         String content = defenderUsername + " accepted your challenge! Please select from one of the following times:";
 
-        Main.debug("Saving to file");
+        Dreamvisitor.debug("Saving to file");
         saveFile(fileConfig);
 
         // Create notification
@@ -350,41 +350,4 @@ public class Challenge {
         }
     }
 
-    @SuppressWarnings("unchecked")
-    public void passiveSave() {
-        // Get the list of challenges
-        List<List<Object>> challenges = (List<List<Object>>) fileConfig.getList("challenges");
-        Main.debug("Got list of challenges.");
-
-        // Init if null or empty
-        if (challenges == null || challenges.isEmpty()) {
-            Main.debug("No challenges; creating a new list");
-            challenges = new ArrayList<>();
-        }
-
-        // Challenge -> List
-        List<Object> yamlChallenge = new ArrayList<>();
-
-        Main.debug("Converting to YAML...");
-        yamlChallenge.add(this.attacker);
-        yamlChallenge.add(this.defender);
-
-        List<String> dateTimes = new ArrayList<>();
-
-        for (LocalDateTime dateTime : this.time) {
-            dateTimes.add(dateTime.format(DateTimeFormatter.ISO_DATE_TIME));
-        }
-        yamlChallenge.add(dateTimes);
-        yamlChallenge.add(state);
-        yamlChallenge.add(attackerCanceled);
-        yamlChallenge.add(defenderCanceled);
-
-        // Add the given challenge
-        challenges.add(yamlChallenge);
-        Main.debug("Added to List");
-
-        fileConfig.set("challenges", challenges);
-        Main.debug("Saving to file");
-        saveFile(fileConfig);
-    }
 }

@@ -1,6 +1,6 @@
 package io.github.stonley890.eyeofonyx.commands;
 
-import io.github.stonley890.dreamvisitor.Main;
+import io.github.stonley890.dreamvisitor.Dreamvisitor;
 import io.github.stonley890.dreamvisitor.data.PlayerUtility;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import io.github.stonley890.eyeofonyx.files.*;
@@ -394,7 +394,7 @@ public class CmdEyeOfOnyx implements CommandExecutor {
                 } case "senddiscord" -> {
 
                     // Clear list of recorded messages
-                    List<Long> messages = Main.getPlugin().getConfig().getLongList("royalty-board-message");
+                    List<Long> messages = Dreamvisitor.getPlugin().getConfig().getLongList("royalty-board-message");
                     messages.clear();
                     EyeOfOnyx.getPlugin().getConfig().set("royalty-board-message", messages);
                     EyeOfOnyx.getPlugin().saveConfig();

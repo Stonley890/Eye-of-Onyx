@@ -2,7 +2,7 @@ package io.github.stonley890.eyeofonyx.web;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import io.github.stonley890.dreamvisitor.Main;
+import io.github.stonley890.dreamvisitor.Dreamvisitor;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import io.github.stonley890.eyeofonyx.commands.CmdChallenge;
 import io.github.stonley890.eyeofonyx.files.*;
@@ -38,13 +38,13 @@ public class SubmitHandler implements HttpHandler {
             BufferedReader br = new BufferedReader(isr);
             String formData = br.readLine();
 
-            Main.debug("FORM DATA: " + formData);
+            Dreamvisitor.debug("FORM DATA: " + formData);
 
             // Parse the code
             String encodedCode = formData.split("code=")[1].split("&availability=")[0]; // Extracting code value from the form data
             String code = URLDecoder.decode(encodedCode, StandardCharsets.UTF_8);
 
-            Main.debug(encodedCode + "AND" + code);
+            Dreamvisitor.debug(encodedCode + "AND" + code);
 
             // Parse the availability dates and times
             List<LocalDateTime> availabilities = new ArrayList<>();
@@ -52,22 +52,22 @@ public class SubmitHandler implements HttpHandler {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
             try {
                 if (availabilityParams.length == 0) {
-                    Main.debug("No dates.");
+                    Dreamvisitor.debug("No dates.");
                     sendInvalid(httpExchange, "You did not send any dates! Go back and add at least one availability.");
                     return;
                 }
                 for (int i = 1; i < availabilityParams.length; i++) {
                     // Extract only the date and time part from the availability string
-                    Main.debug("Processing string: " + availabilityParams[i]);
+                    Dreamvisitor.debug("Processing string: " + availabilityParams[i]);
                     String[] splitAvailabilities = availabilityParams[i].split("&");
                     if (splitAvailabilities.length == 0) {
                         break;
                     }
                     String dateTimeString = splitAvailabilities[0]; // Get the part before the "&"
                     dateTimeString = URLDecoder.decode(dateTimeString, StandardCharsets.UTF_8);
-                    Main.debug("Processed string: " + dateTimeString);
+                    Dreamvisitor.debug("Processed string: " + dateTimeString);
                     if (!dateTimeString.isEmpty() && !dateTimeString.equals("&")) {
-                        Main.debug("Added time " + dateTimeString);
+                        Dreamvisitor.debug("Added time " + dateTimeString);
 
                         // Parse
                         LocalDateTime parsedTime = LocalDateTime.parse(dateTimeString, formatter);
@@ -84,26 +84,26 @@ public class SubmitHandler implements HttpHandler {
                 e.printStackTrace();
             }
 
-            Main.debug("Values obtained.");
+            Dreamvisitor.debug("Values obtained.");
             // Now you have the code and the list of LocalDateTime objects representing availabilities.
             // You can further process or store this data as needed.
 
             Player player = null;
 
-            Main.debug("Checking code match.");
+            Dreamvisitor.debug("Checking code match.");
 
             // Check code match
             if (!CmdChallenge.codesOnForm.isEmpty()) {
                 for (int i = 0; i < CmdChallenge.codesOnForm.size(); i++) {
                     if (CmdChallenge.codesOnForm.get(i).equals(code)) {
 
-                        Main.debug("Found code match.");
+                        Dreamvisitor.debug("Found code match.");
 
                         player = CmdChallenge.playersOnForm.get(i);
 
                         for (LocalDateTime availability : availabilities) {
                             if (availability.isBefore(LocalDateTime.now())) {
-                                Main.debug("Invalid; time is before now.");
+                                Dreamvisitor.debug("Invalid; time is before now.");
                                 // Time is before now: invalid
                                 player.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Invalid time! You cannot schedule a time before now!");
 
@@ -118,7 +118,7 @@ public class SubmitHandler implements HttpHandler {
                                     for (Challenge challenge : Challenge.getChallenges()) {
                                         for (LocalDateTime time : challenge.time) {
                                             if (availability.isBefore(time.plusMinutes(30)) || availability.isAfter((time.minusMinutes(30)))) {
-                                                Main.debug("Invalid; time is within 30 mins of another");
+                                                Dreamvisitor.debug("Invalid; time is within 30 mins of another");
 
                                                 player.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Invalid time! " + availability.format(DateTimeFormatter.ofPattern("MM/dd hh:mm a")) + " is within 30 minutes of a challenge at " + time.format(DateTimeFormatter.ofPattern("hh:mm a")));
 
@@ -134,14 +134,14 @@ public class SubmitHandler implements HttpHandler {
                             }
                         }
 
-                        Main.debug("No availability issues");
+                        Dreamvisitor.debug("No availability issues");
 
                         // Remove notification
                         try {
                             for (Notification notification : Notification.getNotificationsOfPlayer(player.getUniqueId())) {
                                 if (notification.type == NotificationType.CHALLENGE_REQUESTED) {
                                     Notification.removeNotification(notification);
-                                    Main.debug("Removed notification.");
+                                    Dreamvisitor.debug("Removed notification.");
                                 }
                             }
                         } catch (IOException | InvalidConfigurationException e) {
@@ -157,7 +157,7 @@ public class SubmitHandler implements HttpHandler {
                             player.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You do not have an associated tribe! Contact a staff member.");
                         }
 
-                        Main.debug("Finding attacker.");
+                        Dreamvisitor.debug("Finding attacker.");
                         // Notify attacker
                         UUID attackerUuid = null;
                         try {
@@ -188,7 +188,7 @@ public class SubmitHandler implements HttpHandler {
                             sendInvalid(httpExchange, "You do not have an associated tribe! Contact a staff member.");
                             player.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You do not have an associated tribe! Contact a staff member.");
                         }
-                        Main.debug("Set data in board.yml");
+                        Dreamvisitor.debug("Set data in board.yml");
 
                         // Modify challenge
                         UUID finalAttackerUuid = attackerUuid;
@@ -202,7 +202,7 @@ public class SubmitHandler implements HttpHandler {
                             challenge.state = Challenge.State.ACCEPTED;
                         });
 
-                        Main.debug("Created the challenge");
+                        Dreamvisitor.debug("Created the challenge");
 
                         // Remove code
                         CmdChallenge.codesOnForm.remove(i);
@@ -237,7 +237,7 @@ public class SubmitHandler implements HttpHandler {
             }
 
             // Success
-            Main.debug("Success");
+            Dreamvisitor.debug("Success");
 
             // Send a response to the client
             InputStream inputStream = EyeOfOnyx.getPlugin().getResource("availability_done.html");

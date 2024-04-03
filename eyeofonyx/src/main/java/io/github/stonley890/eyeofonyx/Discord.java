@@ -1,7 +1,7 @@
 package io.github.stonley890.eyeofonyx;
 
 import io.github.stonley890.dreamvisitor.Bot;
-import io.github.stonley890.dreamvisitor.Main;
+import io.github.stonley890.dreamvisitor.Dreamvisitor;
 import io.github.stonley890.dreamvisitor.data.AccountLink;
 import io.github.stonley890.dreamvisitor.data.PlayerUtility;
 import io.github.stonley890.eyeofonyx.files.*;
@@ -132,7 +132,7 @@ public class Discord extends ListenerAdapter {
 
         // register commands
         for (CommandData commandDatum : commandData) {
-            Bot.gameLogChannel.getGuild().upsertCommand(commandDatum).queue();
+            Bot.getGameLogChannel().getGuild().upsertCommand(commandDatum).queue();
         }
 
         commandData.clear();
@@ -236,7 +236,7 @@ public class Discord extends ListenerAdapter {
                         event.reply("Required teams do not exist!").queue();
                     } catch (NotFoundException e) {
                         event.reply("Player is not associated with a tribe!").queue();
-                        if (Main.debugMode) e.printStackTrace();
+                        if (Dreamvisitor.debugMode) e.printStackTrace();
                     }
                 }
                 case "clear" -> {
@@ -571,6 +571,9 @@ public class Discord extends ListenerAdapter {
                             // No user
                         }
 
+                        assert username != null;
+                        assert challenger != null;
+                        assert challenging != null;
                         values.append("\nPlayer: ").append(Bot.escapeMarkdownFormatting(username))
                                 .append("\nUUID: ").append(uuid)
                                 .append("\nUser: ").append(discordUser)

@@ -1,6 +1,6 @@
 package io.github.stonley890.eyeofonyx.commands;
 
-import io.github.stonley890.dreamvisitor.Main;
+import io.github.stonley890.dreamvisitor.Dreamvisitor;
 import io.github.stonley890.dreamvisitor.data.PlayerUtility;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import io.github.stonley890.eyeofonyx.Utils;
@@ -291,7 +291,7 @@ public class CmdRoyalty implements CommandExecutor {
     // royalty clear <tribe> <position>
     static void clear(CommandSender sender, String @NotNull [] args) {
 
-        Main.debug("Clearing...");
+        Dreamvisitor.debug("Clearing...");
 
         String tribe = args[1];
         String pos = args[2];
@@ -695,7 +695,7 @@ public class CmdRoyalty implements CommandExecutor {
                         RoyaltyBoard.updateDiscordBoard(tribeIndex);
                     } catch (IOException e) {
                         sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "An I/O error occurred while attempting to update Discord board.");
-                        if (Main.debugMode) e.printStackTrace();
+                        if (Dreamvisitor.debugMode) e.printStackTrace();
                     }
                     sender.sendMessage(EyeOfOnyx.EOO + "Set " + key.toUpperCase() + " for " + teamNames[tribeIndex] + " " + validPositions[posIndex].replaceAll("_", " ") + " to " + ChatColor.YELLOW + value);
 

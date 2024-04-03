@@ -1,6 +1,6 @@
 package io.github.stonley890.eyeofonyx.challenges;
 
-import io.github.stonley890.dreamvisitor.Main;
+import io.github.stonley890.dreamvisitor.Dreamvisitor;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import io.github.stonley890.eyeofonyx.files.Challenge;
 import io.github.stonley890.eyeofonyx.files.PlayerTribe;
@@ -28,7 +28,7 @@ public class Competition {
 
     public static void call(@NotNull Challenge challenge) throws IOException, InvalidConfigurationException {
 
-        Main.debug("Challenge " + challenge.attacker + " vs " + challenge.defender + " is getting ready to start.");
+        Dreamvisitor.debug("Challenge " + challenge.attacker + " vs " + challenge.defender + " is getting ready to start.");
         // Add to activeChallenges list
         try {
             activeChallenge = new Competition(challenge);
@@ -51,7 +51,7 @@ public class Competition {
 
     public void callToJoin() {
 
-        Main.debug("Calling to join...");
+        Dreamvisitor.debug("Calling to join...");
 
         ComponentBuilder message = new ComponentBuilder(EyeOfOnyx.EOO);
         message.append("Your challenge is starting!\n");
@@ -62,15 +62,15 @@ public class Competition {
         message.append(button);
         message.append("\n");
 
-        Main.debug("Message built. Sending to " + this.attacker + " and " + this.defender + ".");
+        Dreamvisitor.debug("Message built. Sending to " + this.attacker + " and " + this.defender + ".");
 
         if (Bukkit.getPlayer(this.attacker) != null) {
             Objects.requireNonNull(Bukkit.getPlayer(this.attacker)).spigot().sendMessage(message.create());
-            Main.debug("Send message to attacker.");
+            Dreamvisitor.debug("Send message to attacker.");
         }
         if (Bukkit.getPlayer(this.defender) != null) {
             Objects.requireNonNull(Bukkit.getPlayer(this.defender)).spigot().sendMessage(message.create());
-            Main.debug("Send message to defender.");
+            Dreamvisitor.debug("Send message to defender.");
         }
     }
 

@@ -1,6 +1,6 @@
 package io.github.stonley890.eyeofonyx.files;
 
-import io.github.stonley890.dreamvisitor.Main;
+import io.github.stonley890.dreamvisitor.Dreamvisitor;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -8,7 +8,9 @@ import org.jetbrains.annotations.NotNull;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 public class BoardState {
 
@@ -114,7 +116,7 @@ public class BoardState {
                 // Get UUID
                 UUID uuid;
                 String uuidString = config.getString(tribe + "." + position + ".uuid");
-                Main.debug("UUID: " + uuidString);
+                Dreamvisitor.debug("UUID: " + uuidString);
                 // Attempt to parse
                 try {
                     if (uuidString == null || uuidString.equals("none")) uuid = null;

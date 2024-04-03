@@ -13,8 +13,6 @@ import java.util.List;
 
 public class TabUpdatePlayer implements TabCompleter {
 
-
-
     @Nullable
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String @NotNull [] args) {

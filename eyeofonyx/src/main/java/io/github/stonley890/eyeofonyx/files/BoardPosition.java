@@ -1,6 +1,5 @@
 package io.github.stonley890.eyeofonyx.files;
 
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

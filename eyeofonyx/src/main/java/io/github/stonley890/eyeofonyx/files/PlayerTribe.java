@@ -1,11 +1,10 @@
 package io.github.stonley890.eyeofonyx.files;
 
-import io.github.stonley890.dreamvisitor.Main;
+import io.github.stonley890.dreamvisitor.Dreamvisitor;
 import io.github.stonley890.dreamvisitor.data.PlayerUtility;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import javassist.NotFoundException;
 import org.bukkit.Bukkit;
-import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -125,13 +124,13 @@ public class PlayerTribe {
         else username = PlayerUtility.getUsernameOfUuid(uuid);
 
         // Check by team
-        Main.debug("Checking by team...");
+        Dreamvisitor.debug("Checking by team...");
         String[] teamNames = RoyaltyBoard.getTeamNames();
         for (int i = 0; i < teamNames.length; i++) {
             String teamName = teamNames[i];
             Team team = scoreboard.getTeam(teamName);
             if (team != null && team.hasEntry(username)) {
-                Main.debug("Found tribe " + i);
+                Dreamvisitor.debug("Found tribe " + i);
                 playerTribe = i;
                 saveTribe(uuid, playerTribe);
                 return;
@@ -140,11 +139,11 @@ public class PlayerTribe {
 
         if (online) {
             // If no matching team, check by tags
-            Main.debug("Checking by tag...");
+            Dreamvisitor.debug("Checking by tag...");
             for (int i = 0; i < teamNames.length; i++) {
                 String teamName = teamNames[i];
                 if (player.getScoreboardTags().contains(teamName)) {
-                    Main.debug("Found tag " + i);
+                    Dreamvisitor.debug("Found tag " + i);
                     playerTribe = i;
                     saveTribe(uuid, playerTribe);
                     return;

@@ -1,6 +1,6 @@
 package io.github.stonley890.eyeofonyx.commands;
 
-import io.github.stonley890.dreamvisitor.Main;
+import io.github.stonley890.dreamvisitor.Dreamvisitor;
 import io.github.stonley890.dreamvisitor.data.AccountLink;
 import io.github.stonley890.dreamvisitor.data.PlayerUtility;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
@@ -23,7 +23,10 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Random;
 
 import static io.github.stonley890.eyeofonyx.files.RoyaltyBoard.*;
 
@@ -227,14 +230,14 @@ public class CmdChallenge implements CommandExecutor {
                 switch (args[0]) {
                     case "position1", "position2", "position3", "position4", "position5" -> {
 
-                        Main.debug("Initiating challenge");
+                        Dreamvisitor.debug("Initiating challenge");
 
                         ComponentBuilder builder = new ComponentBuilder();
                         builder.append(EyeOfOnyx.EOO);
 
                         int targetPosition;
 
-                         Main.debug("Checking for validity");
+                        Dreamvisitor.debug("Checking for validity");
 
                         // Check for active challenge
                         if (Competition.activeChallenge != null) {
@@ -245,7 +248,7 @@ public class CmdChallenge implements CommandExecutor {
                         // Make sure challenge is valid
                         if (playerPosition == CIVILIAN) {
 
-                            Main.debug("Player is civilian");
+                            Dreamvisitor.debug("Player is civilian");
 
                             // Check for any empty positions
                             int nextEmptyPosition = CIVILIAN;
@@ -253,10 +256,10 @@ public class CmdChallenge implements CommandExecutor {
                             // Iterate through positions (start at ruler)
                             for (int posToCheck = 0; posToCheck < positions.length; posToCheck++) {
                                 nextEmptyPosition = posToCheck;
-                                Main.debug("Next empty position: " + posToCheck);
+                                Dreamvisitor.debug("Next empty position: " + posToCheck);
                                 // If position is empty, break
                                 if (getUuid(playerTribe, posToCheck) == null) {
-                                    Main.debug("Position " + posToCheck + "is empty");
+                                    Dreamvisitor.debug("Position " + posToCheck + "is empty");
                                     break;
                                 }
                                 nextEmptyPosition = CIVILIAN;
@@ -264,14 +267,14 @@ public class CmdChallenge implements CommandExecutor {
 
                             // If a position is available, do that
                             if (nextEmptyPosition < CIVILIAN) {
-                                Main.debug("Position available. Skipping challenge process.");
+                                Dreamvisitor.debug("Position available. Skipping challenge process.");
 
                                 BoardState oldBoard = getBoardOf(playerTribe).clone();
                                 RoyaltyBoard.set(playerTribe, nextEmptyPosition, new BoardPosition(player.getUniqueId(), null, LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now(), null, null));
                                 BoardState newBoard = getBoardOf(playerTribe).clone();
                                 reportChange(new RoyaltyAction(player.getName(), playerTribe, oldBoard, newBoard));
                                 updateBoard(playerTribe, false);
-                                Main.debug("Board updated.");
+                                Dreamvisitor.debug("Board updated.");
 
                                 sender.sendMessage(EyeOfOnyx.EOO + "You are now " + getValidPositions()[nextEmptyPosition].toUpperCase().replace("_", " ") + " of the " + getTeamNames()[playerTribe].toUpperCase() + "s!");
                                 try {
@@ -282,7 +285,7 @@ public class CmdChallenge implements CommandExecutor {
                                 return true;
                             }
 
-                            Main.debug("No extra positions available.");
+                            Dreamvisitor.debug("No extra positions available.");
 
                             // Determine which position is being targeted
                             switch (args[0]) {
@@ -366,7 +369,7 @@ public class CmdChallenge implements CommandExecutor {
                             new Notification(targetUuid, title, content, NotificationType.CHALLENGE_REQUESTED).create();
 
                             // create challenge
-                            new Challenge(player.getUniqueId(), targetUuid, null, Challenge.State.PROPOSED).passiveSave();
+                            new Challenge(player.getUniqueId(), targetUuid, null, Challenge.State.PROPOSED).save();
 
                             assert targetUuid != null;
                             report(player.getName(), player.getName() + " initiated a challenge against " + PlayerUtility.getUsernameOfUuid(targetUuid) + ".");
@@ -487,14 +490,12 @@ public class CmdChallenge implements CommandExecutor {
                     }
                     case "date" -> {
 
-                        Challenge playerChallenge = challenge;
-
-                        if (playerChallenge == null) {
+                        if (challenge == null) {
                             sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You are not in any scheduled challenges!");
                             return true;
                         }
 
-                        if (playerChallenge.state == Challenge.State.SCHEDULED) {
+                        if (challenge.state == Challenge.State.SCHEDULED) {
                             sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "This challenge is already finalized!");
                             return true;
                         }
@@ -514,22 +515,22 @@ public class CmdChallenge implements CommandExecutor {
                         }
 
                         try {
-                            Challenge.remove(playerChallenge);
+                            Challenge.remove(challenge);
                         } catch (IOException | InvalidConfigurationException e) {
                             throw new RuntimeException(e);
                         }
 
-                        LocalDateTime selectedTime = playerChallenge.time.get(selectedTimeIndex);
-                        playerChallenge.time.clear();
-                        playerChallenge.time.add(selectedTime);
-                        playerChallenge.state = Challenge.State.SCHEDULED;
+                        LocalDateTime selectedTime = challenge.time.get(selectedTimeIndex);
+                        challenge.time.clear();
+                        challenge.time.add(selectedTime);
+                        challenge.state = Challenge.State.SCHEDULED;
 
-                        playerChallenge.passiveSave();
+                        challenge.save();
 
-                        report(player.getName(), player.getName() + "'s challenge with " + PlayerUtility.getUsernameOfUuid(playerChallenge.defender) + " has been scheduled for " + selectedTime.format(DateTimeFormatter.ofPattern("MM/dd hh:mm a")));
+                        report(player.getName(), player.getName() + "'s challenge with " + PlayerUtility.getUsernameOfUuid(challenge.defender) + " has been scheduled for " + selectedTime.format(DateTimeFormatter.ofPattern("MM/dd hh:mm a")));
 
                         sender.sendMessage(EyeOfOnyx.EOO + "Time confirmed! Your challenge will take place " + selectedTime.format(DateTimeFormatter.ofPattern("MM/dd hh:mm a")) + "!");
-                        new Notification(playerChallenge.defender, "Challenge date confirmed!", "The time of your challenge with " + PlayerUtility.getUsernameOfUuid(playerChallenge.attacker.toString()) + " will be " + selectedTime.format(DateTimeFormatter.ofPattern("MM/dd hh:mm a")) + ".", NotificationType.GENERIC).create();
+                        new Notification(challenge.defender, "Challenge date confirmed!", "The time of your challenge with " + PlayerUtility.getUsernameOfUuid(challenge.attacker.toString()) + " will be " + selectedTime.format(DateTimeFormatter.ofPattern("MM/dd hh:mm a")) + ".", NotificationType.GENERIC).create();
 
                         // Remove CHALLENGE_ACCEPTED notification
                         try {
