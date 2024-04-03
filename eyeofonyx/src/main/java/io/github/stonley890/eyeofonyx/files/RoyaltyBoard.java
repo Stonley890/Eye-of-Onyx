@@ -14,7 +14,6 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.exceptions.ErrorHandler;
-import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
@@ -117,7 +116,6 @@ public class RoyaltyBoard {
 
         if (!file.exists()) {
             Bukkit.getLogger().info("board.yml does not exist. Creating one...");
-            file.getParentFile().mkdirs();
             plugin.saveResource("board.yml", false);
         }
 
@@ -541,7 +539,6 @@ public class RoyaltyBoard {
 
         // Get guilds
         Guild mainGuild = Bot.getGameLogChannel().getGuild();
-        Guild sisterGuild = Bot.getJda().getGuildById(config.getLong("tribeGuildID"));
 
         // Get roles
         Role rulerRole = Bot.getJda().getRoleById(config.getLong("main-royalty-roles.ruler"));
@@ -572,42 +569,11 @@ public class RoyaltyBoard {
 
         });
 
-        if (sisterGuild == null) {
-            Bukkit.getLogger().warning("Sister guild could not be found! Make sure the ID in the Eye of Onyx config is correct and restart!");
-            return;
-        }
-
-        int finalPos1 = pos;
-        int finalTribe = tribe;
-        sisterGuild.retrieveMember(user).queue(member -> {
-            if (member != null) {
-                // get sister guild roles
-                List<Role> sisterRoyaltyRoles = new ArrayList<>();
-                List<Long> sisterRoyaltyRoleIDs = config.getLongList("sister-royalty-roles");
-                if (sisterRoyaltyRoleIDs.size() < tribes.length) {
-                    Bukkit.getLogger().warning("Missing sister guild royalty role IDs! Check Eye of Onyx configuration and restart.");
-                    return;
-                }
-                for (Long roleID : sisterRoyaltyRoleIDs) {
-                    sisterRoyaltyRoles.add(Bot.getJda().getRoleById(roleID));
-                }
-
-                // For each position, remove royalty role if they are citizen or are not part of that tribe.
-                // Add role if applicable
-                for (int tribeRole = 0; tribeRole < tribes.length; tribeRole++) {
-                    Role role = sisterRoyaltyRoles.get(tribeRole);
-                    if (finalPos1 == CIVILIAN || finalTribe != tribeRole && member.getRoles().contains(role)) sisterGuild.removeRoleFromMember(member, role).queue();
-                    if (finalPos1 != CIVILIAN && finalTribe == tribeRole && !member.getRoles().contains(role)) sisterGuild.addRoleToMember(member, role).queue();
-                }
-            }
-        });
-
     }
 
     /**
-     * Removes all royalty-associated Discord roles from tribe royalty of main and sister servers.
+     * Removes all royalty-associated Discord roles from tribe royalty.
      * applyRoles() should be used after this to reapply the roles.
-     * This does not apply to the sister guild due to how the roles are set up.
      * @param tribe the tribe whose roles to remove
      */
     public static void removeRoles(int tribe) {
@@ -673,11 +639,6 @@ public class RoyaltyBoard {
 
         // Get guilds
         Guild mainGuild = Bot.getGameLogChannel().getGuild();
-        Guild sisterGuild = Bot.getJda().getGuildById(config.getLong("tribeGuildID"));
-
-        if (sisterGuild == null) {
-            Bukkit.getLogger().warning("Sister guild could not be found! Ensure the correct guild ID is set in the Eye of Onyx config.");
-        }
 
         Dreamvisitor.debug("Got guilds.");
 
@@ -687,14 +648,6 @@ public class RoyaltyBoard {
         Role nobleRole = Bot.getJda().getRoleById(config.getLong("main-royalty-roles.noble"));
 
         Dreamvisitor.debug("Got main roles.");
-
-        Role sisterTribeRole = null;
-        if (sisterGuild != null) {
-            List<Long> sisterRoyaltyRoles = config.getLongList("sister-royalty-roles");
-            sisterTribeRole = Bot.getJda().getRoleById(sisterRoyaltyRoles.get(tribe));
-        }
-
-        Dreamvisitor.debug("Got sister role. Checking positions...");
 
         // Check each position
         for (int pos = 0; pos < validPositions.length; pos++) {
@@ -713,18 +666,6 @@ public class RoyaltyBoard {
                 Dreamvisitor.debug("Getting ID");
                 long userId = AccountLink.getDiscordId(Objects.requireNonNull(getUuid(tribe, pos)));
                 Member member;
-
-                // Get user and add role
-                if (sisterGuild != null) {
-                    try {
-                        member = sisterGuild.retrieveMemberById(userId).complete();
-                        if (sisterTribeRole != null) sisterGuild.addRoleToMember(member, sisterTribeRole).complete();
-                        else Dreamvisitor.debug("Added sister role");
-
-                    } catch (ErrorResponseException ignored) {
-                        Dreamvisitor.debug("User is not in sister server");
-                    }
-                }
 
                 // Get appropriate role
                 Role royaltyRole = null;
