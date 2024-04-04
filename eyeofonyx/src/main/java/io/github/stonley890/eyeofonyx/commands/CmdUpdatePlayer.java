@@ -130,7 +130,7 @@ public class CmdUpdatePlayer implements CommandExecutor {
                     if (attacker != null) {
                         int attackerPos = RoyaltyBoard.getPositionIndexOfUUID(attacker);
                         RoyaltyBoard.setAttacking(t, attackerPos, null);
-                        new Notification(attacker, "Your challenge was canceled.", "The player you were challenging was removed from the royalty board, so your challenge was canceled.", NotificationType.GENERIC).create();
+                        new Notification(attacker, "Your challenge was canceled.", "The player you were challenging was removed from the royalty board, so your challenge was canceled.", Notification.Type.GENERIC).create();
                     }
 
                     // Notify defender if exists
@@ -139,7 +139,7 @@ public class CmdUpdatePlayer implements CommandExecutor {
                         if (attacking != null) {
                             int defenderPos = RoyaltyBoard.getPositionIndexOfUUID(attacking);
                             RoyaltyBoard.setAttacker(t, defenderPos, null);
-                            new Notification(attacker, "Your challenge was canceled.", "The player who was challenging you was removed from the royalty board, so your challenge was canceled.", NotificationType.GENERIC).create();
+                            new Notification(attacker, "Your challenge was canceled.", "The player who was challenging you was removed from the royalty board, so your challenge was canceled.", Notification.Type.GENERIC).create();
                         }
                     }
 
@@ -150,13 +150,13 @@ public class CmdUpdatePlayer implements CommandExecutor {
 
                     // Remove any challenge notifications
                     for (Notification notification : Notification.getNotificationsOfPlayer(uuid)) {
-                        if (notification.type == NotificationType.CHALLENGE_ACCEPTED || notification.type == NotificationType.CHALLENGE_REQUESTED) Notification.removeNotification(notification);
+                        if (notification.type == Notification.Type.CHALLENGE_ACCEPTED || notification.type == Notification.Type.CHALLENGE_REQUESTED) Notification.removeNotification(notification);
                     }
 
                     RoyaltyBoard.removePlayer(t, p, true);
                     RoyaltyBoard.updateBoard(t, false);
                     RoyaltyBoard.updateDiscordBoard(t);
-                    new Notification(uuid, "You have been removed from the royalty board.", "You were removed from the royalty board because you changed your tribe. Any pending challenges have been canceled.", NotificationType.GENERIC).create();
+                    new Notification(uuid, "You have been removed from the royalty board.", "You were removed from the royalty board because you changed your tribe. Any pending challenges have been canceled.", Notification.Type.GENERIC).create();
                 }
 
             }

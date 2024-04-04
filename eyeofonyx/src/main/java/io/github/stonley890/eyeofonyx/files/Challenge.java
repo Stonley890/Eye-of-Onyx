@@ -8,6 +8,7 @@ import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.shanerx.mojang.Mojang;
@@ -23,50 +24,14 @@ import java.util.UUID;
 
 public class Challenge {
 
-    private static File file;
-    private static FileConfiguration fileConfig;
     private static final EyeOfOnyx plugin = EyeOfOnyx.getPlugin();
-
+    private static File file;
     public final UUID attacker;
     public final UUID defender;
     public final List<LocalDateTime> time;
     public State state;
     private boolean attackerCanceled = false;
     private boolean defenderCanceled = false;
-
-    @Nullable
-    public static Challenge getChallenge(Player player) {
-        Challenge playerChallenge = null;
-
-        try {
-            for (Challenge challenge : getChallenges()) {
-                if (Objects.equals(challenge.attacker, player.getUniqueId())) {
-                    playerChallenge = challenge;
-                    break;
-                }
-            }
-        } catch (IOException | InvalidConfigurationException e) {
-            throw new RuntimeException(e);
-        }
-        return playerChallenge;
-    }
-
-    public enum State {
-        PROPOSED,
-        ACCEPTED,
-        SCHEDULED,
-        ACTIVE
-    }
-
-    public boolean isAccepted() {
-        return (state == State.ACCEPTED || state == State.SCHEDULED || state == State.ACTIVE);
-    }
-    public boolean isScheduled() {
-        return (state == State.SCHEDULED || state == State.ACTIVE);
-    }
-    public boolean isActive() {
-        return (state == State.ACTIVE);
-    }
 
     /**
      * Create a new challenge.
@@ -81,7 +46,33 @@ public class Challenge {
         state = challengeState;
     }
 
-    public static void remove(Challenge challenge) throws IOException, InvalidConfigurationException {
+    @Contract(" -> new")
+    private static @NotNull YamlConfiguration getConfig() {
+        try {
+            YamlConfiguration configuration = new YamlConfiguration();
+            configuration.load(file);
+            return configuration;
+        } catch (IOException | InvalidConfigurationException e) {
+            Bukkit.getLogger().severe("Unable to load " + file.getName() + "!");
+            Bukkit.getPluginManager().disablePlugin(plugin);
+            throw new RuntimeException();
+        }
+    }
+
+    @Nullable
+    public static Challenge getChallenge(Player player) {
+        Challenge playerChallenge = null;
+
+        for (Challenge challenge : getChallenges()) {
+            if (Objects.equals(challenge.attacker, player.getUniqueId())) {
+                playerChallenge = challenge;
+                break;
+            }
+        }
+        return playerChallenge;
+    }
+
+    public static void remove(Challenge challenge) {
         List<Challenge> challenges = getChallenges();
 
         challenges.removeIf(challenge1 -> challenge1.defender.equals(challenge.defender));
@@ -110,36 +101,11 @@ public class Challenge {
 
         Dreamvisitor.debug("Added to List");
 
+        YamlConfiguration fileConfig = getConfig();
         fileConfig.set("challenges", yamlChallenges);
 
         Dreamvisitor.debug("Saving to file");
         saveFile(fileConfig);
-    }
-
-    public void cancelAttacker() throws IOException, InvalidConfigurationException {
-        attackerCanceled = true;
-        if (defenderCanceled) cancel();
-        else new Notification(defender, "Your opponent wants to cancel their challenge", "Your opponent, " + PlayerUtility.getUsernameOfUuid(attacker) + ", wants to cancel their challenge. Run /challenge to open the details of your challenge and complete the cancellation.", NotificationType.GENERIC).create();
-    }
-    public void cancelDefender() throws IOException, InvalidConfigurationException {
-        defenderCanceled = true;
-        if (attackerCanceled) cancel();
-        else new Notification(attacker, "Your opponent wants to cancel their challenge", "Your opponent, " + PlayerUtility.getUsernameOfUuid(defender) + ", wants to cancel their challenge. Run /challenge to open the details of your challenge and complete the cancellation.", NotificationType.GENERIC).create();
-    }
-
-    private void cancel() throws IOException, InvalidConfigurationException {
-        String attackerUsername = PlayerUtility.getUsernameOfUuid(attacker);
-        String defenderUsername = PlayerUtility.getUsernameOfUuid(defender);
-        RoyaltyBoard.report(null, "The challenge between " + attackerUsername + " and " + defenderUsername + " was canceled upon agreement.");
-        Challenge.remove(this);
-        new Notification(attacker, "Your challenge was canceled", "You and your opponent, " + defenderUsername + ", both agreed to cancel the challenge.", NotificationType.GENERIC).create();
-        new Notification(defender, "Your challenge was canceled", "You and your opponent, " + attackerUsername + ", both agreed to cancel the challenge.", NotificationType.GENERIC).create();
-    }
-    public boolean isAttackerCanceled() {
-        return attackerCanceled;
-    }
-    public boolean isDefenderCanceled() {
-        return defenderCanceled;
     }
 
     /**
@@ -150,20 +116,15 @@ public class Challenge {
      *               If this is {@code null}, no notification will be sent.
      */
     public static void removeChallengesOfPlayer(UUID uuid, @Nullable String reason) {
-        try {
-            for (Challenge challenge : getChallenges()) {
-                if (challenge.defender == uuid || challenge.attacker == uuid) {
-                    if (reason != null) {
-                        if (challenge.defender == uuid) new Notification(challenge.attacker, "Your challenge was canceled.", reason, NotificationType.GENERIC).create();
-                        if (challenge.attacker == uuid) new Notification(challenge.defender, "Your challenge was canceled.", reason, NotificationType.GENERIC).create();
-                    }
-                    Challenge.remove(challenge);
+        for (Challenge challenge : getChallenges()) {
+            if (challenge.defender == uuid || challenge.attacker == uuid) {
+                if (reason != null) {
+                    if (challenge.defender == uuid) new Notification(challenge.attacker, "Your challenge was canceled.", reason, Notification.Type.GENERIC).create();
+                    if (challenge.attacker == uuid) new Notification(challenge.defender, "Your challenge was canceled.", reason, Notification.Type.GENERIC).create();
                 }
+                Challenge.remove(challenge);
             }
-        } catch (IOException | InvalidConfigurationException e) {
-            Bukkit.getLogger().severe("Unable to access challenges.yml file!");
         }
-        saveFile(fileConfig);
     }
 
     /**
@@ -172,14 +133,10 @@ public class Challenge {
      * @param defender the second player whose challenges to delete.
      */
     public static void removeChallengesOfPlayers(UUID attacker, UUID defender) {
-        try {
-            for (Challenge challenge : getChallenges()) {
-                if (challenge.attacker == attacker && challenge.defender == defender) {
-                    Challenge.remove(challenge);
-                }
+        for (Challenge challenge : getChallenges()) {
+            if (challenge.attacker == attacker && challenge.defender == defender) {
+                Challenge.remove(challenge);
             }
-        } catch (IOException | InvalidConfigurationException e) {
-            Bukkit.getLogger().severe("Unable to access challenges.yml file!");
         }
     }
 
@@ -189,100 +146,23 @@ public class Challenge {
      * @param defender the second player whose challenges to delete.
      */
     public static @Nullable Challenge getChallengeOfPlayers(UUID attacker, UUID defender) {
-        try {
-            for (Challenge challenge : getChallenges()) {
-                if (challenge.attacker == attacker && challenge.defender == defender) {
-                    return challenge;
-                }
+        for (Challenge challenge : getChallenges()) {
+            if (challenge.attacker == attacker && challenge.defender == defender) {
+                return challenge;
             }
-        } catch (IOException | InvalidConfigurationException e) {
-            Bukkit.getLogger().severe("Unable to access challenges.yml file!");
         }
 
         return null;
     }
 
     /**
-     * Saves the challenge to challenge.yml on disk
-      */
-    @SuppressWarnings("unchecked")
-    public void save() {
-
-        Dreamvisitor.debug("Creating new challenge...");
-
-        /* Challenges in challenges.yml are saved as a list of string lists
-
-        challenges:
-            -   - 'attacker-UUID-xxxx-xxxxxxxxxxxx'
-                - 'defender-UUID-xxxx-xxxxxxxxxxxx'
-                - TYPE
-                -   - 'uuuu-MM-dd'
-                    - 'uuuu-MM-dd'
-                    - 'uuuu-MM-dd'
-
-            -   - 'attacker-UUID-xxxx-xxxxxxxxxxxx'
-                - 'defender-UUID-xxxx-xxxxxxxxxxxx'
-                - TYPE
-                -   - 'uuuu-MM-dd'
-
-        ...and so on
-
-         */
-
-        // Get the list of challenges
-        List<List<Object>> challenges = (List<List<Object>>) fileConfig.getList("challenges");
-        Dreamvisitor.debug("Got list of challenges.");
-
-        // Init if null or empty
-        if (challenges == null || challenges.isEmpty()) {
-            Dreamvisitor.debug("No challenges; creating a new list");
-            challenges = new ArrayList<>();
-        }
-
-        // Challenge -> List
-        List<Object> yamlChallenge = new ArrayList<>();
-
-        Dreamvisitor.debug("Converting to YAML...");
-        yamlChallenge.add(this.attacker);
-        yamlChallenge.add(this.defender);
-
-        List<String> dateTimes = new ArrayList<>();
-
-        for (LocalDateTime dateTime : this.time) {
-            dateTimes.add(dateTime.format(DateTimeFormatter.ISO_DATE_TIME));
-        }
-        yamlChallenge.add(dateTimes);
-        yamlChallenge.add(this.state);
-
-        // Add the given challenge
-        challenges.add(yamlChallenge);
-        Dreamvisitor.debug("Added to List");
-
-        fileConfig.set("challenges", challenges);
-
-        Dreamvisitor.debug("Creating notification...");
-        Mojang mojang = new Mojang().connect();
-
-        String defenderUsername = mojang.getPlayerProfile(defender.toString()).getUsername();
-        String content = defenderUsername + " accepted your challenge! Please select from one of the following times:";
-
-        Dreamvisitor.debug("Saving to file");
-        saveFile(fileConfig);
-
-        // Create notification
-        new Notification(attacker, "Your challenge was accepted!", content, NotificationType.CHALLENGE_ACCEPTED).create();
-    }
-
-    /**
      * Retrieves all challenges from challenges.yml.
      * @return A list of {@link Challenge}s. If none exist, the list will return empty.
-     * @throws IOException If the file could not be accessed.
-     * @throws InvalidConfigurationException If the configuration is invalid.
      */
     @SuppressWarnings("unchecked")
-    public static @NotNull List<Challenge> getChallenges() throws IOException, InvalidConfigurationException {
+    public static @NotNull List<Challenge> getChallenges() {
 
-        fileConfig.load(file);
+        YamlConfiguration fileConfig = getConfig();
 
         // Get the list of challenges
         List<List<Object>> yamlChallenges = (List<List<Object>>) fileConfig.getList("challenges");
@@ -333,9 +213,6 @@ public class Challenge {
             Bukkit.getLogger().info("challenges.yml does not exist. Creating one...");
             file.createNewFile();
         }
-
-        fileConfig = YamlConfiguration.loadConfiguration(file);
-        saveFile(fileConfig);
     }
 
     /**
@@ -348,6 +225,127 @@ public class Challenge {
         } catch (Exception e) {
             Bukkit.getLogger().severe("Error saving challenges.yml file.");
         }
+    }
+
+    public boolean isAccepted() {
+        return (state == State.ACCEPTED || state == State.SCHEDULED || state == State.ACTIVE);
+    }
+
+    public boolean isScheduled() {
+        return (state == State.SCHEDULED || state == State.ACTIVE);
+    }
+
+    public boolean isActive() {
+        return (state == State.ACTIVE);
+    }
+
+    public void cancelAttacker() {
+        attackerCanceled = true;
+        if (defenderCanceled) cancel();
+        else new Notification(defender, "Your opponent wants to cancel their challenge", "Your opponent, " + PlayerUtility.getUsernameOfUuid(attacker) + ", wants to cancel their challenge. Run /challenge to open the details of your challenge and complete the cancellation.", Notification.Type.GENERIC).create();
+    }
+
+    public void cancelDefender() {
+        defenderCanceled = true;
+        if (attackerCanceled) cancel();
+        else new Notification(attacker, "Your opponent wants to cancel their challenge", "Your opponent, " + PlayerUtility.getUsernameOfUuid(defender) + ", wants to cancel their challenge. Run /challenge to open the details of your challenge and complete the cancellation.", Notification.Type.GENERIC).create();
+    }
+
+    private void cancel() {
+        String attackerUsername = PlayerUtility.getUsernameOfUuid(attacker);
+        String defenderUsername = PlayerUtility.getUsernameOfUuid(defender);
+        RoyaltyBoard.report(null, "The challenge between " + attackerUsername + " and " + defenderUsername + " was canceled upon agreement.");
+        Challenge.remove(this);
+        new Notification(attacker, "Your challenge was canceled", "You and your opponent, " + defenderUsername + ", both agreed to cancel the challenge.", Notification.Type.GENERIC).create();
+        new Notification(defender, "Your challenge was canceled", "You and your opponent, " + attackerUsername + ", both agreed to cancel the challenge.", Notification.Type.GENERIC).create();
+    }
+
+    public boolean isAttackerCanceled() {
+        return attackerCanceled;
+    }
+
+    public boolean isDefenderCanceled() {
+        return defenderCanceled;
+    }
+
+    /**
+     * ADDS the challenge to challenge.yml on disk
+      */
+    @SuppressWarnings("unchecked")
+    public void save() {
+
+        Dreamvisitor.debug("Creating new challenge...");
+
+        /* Challenges in challenges.yml are saved as a list of string lists
+
+        challenges:
+            -   - 'attacker-UUID-xxxx-xxxxxxxxxxxx'
+                - 'defender-UUID-xxxx-xxxxxxxxxxxx'
+                - TYPE
+                -   - 'uuuu-MM-dd'
+                    - 'uuuu-MM-dd'
+                    - 'uuuu-MM-dd'
+
+            -   - 'attacker-UUID-xxxx-xxxxxxxxxxxx'
+                - 'defender-UUID-xxxx-xxxxxxxxxxxx'
+                - TYPE
+                -   - 'uuuu-MM-dd'
+
+        ...and so on
+
+         */
+
+        YamlConfiguration fileConfig = getConfig();
+
+        // Get the list of challenges
+        List<List<Object>> challenges = (List<List<Object>>) fileConfig.getList("challenges");
+        Dreamvisitor.debug("Got list of challenges.");
+
+        // Init if null or empty
+        if (challenges == null || challenges.isEmpty()) {
+            Dreamvisitor.debug("No challenges; creating a new list");
+            challenges = new ArrayList<>();
+        }
+
+        // Challenge -> List
+        List<Object> yamlChallenge = new ArrayList<>();
+
+        Dreamvisitor.debug("Converting to YAML...");
+        yamlChallenge.add(this.attacker);
+        yamlChallenge.add(this.defender);
+
+        List<String> dateTimes = new ArrayList<>();
+
+        for (LocalDateTime dateTime : this.time) {
+            dateTimes.add(dateTime.format(DateTimeFormatter.ISO_DATE_TIME));
+        }
+        yamlChallenge.add(dateTimes);
+        yamlChallenge.add(this.state);
+
+        // Add the given challenge
+        challenges.add(yamlChallenge);
+        Dreamvisitor.debug("Added to List");
+
+        fileConfig.set("challenges", challenges);
+
+        Dreamvisitor.debug("Creating notification...");
+        Mojang mojang = new Mojang().connect();
+
+        String defenderUsername = mojang.getPlayerProfile(defender.toString()).getUsername();
+        String content = defenderUsername + " accepted your challenge! Please select from one of the following times:";
+
+        Dreamvisitor.debug("Saving to file");
+        saveFile(fileConfig);
+
+        // Create notification
+        new Notification(attacker, "Your challenge was accepted!", content, Notification.Type.CHALLENGE_ACCEPTED).create();
+    }
+
+    public enum State {
+        PROPOSED,
+        ACCEPTED,
+        SCHEDULED,
+        ACTIVE
     }
 
 }

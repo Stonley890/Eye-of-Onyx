@@ -14,6 +14,7 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.exceptions.ErrorHandler;
+import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
@@ -37,52 +38,47 @@ import java.util.concurrent.CompletableFuture;
 
 public class RoyaltyBoard {
 
-    private static Map<Integer, BoardState> royaltyBoard = new HashMap<>(10);
-    public static Map<Integer, BoardState> getBoard() {return royaltyBoard;}
-    public static BoardState getBoardOf(int tribe) {return royaltyBoard.get(tribe);}
-
-    private static File file;
-    private static FileConfiguration boardFile;
-    private static final EyeOfOnyx plugin = EyeOfOnyx.getPlugin();
-    private static TextChannel boardChannel;
-    /**
-     * Whether the royalty board is frozen
-     */
-    private static boolean frozen;
-
-    // private static List<RoyaltyAction> recordedActions;
-
-    // Team names
-    private static final String[] teamNames = {
-            "HiveWing", "IceWing", "LeafWing", "MudWing", "NightWing", "RainWing", "SandWing", "SeaWing", "SilkWing",
-            "SkyWing"
-    };
-
-    // Tribe IDs
-    private static final String[] tribes = {
-            "hive", "ice", "leaf", "mud", "night", "rain", "sand", "sea", "silk", "sky"
-    };
-
-    // Valid positions
-    private static final String[] validPositions = {
-            "ruler", "crown_heir", "apparent_heir", "presumptive_heir", "crown_noble", "grand_noble", "high_noble", "apparent_noble", "presumptive_noble"
-    };
-
     // Stored values
     public static final String UUID = "uuid";
     public static final String TITLE = "title";
-
-
     public static final int RULER = 0;
     public static final int HEIR1 = 1;
     public static final int HEIR2 = 2;
     public static final int HEIR3 = 3;
     public static final int NOBLE1 = 4;
     public static final int NOBLE2 = 5;
+
+    // private static List<RoyaltyAction> recordedActions;
     public static final int NOBLE3 = 6;
     public static final int NOBLE4 = 7;
     public static final int NOBLE5 = 8;
     public static final int CIVILIAN = 9;
+    private static final EyeOfOnyx plugin = EyeOfOnyx.getPlugin();
+    // Team names
+    private static final String[] teamNames = {
+            "HiveWing", "IceWing", "LeafWing", "MudWing", "NightWing", "RainWing", "SandWing", "SeaWing", "SilkWing",
+            "SkyWing"
+    };
+    // Tribe IDs
+    private static final String[] tribes = {
+            "hive", "ice", "leaf", "mud", "night", "rain", "sand", "sea", "silk", "sky"
+    };
+    // Valid positions
+    private static final String[] validPositions = {
+            "ruler", "crown_heir", "apparent_heir", "presumptive_heir", "crown_noble", "grand_noble", "high_noble", "apparent_noble", "presumptive_noble"
+    };
+    private static File file;
+    /**
+     * Whether the royalty board is frozen
+     */
+    private static boolean frozen;
+    private RoyaltyBoard() {
+        throw new IllegalStateException("Utility class");
+    }
+
+    public static BoardState getBoardOf(int tribe) {
+        return getBoard().get(tribe);
+    }
 
     public static String[] getTeamNames() {
         return teamNames;
@@ -96,16 +92,15 @@ public class RoyaltyBoard {
         return validPositions;
     }
 
+    public static boolean isFrozen() {
+        return frozen;
+    }
+
     public static void setFrozen(boolean value) {
         frozen = value;
         plugin.getConfig().set("frozen", value);
         plugin.saveConfig();
     }
-
-    public static boolean isFrozen() {
-        return frozen;
-    }
-
 
     /**
      * Initializes the royalty board.
@@ -116,37 +111,41 @@ public class RoyaltyBoard {
 
         if (!file.exists()) {
             Bukkit.getLogger().info("board.yml does not exist. Creating one...");
+            file.getParentFile().mkdirs();
             plugin.saveResource("board.yml", false);
         }
 
-        loadFromDisk();
-
-        long channelID = plugin.getConfig().getLong("royalty-board-channel");
-        JDA jda = Bot.getJda();
-        boardChannel = jda.getTextChannelById(channelID);
+        getBoard();
 
     }
 
+    private static TextChannel getBoardChannel() {
+        long channelID = plugin.getConfig().getLong("royalty-board-channel");
+        JDA jda = Bot.getJda();
+        return jda.getTextChannelById(channelID);
+    }
+
     private static void saveFile(FileConfiguration board) {
-        boardFile = board;
         try {
-            boardFile.save(file);
+            board.save(file);
         } catch (Exception e) {
             Bukkit.getLogger().severe("Eye of Onyx could not save board.yml! If this persists after a restart, report this error!");
         }
     }
 
     public static void saveToDisk() {
-        saveFile(BoardState.createYamlConfiguration(royaltyBoard));
+        saveFile(BoardState.createYamlConfiguration(getBoard()));
     }
 
     /**
      * Reload the file from disk.
+     *
+     * @return
      */
-    public static void loadFromDisk() {
-        boardFile = YamlConfiguration.loadConfiguration(file);
+    public static @NotNull Map<Integer, BoardState> getBoard() {
+        YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
         frozen = plugin.getConfig().getBoolean("frozen");
-        royaltyBoard = BoardState.fromYamlConfig(boardFile);
+        return BoardState.fromYamlConfig(configuration);
     }
 
     /**
@@ -305,6 +304,8 @@ public class RoyaltyBoard {
 
         Dreamvisitor.debug("Updating royalty board.");
 
+        Map<Integer, BoardState> royaltyBoard = getBoard();
+
         // joined_time access
         LocalDateTime last_online;
         // Count the number of empty positions
@@ -345,7 +346,7 @@ public class RoyaltyBoard {
                     Challenge.removeChallengesOfPlayer(uuid, "The player you were challenging was removed from the royalty board for inactivity.");
 
                     // Remove notifications
-                    Notification.removeNotificationsOfPlayer(uuid, NotificationType.CHALLENGE_REQUESTED);
+                    Notification.removeNotificationsOfPlayer(uuid, Notification.Type.CHALLENGE_REQUESTED);
                 }
 
                 // Clear data
@@ -367,13 +368,13 @@ public class RoyaltyBoard {
                     // Notify the user who has moved
                     java.util.UUID movedUser = royaltyBoard.get(tribe).getPos(emptyPosition).player;
                     if (movedUser != null) {
-                        new Notification(movedUser, "You've been promoted!", "A player was removed from the royalty board and you moved into a higher position. Because of this, any challenges have been canceled.", NotificationType.GENERIC).create();
+                        new Notification(movedUser, "You've been promoted!", "A player was removed from the royalty board and you moved into a higher position. Because of this, any challenges have been canceled.", Notification.Type.GENERIC).create();
 
                         // Remove challenges
                         Challenge.removeChallengesOfPlayer(movedUser, null);
 
                         // Remove notifications
-                        Notification.removeNotificationsOfPlayer(movedUser, NotificationType.CHALLENGE_REQUESTED);
+                        Notification.removeNotificationsOfPlayer(movedUser, Notification.Type.CHALLENGE_REQUESTED);
                     }
 
                     // This position is now empty
@@ -404,6 +405,7 @@ public class RoyaltyBoard {
      */
     public static void updateOCName(int tribe, int pos) {
         UUID uuid = getUuid(tribe, pos);
+        Map<Integer, BoardState> royaltyBoard = getBoard();
 
         if (uuid != null) {
             // Set name from OpenRP character
@@ -427,6 +429,8 @@ public class RoyaltyBoard {
 
         // Get channel and message
         List<Long> messageIDs = plugin.getConfig().getLongList("royalty-board-message");
+
+        TextChannel boardChannel = getBoardChannel();
 
         if (boardChannel == null) {
             Bukkit.getLogger().warning("Could not get royalty board channel!");
@@ -539,6 +543,7 @@ public class RoyaltyBoard {
 
         // Get guilds
         Guild mainGuild = Bot.getGameLogChannel().getGuild();
+        Guild sisterGuild = Bot.getJda().getGuildById(config.getLong("tribeGuildID"));
 
         // Get roles
         Role rulerRole = Bot.getJda().getRoleById(config.getLong("main-royalty-roles.ruler"));
@@ -569,11 +574,42 @@ public class RoyaltyBoard {
 
         });
 
+        if (sisterGuild == null) {
+            Bukkit.getLogger().warning("Sister guild could not be found! Make sure the ID in the Eye of Onyx config is correct and restart!");
+            return;
+        }
+
+        int finalPos1 = pos;
+        int finalTribe = tribe;
+        sisterGuild.retrieveMember(user).queue(member -> {
+            if (member != null) {
+                // get sister guild roles
+                List<Role> sisterRoyaltyRoles = new ArrayList<>();
+                List<Long> sisterRoyaltyRoleIDs = config.getLongList("sister-royalty-roles");
+                if (sisterRoyaltyRoleIDs.size() < tribes.length) {
+                    Bukkit.getLogger().warning("Missing sister guild royalty role IDs! Check Eye of Onyx configuration and restart.");
+                    return;
+                }
+                for (Long roleID : sisterRoyaltyRoleIDs) {
+                    sisterRoyaltyRoles.add(Bot.getJda().getRoleById(roleID));
+                }
+
+                // For each position, remove royalty role if they are citizen or are not part of that tribe.
+                // Add role if applicable
+                for (int tribeRole = 0; tribeRole < tribes.length; tribeRole++) {
+                    Role role = sisterRoyaltyRoles.get(tribeRole);
+                    if (finalPos1 == CIVILIAN || finalTribe != tribeRole && member.getRoles().contains(role)) sisterGuild.removeRoleFromMember(member, role).queue();
+                    if (finalPos1 != CIVILIAN && finalTribe == tribeRole && !member.getRoles().contains(role)) sisterGuild.addRoleToMember(member, role).queue();
+                }
+            }
+        });
+
     }
 
     /**
-     * Removes all royalty-associated Discord roles from tribe royalty.
+     * Removes all royalty-associated Discord roles from tribe royalty of main and sister servers.
      * applyRoles() should be used after this to reapply the roles.
+     * This does not apply to the sister guild due to how the roles are set up.
      * @param tribe the tribe whose roles to remove
      */
     public static void removeRoles(int tribe) {
@@ -639,6 +675,11 @@ public class RoyaltyBoard {
 
         // Get guilds
         Guild mainGuild = Bot.getGameLogChannel().getGuild();
+        Guild sisterGuild = Bot.getJda().getGuildById(config.getLong("tribeGuildID"));
+
+        if (sisterGuild == null) {
+            Bukkit.getLogger().warning("Sister guild could not be found! Ensure the correct guild ID is set in the Eye of Onyx config.");
+        }
 
         Dreamvisitor.debug("Got guilds.");
 
@@ -648,6 +689,14 @@ public class RoyaltyBoard {
         Role nobleRole = Bot.getJda().getRoleById(config.getLong("main-royalty-roles.noble"));
 
         Dreamvisitor.debug("Got main roles.");
+
+        Role sisterTribeRole = null;
+        if (sisterGuild != null) {
+            List<Long> sisterRoyaltyRoles = config.getLongList("sister-royalty-roles");
+            sisterTribeRole = Bot.getJda().getRoleById(sisterRoyaltyRoles.get(tribe));
+        }
+
+        Dreamvisitor.debug("Got sister role. Checking positions...");
 
         // Check each position
         for (int pos = 0; pos < validPositions.length; pos++) {
@@ -666,6 +715,18 @@ public class RoyaltyBoard {
                 Dreamvisitor.debug("Getting ID");
                 long userId = AccountLink.getDiscordId(Objects.requireNonNull(getUuid(tribe, pos)));
                 Member member;
+
+                // Get user and add role
+                if (sisterGuild != null) {
+                    try {
+                        member = sisterGuild.retrieveMemberById(userId).complete();
+                        if (sisterTribeRole != null) sisterGuild.addRoleToMember(member, sisterTribeRole).complete();
+                        else Dreamvisitor.debug("Added sister role");
+
+                    } catch (ErrorResponseException ignored) {
+                        Dreamvisitor.debug("User is not in sister server");
+                    }
+                }
 
                 // Get appropriate role
                 Role royaltyRole = null;
@@ -827,7 +888,7 @@ public class RoyaltyBoard {
     }
 
     public static boolean isPositionEmpty(int tribe, int pos) {
-        return royaltyBoard.get(tribe).getPos(pos).player == null;
+        return getBoard().get(tribe).getPos(pos).player == null;
     }
 
     /**
@@ -888,7 +949,7 @@ public class RoyaltyBoard {
      * @return The String UUID located at the given location.
      */
     public static @Nullable java.util.UUID getUuid(int tribe, int pos) {
-        return royaltyBoard.get(tribe).getPos(pos).player;
+        return getBoard().get(tribe).getPos(pos).player;
     }
 
     /**
@@ -899,7 +960,7 @@ public class RoyaltyBoard {
      * @return the character name located at the given location.
      */
     public static @Nullable String getOcName(int tribe, int pos) {
-        return royaltyBoard.get(tribe).getPos(pos).name;
+        return getBoard().get(tribe).getPos(pos).name;
     }
 
     /**
@@ -910,7 +971,7 @@ public class RoyaltyBoard {
      * @return the date joined located at the given location.
      */
     public static @Nullable LocalDateTime getJoinedPosDate(int tribe, int pos) {
-        return royaltyBoard.get(tribe).getPos(pos).joinedPosition;
+        return getBoard().get(tribe).getPos(pos).joinedPosition;
     }
 
     /**
@@ -921,7 +982,7 @@ public class RoyaltyBoard {
      * @return the date joined located at the given location.
      */
     public static @Nullable LocalDateTime getJoinedBoardDate(int tribe, int pos) {
-        return royaltyBoard.get(tribe).getPos(pos).joinedBoard;
+        return getBoard().get(tribe).getPos(pos).joinedBoard;
     }
 
     /**
@@ -932,7 +993,7 @@ public class RoyaltyBoard {
      * @return The date joined last online at the given location.
      */
     public static @Nullable LocalDateTime getLastOnline(int tribe, int pos) {
-        return royaltyBoard.get(tribe).getPos(pos).lastOnline;
+        return getBoard().get(tribe).getPos(pos).lastOnline;
     }
 
     /**
@@ -943,6 +1004,7 @@ public class RoyaltyBoard {
      * @param time the date & time to set.
      */
     public static void setLastOnline(int tribe, int pos, LocalDateTime time) {
+        Map<Integer, BoardState> royaltyBoard = getBoard();
         royaltyBoard.put(tribe, royaltyBoard.get(tribe).setLastOnline(pos, time));
     }
 
@@ -954,6 +1016,7 @@ public class RoyaltyBoard {
      * @return The date last challenged at the given location.
      */
     public static @Nullable LocalDateTime getLastChallengeDate(int tribe, int pos) {
+        Map<Integer, BoardState> royaltyBoard = getBoard();
         return royaltyBoard.get(tribe).getPos(pos).lastChallenge;
     }
 
@@ -965,6 +1028,7 @@ public class RoyaltyBoard {
      * @param time the date & time to set.
      */
     public static void setLastChallengeDate(int tribe, int pos, LocalDateTime time) {
+        Map<Integer, BoardState> royaltyBoard = getBoard();
         royaltyBoard.put(tribe, royaltyBoard.get(tribe).setLastChallenge(pos, time));
     }
 
@@ -976,6 +1040,7 @@ public class RoyaltyBoard {
      * @return The attacker at the given location.
      */
     public static @Nullable UUID getAttacker(int tribe, int pos) {
+        Map<Integer, BoardState> royaltyBoard = getBoard();
         return royaltyBoard.get(tribe).getPos(pos).challenger;
     }
 
@@ -987,6 +1052,7 @@ public class RoyaltyBoard {
      * @param uuid          The UUID to set as the attacker.
      */
     public static void setAttacker(int tribe, int pos, UUID uuid) {
+        Map<Integer, BoardState> royaltyBoard = getBoard();
         royaltyBoard.put(tribe, royaltyBoard.get(tribe).setChallenger(pos, uuid));
     }
 
@@ -997,6 +1063,7 @@ public class RoyaltyBoard {
      * @param pos The position to fetch from.
      */
     public static @Nullable UUID getAttacking(int tribe, int pos) {
+        Map<Integer, BoardState> royaltyBoard = getBoard();
         return royaltyBoard.get(tribe).getPos(pos).challenging;
     }
 
@@ -1008,6 +1075,7 @@ public class RoyaltyBoard {
      * @param uuid          The UUID to set.
      */
     public static void setAttacking(int tribe, int pos, UUID uuid) {
+        Map<Integer, BoardState> royaltyBoard = getBoard();
         royaltyBoard.put(tribe, royaltyBoard.get(tribe).setChallenging(pos, uuid));
     }
 
@@ -1031,10 +1099,6 @@ public class RoyaltyBoard {
         } else return null;
     }
 
-    private RoyaltyBoard() {
-        throw new IllegalStateException("Utility class");
-    }
-
     /**
      * Moves a player from a given position to another given position.
      * If a player is in the position to be moved to, they will be removed.
@@ -1043,6 +1107,7 @@ public class RoyaltyBoard {
      * @param toPos the second position to swap.
      */
     public static void replace(int tribe, int fromPos, int toPos) {
+        Map<Integer, BoardState> royaltyBoard = getBoard();
         royaltyBoard.put(tribe, royaltyBoard.get(tribe).replace(fromPos, toPos));
     }
 
@@ -1053,6 +1118,7 @@ public class RoyaltyBoard {
      * @param complete if {@code true}, also updates this user's LuckPerms permissions and Discord roles.
      */
     public static void removePlayer(int tribe, int pos, boolean complete) {
+        Map<Integer, BoardState> royaltyBoard = getBoard();
         Dreamvisitor.debug("Removing player at tribe " + tribe + " pos " + pos + ". Complete? " + complete);
         java.util.UUID uuid = null;
         if (complete) uuid = royaltyBoard.get(tribe).getPos(pos).player;
@@ -1070,10 +1136,12 @@ public class RoyaltyBoard {
     }
 
     public static void set(int tribe, int pos, BoardPosition newPosition) {
+        Map<Integer, BoardState> royaltyBoard = getBoard();
         royaltyBoard.put(tribe, royaltyBoard.get(tribe).updatePosition(pos, newPosition));
     }
 
     public static void set(int tribe, BoardState newState) {
+        Map<Integer, BoardState> royaltyBoard = getBoard();
         royaltyBoard.put(tribe, newState);
     }
 }

@@ -5,7 +5,7 @@ import io.github.stonley890.dreamvisitor.data.PlayerUtility;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import javassist.NotFoundException;
 import org.bukkit.Bukkit;
-import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.Scoreboard;
@@ -14,19 +14,12 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Objects;
 import java.util.UUID;
 
 public class PlayerTribe {
 
-    private static final HashMap<String, String> tribeStorage = new HashMap<>();
-    /*
-    These are stored as <String player-uuid, String TeamName> but returned as tribe indexes. This way, the file is human-readable, and the system can be adapted if new tribes are introduced.
-     */
-
     private static File file;
-    private static FileConfiguration fileConfig;
     private static final EyeOfOnyx plugin = EyeOfOnyx.getPlugin();
 
     /**
@@ -42,19 +35,32 @@ public class PlayerTribe {
             Bukkit.getLogger().info("player-tribes.yml does not exist. Creating one...");
             file.createNewFile();
         }
+    }
 
-        fileConfig = YamlConfiguration.loadConfiguration(file);
-        save();
+    private static String getPlayer(@NotNull UUID uuid) {
+        try {
+            YamlConfiguration configuration = new YamlConfiguration();
+            configuration.load(file);
+            return configuration.getString(uuid.toString());
+        } catch (IOException | InvalidConfigurationException e) {
+            Bukkit.getLogger().severe("Unable to load " + file.getName() + "!");
+            Bukkit.getPluginManager().disablePlugin(plugin);
+            throw new RuntimeException();
+        }
     }
 
     /**
      * Saves the current file configuration to disk.
      */
-    private static void save() {
+    private static void savePlayer(@NotNull UUID uuid, @NotNull String teamName) {
         try {
-            fileConfig.save(file);
-        } catch (Exception e) {
-            Bukkit.getLogger().severe("Error saving player-tribes.yml file:");
+            YamlConfiguration configuration = new YamlConfiguration();
+            configuration.load(file);
+            configuration.set(uuid.toString(), teamName);
+        } catch (IOException | InvalidConfigurationException e) {
+            Bukkit.getLogger().severe("Unable to load " + file.getName() + "!");
+            Bukkit.getPluginManager().disablePlugin(plugin);
+            throw new RuntimeException();
         }
     }
 
@@ -67,26 +73,20 @@ public class PlayerTribe {
      */
     public static int getTribeOfPlayer(@NotNull UUID playerUuid) throws NotFoundException {
 
-        String tribeName = tribeStorage.get(playerUuid.toString());
+        String tribeName = getPlayer(playerUuid);
 
-        // If not cached, get from file.
+        // If not in file, try to get from online player
         if (tribeName == null) {
-            tribeName = fileConfig.getString(playerUuid.toString());
+            Player player = Bukkit.getPlayer(playerUuid);
 
-            // If not in file, try to get from online player
-            if (tribeName == null) {
-                Player player = Bukkit.getPlayer(playerUuid);
-
-                // If player not online, throw exception
-                if (player == null) throw new NotFoundException("The given player does not have a recorded tribe.");
-                else {
-                    // if online, try to get from team or tag
-                    try {
-                        updateTribeOfPlayer(player.getUniqueId());
-                        tribeName = tribeStorage.get(playerUuid.toString());
-                    } catch (Exception e) {
-                        throw new NotFoundException("The given player does not have a recorded tribe.");
-                    }
+            // If player not online, throw exception
+            if (player == null) throw new NotFoundException("The given player does not have a recorded tribe.");
+            else {
+                // if online, try to get from team or tag
+                try {
+                    updateTribeOfPlayer(player.getUniqueId());
+                } catch (Exception e) {
+                    throw new NotFoundException("The given player does not have a recorded tribe.");
                 }
             }
         }
@@ -123,6 +123,8 @@ public class PlayerTribe {
         if (online) username = player.getName();
         else username = PlayerUtility.getUsernameOfUuid(uuid);
 
+        if (username == null) throw new NotFoundException("Player is null");
+
         // Check by team
         Dreamvisitor.debug("Checking by team...");
         String[] teamNames = RoyaltyBoard.getTeamNames();
@@ -132,7 +134,7 @@ public class PlayerTribe {
             if (team != null && team.hasEntry(username)) {
                 Dreamvisitor.debug("Found tribe " + i);
                 playerTribe = i;
-                saveTribe(uuid, playerTribe);
+                savePlayer(uuid, teamNames[playerTribe]);
                 return;
             }
         }
@@ -145,19 +147,12 @@ public class PlayerTribe {
                 if (player.getScoreboardTags().contains(teamName)) {
                     Dreamvisitor.debug("Found tag " + i);
                     playerTribe = i;
-                    saveTribe(uuid, playerTribe);
+                    savePlayer(uuid, teamNames[playerTribe]);
                     return;
                 }
             }
         }
 
-        throw new NotFoundException("Given player does not have a valid team or tag associated with a tribe!");
+        throw new NotFoundException("Given player does nozt have a valid team or tag associated with a tribe!");
     }
-
-    private static void saveTribe(@NotNull UUID player, int tribeIndex) {
-        tribeStorage.put(player.toString(), RoyaltyBoard.getTeamNames()[tribeIndex]);
-        fileConfig.set(player.toString(), RoyaltyBoard.getTeamNames()[tribeIndex]);
-        save();
-    }
-
 }

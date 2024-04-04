@@ -5,11 +5,13 @@ import com.sun.net.httpserver.HttpHandler;
 import io.github.stonley890.dreamvisitor.Dreamvisitor;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import io.github.stonley890.eyeofonyx.commands.CmdChallenge;
-import io.github.stonley890.eyeofonyx.files.*;
+import io.github.stonley890.eyeofonyx.files.Challenge;
+import io.github.stonley890.eyeofonyx.files.Notification;
+import io.github.stonley890.eyeofonyx.files.PlayerTribe;
+import io.github.stonley890.eyeofonyx.files.RoyaltyBoard;
 import javassist.NotFoundException;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.thymeleaf.TemplateEngine;
@@ -114,22 +116,18 @@ public class SubmitHandler implements HttpHandler {
                             } else {
 
                                 // Time cannot be within 30 minutes of another challenge
-                                try {
-                                    for (Challenge challenge : Challenge.getChallenges()) {
-                                        for (LocalDateTime time : challenge.time) {
-                                            if (availability.isBefore(time.plusMinutes(30)) || availability.isAfter((time.minusMinutes(30)))) {
-                                                Dreamvisitor.debug("Invalid; time is within 30 mins of another");
+                                for (Challenge challenge : Challenge.getChallenges()) {
+                                    for (LocalDateTime time : challenge.time) {
+                                        if (availability.isBefore(time.plusMinutes(30)) || availability.isAfter((time.minusMinutes(30)))) {
+                                            Dreamvisitor.debug("Invalid; time is within 30 mins of another");
 
-                                                player.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Invalid time! " + availability.format(DateTimeFormatter.ofPattern("MM/dd hh:mm a")) + " is within 30 minutes of a challenge at " + time.format(DateTimeFormatter.ofPattern("hh:mm a")));
+                                            player.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Invalid time! " + availability.format(DateTimeFormatter.ofPattern("MM/dd hh:mm a")) + " is within 30 minutes of a challenge at " + time.format(DateTimeFormatter.ofPattern("hh:mm a")));
 
-                                                sendInvalid(httpExchange, "One of your times was invalid! " + availability.format(DateTimeFormatter.ofPattern("MM/dd hh:mm a")) + " is within 30 minutes of a challenge at " + time.format(DateTimeFormatter.ofPattern("hh:mm a")));
+                                            sendInvalid(httpExchange, "One of your times was invalid! " + availability.format(DateTimeFormatter.ofPattern("MM/dd hh:mm a")) + " is within 30 minutes of a challenge at " + time.format(DateTimeFormatter.ofPattern("hh:mm a")));
 
-                                                return;
-                                            }
+                                            return;
                                         }
                                     }
-                                } catch (InvalidConfigurationException e) {
-                                    throw new RuntimeException(e);
                                 }
                             }
                         }
@@ -137,15 +135,11 @@ public class SubmitHandler implements HttpHandler {
                         Dreamvisitor.debug("No availability issues");
 
                         // Remove notification
-                        try {
-                            for (Notification notification : Notification.getNotificationsOfPlayer(player.getUniqueId())) {
-                                if (notification.type == NotificationType.CHALLENGE_REQUESTED) {
-                                    Notification.removeNotification(notification);
-                                    Dreamvisitor.debug("Removed notification.");
-                                }
+                        for (Notification notification : Notification.getNotificationsOfPlayer(player.getUniqueId())) {
+                            if (notification.type == Notification.Type.CHALLENGE_REQUESTED) {
+                                Notification.removeNotification(notification);
+                                Dreamvisitor.debug("Removed notification.");
                             }
-                        } catch (IOException | InvalidConfigurationException e) {
-                            e.printStackTrace();
                         }
 
                         int playerTribe = 0;

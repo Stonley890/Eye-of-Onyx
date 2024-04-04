@@ -11,6 +11,7 @@ import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -28,13 +29,12 @@ import java.util.UUID;
 public class Notification {
 
     private static File file;
-    private static FileConfiguration fileConfig;
     private static final EyeOfOnyx plugin = EyeOfOnyx.getPlugin();
 
     private final UUID player;
     private final String title;
     private final String content;
-    public final NotificationType type;
+    public final Type type;
     public LocalDateTime time;
     public boolean seen = false;
 
@@ -50,9 +50,19 @@ public class Notification {
             Bukkit.getLogger().info("notifications.yml does not exist. Creating one...");
             file.createNewFile();
         }
+    }
 
-        fileConfig = YamlConfiguration.loadConfiguration(file);
-        save(fileConfig);
+    @Contract(" -> new")
+    private static @NotNull YamlConfiguration getConfig() {
+        try {
+            YamlConfiguration configuration = new YamlConfiguration();
+            configuration.load(file);
+            return configuration;
+        } catch (IOException | InvalidConfigurationException e) {
+            Bukkit.getLogger().severe("Unable to load " + file.getName() + "!");
+            Bukkit.getPluginManager().disablePlugin(plugin);
+            throw new RuntimeException();
+        }
     }
 
     /**
@@ -60,9 +70,8 @@ public class Notification {
      * @param board The file configuration to save.
      */
     private static void save(FileConfiguration board) {
-        fileConfig = board;
         try {
-            fileConfig.save(file);
+            board.save(file);
         } catch (Exception e) {
             Bukkit.getLogger().severe("Error saving notifications.yml file:");
         }
@@ -71,10 +80,9 @@ public class Notification {
     /**
      * Saves the notification to notifications.yml on disk
      * @param notification The notification to save.
-     * @throws IOException If file could not be accessed.
      */
     @SuppressWarnings("unchecked")
-    public static void saveNotification(@NotNull Notification notification) throws IOException, InvalidConfigurationException {
+    public static void saveNotification(@NotNull Notification notification) {
 
         /* Notifications in notification.yml are saved as a list of string lists for each player
 
@@ -95,7 +103,7 @@ public class Notification {
 
          */
 
-        fileConfig.load(file);
+        YamlConfiguration fileConfig = getConfig();
 
         // Get list of notifications of given player
         List<List<String>> notifications = (List<List<String>>) fileConfig.getList(notification.player.toString());
@@ -125,13 +133,11 @@ public class Notification {
      * Retrieves all notifications of a given player UUID.
      * @param uuid The player UUID to get notifications of.
      * @return A list of {@link Notification}s. If none exist, the list will return empty.
-     * @throws IOException If the file could not be accessed.
-     * @throws InvalidConfigurationException If the configuration is invalid.
      */
     @SuppressWarnings("unchecked")
-    public static @NotNull List<Notification> getNotificationsOfPlayer(@NotNull UUID uuid) throws IOException, InvalidConfigurationException {
+    public static @NotNull List<Notification> getNotificationsOfPlayer(@NotNull UUID uuid) {
 
-        fileConfig.load(file);
+        YamlConfiguration fileConfig = getConfig();
 
         List<Notification> notifications = new ArrayList<>();
 
@@ -151,7 +157,7 @@ public class Notification {
                 // Get saved values
                 String title = yamlNotification.get(0);
                 String content = yamlNotification.get(1);
-                NotificationType type = NotificationType.valueOf(yamlNotification.get(2));
+                Type type = Type.valueOf(yamlNotification.get(2));
                 LocalDateTime time = LocalDateTime.parse(yamlNotification.get(3));
                 boolean seen = Boolean.parseBoolean(yamlNotification.get(4));
 
@@ -169,8 +175,8 @@ public class Notification {
         return notifications;
     }
 
-    public static void removeNotification(@NotNull Notification notification) throws IOException, InvalidConfigurationException {
-        fileConfig.load(file);
+    public static void removeNotification(@NotNull Notification notification) {
+        YamlConfiguration fileConfig = getConfig();
 
         // Get list of notifications of given player
         List<Notification> notifications = getNotificationsOfPlayer(notification.player);
@@ -211,7 +217,7 @@ public class Notification {
      * @param notificationContent The content of the message.
      * @param notificationType The type of Notification. This will determine the buttons added and actions taken upon delivery.
      */
-    public Notification(UUID playerUuid, String notificationTitle, String notificationContent, NotificationType notificationType) {
+    public Notification(UUID playerUuid, String notificationTitle, String notificationContent, Type notificationType) {
         player = playerUuid;
         title = notificationTitle;
         content = notificationContent;
@@ -223,23 +229,17 @@ public class Notification {
      * Saves the Notification to disk and attempts to send it.
      */
     public void create() {
-        try {
-            saveNotification(this);
-            if (Bukkit.getPlayer(this.player) != null) {
-                sendMessage();
-            }
-        } catch (IOException | InvalidConfigurationException e) {
-            Bukkit.getLogger().warning(EyeOfOnyx.EOO + ChatColor.RED + "Error saving to notification.yml");
+        saveNotification(this);
+        if (Bukkit.getPlayer(this.player) != null) {
+            sendMessage();
         }
     }
 
     /**
      * Attempts to send the message to the player.
      * @return Whether the message was sent.
-     * @throws IOException If the file could not be accessed.
-     * @throws InvalidConfigurationException If the configuration is invalid.
      */
-    public boolean sendMessage() throws IOException, InvalidConfigurationException {
+    public boolean sendMessage() {
         Player onlinePlayer = Bukkit.getPlayer(player);
         if (onlinePlayer != null) {
 
@@ -262,7 +262,7 @@ public class Notification {
 
             // NotificationType determines buttons and post-notify actions
 
-            if (type == NotificationType.CHALLENGE_REQUESTED) {
+            if (type == Type.CHALLENGE_REQUESTED) {
 
                 // Add accept and forfeit buttons
 
@@ -283,7 +283,7 @@ public class Notification {
 
                 RoyaltyBoard.report(onlinePlayer.getName(), onlinePlayer.getName() + " has been shown the notification for their challenge request.");
 
-            } else if (type == NotificationType.CHALLENGE_ACCEPTED) {
+            } else if (type == Type.CHALLENGE_ACCEPTED) {
 
                 // Add buttons for dates
 
@@ -344,7 +344,7 @@ public class Notification {
 
                 RoyaltyBoard.report(onlinePlayer.getName(), onlinePlayer.getName() + " has been shown the notification for their challenge scheduling.");
 
-            }   else if (type == NotificationType.GENERIC) {
+            }   else if (type == Type.GENERIC) {
 
                 // Do not show notification again
                 removeNotification(this);
@@ -373,14 +373,34 @@ public class Notification {
         }
     }
 
-    public static void removeNotificationsOfPlayer(@NotNull UUID uuid, NotificationType type) {
-        try {
-            for (Notification notification : Notification.getNotificationsOfPlayer(uuid)) {
-                if (notification.type == type)
-                    Notification.removeNotification(notification);
-            }
-        } catch (IOException | InvalidConfigurationException e) {
-            Bukkit.getLogger().severe("Unable to access notifications.yml file!");
+    public static void removeNotificationsOfPlayer(@NotNull UUID uuid, Type type) {
+        for (Notification notification : Notification.getNotificationsOfPlayer(uuid)) {
+            if (notification.type == type)
+                Notification.removeNotification(notification);
         }
+    }
+
+    public enum Type {
+
+        /**
+         * Generic notification.
+         * Deletes when read.
+         */
+        GENERIC,
+
+        /**
+         * Challenge sent notification.
+         * Includes buttons to accept or deny.
+         * Deletes when acknowledged.
+         */
+        CHALLENGE_REQUESTED,
+
+        /**
+         * Challenge accepted notification.
+         * Includes buttons with available times.
+         * Deletes when acknowledged.
+         */
+        CHALLENGE_ACCEPTED
+
     }
 }

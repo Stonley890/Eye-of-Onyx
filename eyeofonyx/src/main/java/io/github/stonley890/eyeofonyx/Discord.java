@@ -273,10 +273,10 @@ public class Discord extends ListenerAdapter {
                     BoardState oldBoard = RoyaltyBoard.getBoardOf(tribeIndex).clone();
 
                     Challenge.removeChallengesOfPlayer(uuid, "The other player in your challenge was removed from the royalty board.");
-                    Notification.removeNotificationsOfPlayer(uuid, NotificationType.CHALLENGE_REQUESTED);
-                    Notification.removeNotificationsOfPlayer(uuid, NotificationType.CHALLENGE_ACCEPTED);
+                    Notification.removeNotificationsOfPlayer(uuid, Notification.Type.CHALLENGE_REQUESTED);
+                    Notification.removeNotificationsOfPlayer(uuid, Notification.Type.CHALLENGE_ACCEPTED);
 
-                    new Notification(uuid, "You have been removed from the royalty board.", "You were removed from the royalty board because you changed your tribe. All pending challenges have been canceled.", NotificationType.GENERIC).create();
+                    new Notification(uuid, "You have been removed from the royalty board.", "You were removed from the royalty board because you changed your tribe. All pending challenges have been canceled.", Notification.Type.GENERIC).create();
 
                     RoyaltyBoard.removePlayer(tribeIndex, posIndex, true);
 
@@ -329,12 +329,12 @@ public class Discord extends ListenerAdapter {
                     Challenge.removeChallengesOfPlayer(pos2.player, "The player who was in your challenge was moved to a different position.");
 
                     if (pos1.player != null) {
-                        Notification.removeNotificationsOfPlayer(pos1.player, NotificationType.CHALLENGE_ACCEPTED);
-                        Notification.removeNotificationsOfPlayer(pos1.player, NotificationType.CHALLENGE_REQUESTED);
+                        Notification.removeNotificationsOfPlayer(pos1.player, Notification.Type.CHALLENGE_ACCEPTED);
+                        Notification.removeNotificationsOfPlayer(pos1.player, Notification.Type.CHALLENGE_REQUESTED);
                     }
                     if (pos2.player != null) {
-                        Notification.removeNotificationsOfPlayer(pos2.player, NotificationType.CHALLENGE_ACCEPTED);
-                        Notification.removeNotificationsOfPlayer(pos2.player, NotificationType.CHALLENGE_REQUESTED);
+                        Notification.removeNotificationsOfPlayer(pos2.player, Notification.Type.CHALLENGE_ACCEPTED);
+                        Notification.removeNotificationsOfPlayer(pos2.player, Notification.Type.CHALLENGE_REQUESTED);
                     }
 
 
@@ -342,8 +342,8 @@ public class Discord extends ListenerAdapter {
                     RoyaltyBoard.set(tribeIndex, RoyaltyBoard.getBoardOf(tribeIndex).swap(posIndex1, posIndex2));
 
                     // Notify users
-                    new Notification(pos1.player, "You've been moved!","You have been moved to a different spot on the royalty board. Any challenges you were in have been canceled.", NotificationType.GENERIC).create();
-                    new Notification(pos2.player, "You've been moved!","You have been moved to a different spot on the royalty board. Any challenges you were in have been canceled.", NotificationType.GENERIC).create();
+                    new Notification(pos1.player, "You've been moved!","You have been moved to a different spot on the royalty board. Any challenges you were in have been canceled.", Notification.Type.GENERIC).create();
+                    new Notification(pos2.player, "You've been moved!","You have been moved to a different spot on the royalty board. Any challenges you were in have been canceled.", Notification.Type.GENERIC).create();
 
                     // Send update
                     BoardState newBoard = RoyaltyBoard.getBoardOf(tribeIndex).clone();
@@ -429,8 +429,8 @@ public class Discord extends ListenerAdapter {
                                 Challenge.removeChallengesOfPlayer(uuid, "The player who was challenging you was removed from the royalty board, so your challenge was canceled.");
 
                                 // Remove any challenge notifications
-                                Notification.removeNotificationsOfPlayer(uuid, NotificationType.CHALLENGE_REQUESTED);
-                                Notification.removeNotificationsOfPlayer(uuid, NotificationType.CHALLENGE_ACCEPTED);
+                                Notification.removeNotificationsOfPlayer(uuid, Notification.Type.CHALLENGE_REQUESTED);
+                                Notification.removeNotificationsOfPlayer(uuid, Notification.Type.CHALLENGE_ACCEPTED);
 
                                 RoyaltyBoard.removePlayer(tribe, pos, true);
                                 RoyaltyBoard.updateBoard(tribe, false);
@@ -440,7 +440,7 @@ public class Discord extends ListenerAdapter {
                                     Bukkit.getLogger().warning(EyeOfOnyx.EOO + ChatColor.RED + "An I/O error occurred while attempting to update Discord board.");
                                 }
                             }
-                            new Notification(uuid, "Royalty Ban", "You are no longer allowed to participate in royalty. Contact staff if you think this is a mistake.", NotificationType.GENERIC).create();
+                            new Notification(uuid, "Royalty Ban", "You are no longer allowed to participate in royalty. Contact staff if you think this is a mistake.", Notification.Type.GENERIC).create();
                             event.reply(user.getAsMention() + " has been banned.").queue();
 
                         }
@@ -602,7 +602,7 @@ public class Discord extends ListenerAdapter {
             for (RoyaltyAction royaltyAction : actionHistory) {
                 if (targetId.equals(String.valueOf(royaltyAction.id))) {
 
-                    RoyaltyBoard.getBoard().put(royaltyAction.affectedTribe, royaltyAction.oldState);
+                    RoyaltyBoard.set(royaltyAction.affectedTribe, royaltyAction.oldState);
                     RoyaltyBoard.saveToDisk();
                     RoyaltyBoard.updateBoard(royaltyAction.affectedTribe, false);
                     try {

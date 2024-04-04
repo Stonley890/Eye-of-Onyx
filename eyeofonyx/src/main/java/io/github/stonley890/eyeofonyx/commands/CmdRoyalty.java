@@ -68,7 +68,7 @@ public class CmdRoyalty implements CommandExecutor {
 
             if (sender.hasPermission("eyeofonyx.manageboard")) {
                 sender.sendMessage(EyeOfOnyx.EOO + "Reloading and updating the board...");
-                RoyaltyBoard.loadFromDisk();
+                RoyaltyBoard.getBoard();
 
                 for (int i = 0; i < RoyaltyBoard.getTribes().length; i++) {
                     try {
@@ -215,12 +215,12 @@ public class CmdRoyalty implements CommandExecutor {
         Challenge.removeChallengesOfPlayer(pos2.player, "The player who was in your challenge was moved to a different position.");
 
         if (pos1.player != null) {
-            Notification.removeNotificationsOfPlayer(pos1.player, NotificationType.CHALLENGE_ACCEPTED);
-            Notification.removeNotificationsOfPlayer(pos1.player, NotificationType.CHALLENGE_REQUESTED);
+            Notification.removeNotificationsOfPlayer(pos1.player, Notification.Type.CHALLENGE_ACCEPTED);
+            Notification.removeNotificationsOfPlayer(pos1.player, Notification.Type.CHALLENGE_REQUESTED);
         }
         if (pos2.player != null) {
-            Notification.removeNotificationsOfPlayer(pos2.player, NotificationType.CHALLENGE_ACCEPTED);
-            Notification.removeNotificationsOfPlayer(pos2.player, NotificationType.CHALLENGE_REQUESTED);
+            Notification.removeNotificationsOfPlayer(pos2.player, Notification.Type.CHALLENGE_ACCEPTED);
+            Notification.removeNotificationsOfPlayer(pos2.player, Notification.Type.CHALLENGE_REQUESTED);
         }
 
 
@@ -228,8 +228,8 @@ public class CmdRoyalty implements CommandExecutor {
         RoyaltyBoard.set(tribeIndex, RoyaltyBoard.getBoardOf(tribeIndex).swap(posIndex1, posIndex2));
 
         // Notify users
-        new Notification(pos1.player, "You've been moved!","You have been moved to a different spot on the royalty board. Any challenges you were in have been canceled.", NotificationType.GENERIC).create();
-        new Notification(pos2.player, "You've been moved!","You have been moved to a different spot on the royalty board. Any challenges you were in have been canceled.", NotificationType.GENERIC).create();
+        new Notification(pos1.player, "You've been moved!","You have been moved to a different spot on the royalty board. Any challenges you were in have been canceled.", Notification.Type.GENERIC).create();
+        new Notification(pos2.player, "You've been moved!","You have been moved to a different spot on the royalty board. Any challenges you were in have been canceled.", Notification.Type.GENERIC).create();
 
         // Send update
         BoardState newBoard = RoyaltyBoard.getBoardOf(tribeIndex).clone();
@@ -318,10 +318,10 @@ public class CmdRoyalty implements CommandExecutor {
         BoardState oldBoard = RoyaltyBoard.getBoardOf(tribeIndex).clone();
 
         Challenge.removeChallengesOfPlayer(uuid, "The other player in your challenge was removed from the royalty board.");
-        Notification.removeNotificationsOfPlayer(uuid, NotificationType.CHALLENGE_REQUESTED);
-        Notification.removeNotificationsOfPlayer(uuid, NotificationType.CHALLENGE_ACCEPTED);
+        Notification.removeNotificationsOfPlayer(uuid, Notification.Type.CHALLENGE_REQUESTED);
+        Notification.removeNotificationsOfPlayer(uuid, Notification.Type.CHALLENGE_ACCEPTED);
 
-        new Notification(uuid, "You have been removed from the royalty board.", "You were removed from the royalty board because you changed your tribe. All pending challenges have been canceled.", NotificationType.GENERIC).create();
+        new Notification(uuid, "You have been removed from the royalty board.", "You were removed from the royalty board because you changed your tribe. All pending challenges have been canceled.", Notification.Type.GENERIC).create();
 
         RoyaltyBoard.removePlayer(tribeIndex, posIndex, true);
 

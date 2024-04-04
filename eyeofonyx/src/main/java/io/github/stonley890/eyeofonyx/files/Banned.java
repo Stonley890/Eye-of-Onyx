@@ -4,6 +4,7 @@ import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -14,7 +15,6 @@ import java.util.UUID;
 public class Banned {
 
     private static File file;
-    private static FileConfiguration fileConfig;
     private static final EyeOfOnyx plugin = EyeOfOnyx.getPlugin();
 
     /**
@@ -29,9 +29,11 @@ public class Banned {
             Bukkit.getLogger().info("banned.yml does not exist. Creating one...");
             file.createNewFile();
         }
+    }
 
-        fileConfig = YamlConfiguration.loadConfiguration(file);
-        save(fileConfig);
+    @Contract(" -> new")
+    private static @NotNull YamlConfiguration getConfig() {
+        return YamlConfiguration.loadConfiguration(file);
     }
 
     /**
@@ -39,9 +41,8 @@ public class Banned {
      * @param board The file configuration to save.
      */
     public static void save(FileConfiguration board) {
-        fileConfig = board;
         try {
-            fileConfig.save(file);
+            board.save(file);
         } catch (Exception e) {
             Bukkit.getLogger().severe("Error saving banned.yml file.");
         }
@@ -52,6 +53,7 @@ public class Banned {
      * @param uuid The UUID to add.
      */
     public static void addPlayer(@NotNull UUID uuid) {
+        YamlConfiguration fileConfig = getConfig();
         List<String> banlist = fileConfig.getStringList("banned");
         banlist.add(uuid.toString());
         fileConfig.set("banned", banlist);
@@ -63,6 +65,7 @@ public class Banned {
      * @param uuid The UUID to remove.
      */
     public static void removePlayer(@NotNull UUID uuid) {
+        YamlConfiguration fileConfig = getConfig();
         List<String> banlist = fileConfig.getStringList("banned");
         banlist.remove(uuid.toString());
         fileConfig.set("banned", banlist);
@@ -75,6 +78,7 @@ public class Banned {
      * @return Whether the UUID is on the ban list.
      */
     public static boolean isPlayerBanned(@NotNull UUID uuid) {
+        YamlConfiguration fileConfig = getConfig();
         List<String> banlist = fileConfig.getStringList("banned");
         boolean isBanned;
         isBanned = banlist.contains(uuid.toString());
@@ -86,6 +90,7 @@ public class Banned {
      * @return A list of String UUIDs
      */
     public static @NotNull List<String> getBannedPlayers() {
+        YamlConfiguration fileConfig = getConfig();
         return fileConfig.getStringList("banned");
     }
 }

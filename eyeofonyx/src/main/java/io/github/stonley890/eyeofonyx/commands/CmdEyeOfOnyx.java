@@ -73,16 +73,11 @@ public class CmdEyeOfOnyx implements CommandExecutor {
 
                                             BoardState oldBoard = RoyaltyBoard.getBoardOf(tribe).clone();
 
-                                            try {
+                                            Challenge.removeChallengesOfPlayer(uuid, "The player who was challenging you was removed from the royalty board, so your challenge was canceled.");
 
-                                                Challenge.removeChallengesOfPlayer(uuid, "The player who was challenging you was removed from the royalty board, so your challenge was canceled.");
-
-                                                // Remove any challenge notifications
-                                                for (Notification notification : Notification.getNotificationsOfPlayer(uuid)) {
-                                                    if (notification.type == NotificationType.CHALLENGE_ACCEPTED || notification.type == NotificationType.CHALLENGE_REQUESTED) Notification.removeNotification(notification);
-                                                }
-                                            } catch (IOException | InvalidConfigurationException e) {
-                                                e.printStackTrace();
+                                            // Remove any challenge notifications
+                                            for (Notification notification : Notification.getNotificationsOfPlayer(uuid)) {
+                                                if (notification.type == Notification.Type.CHALLENGE_ACCEPTED || notification.type == Notification.Type.CHALLENGE_REQUESTED) Notification.removeNotification(notification);
                                             }
 
                                             RoyaltyBoard.report(sender.getName(),  args[1] + " was banned from participating in royalty.");
@@ -108,7 +103,7 @@ public class CmdEyeOfOnyx implements CommandExecutor {
                                     // sender.sendMessage(EyeOfOnyx.EOO + "This player does not have an associated tribe.");
                                 }
 
-                                new Notification(uuid, "Royalty Ban", "You are no longer allowed to participate in royalty. Contact staff if you think this is a mistake.", NotificationType.GENERIC).create();
+                                new Notification(uuid, "Royalty Ban", "You are no longer allowed to participate in royalty. Contact staff if you think this is a mistake.", Notification.Type.GENERIC).create();
                                 sender.sendMessage(EyeOfOnyx.EOO + args[1] + " has been banned.");
 
                             }

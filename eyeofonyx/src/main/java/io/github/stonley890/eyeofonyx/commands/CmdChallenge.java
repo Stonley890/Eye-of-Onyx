@@ -366,7 +366,7 @@ public class CmdChallenge implements CommandExecutor {
                             // create notification for target
                             String title = "You've been challenged!";
                             String content = player.getName() + " has challenged your position for " + positions[targetPosition].replace('_', ' ') + ".";
-                            new Notification(targetUuid, title, content, NotificationType.CHALLENGE_REQUESTED).create();
+                            new Notification(targetUuid, title, content, Notification.Type.CHALLENGE_REQUESTED).create();
 
                             // create challenge
                             new Challenge(player.getUniqueId(), targetUuid, null, Challenge.State.PROPOSED).save();
@@ -447,16 +447,10 @@ public class CmdChallenge implements CommandExecutor {
                         player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
 
                         // Remove notification
-                        try {
-                            List<Notification> notificationList = Notification.getNotificationsOfPlayer(player.getUniqueId());
-                            for (Notification notification : notificationList) {
-                                if (notification.type == NotificationType.CHALLENGE_REQUESTED)
-                                    Notification.removeNotification(notification);
-                            }
-                        } catch (IOException | InvalidConfigurationException e) {
-                            Bukkit.getLogger().warning("Eye of Onyx could not read from disk!");
-                            sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Error: Eye of Onyx could not read from disk!");
-                            return true;
+                        List<Notification> notificationList = Notification.getNotificationsOfPlayer(player.getUniqueId());
+                        for (Notification notification : notificationList) {
+                            if (notification.type == Notification.Type.CHALLENGE_REQUESTED)
+                                Notification.removeNotification(notification);
                         }
 
                         // Remove from royalty board
@@ -514,11 +508,7 @@ public class CmdChallenge implements CommandExecutor {
                             return true;
                         }
 
-                        try {
-                            Challenge.remove(challenge);
-                        } catch (IOException | InvalidConfigurationException e) {
-                            throw new RuntimeException(e);
-                        }
+                        Challenge.remove(challenge);
 
                         LocalDateTime selectedTime = challenge.time.get(selectedTimeIndex);
                         challenge.time.clear();
@@ -530,27 +520,19 @@ public class CmdChallenge implements CommandExecutor {
                         report(player.getName(), player.getName() + "'s challenge with " + PlayerUtility.getUsernameOfUuid(challenge.defender) + " has been scheduled for " + selectedTime.format(DateTimeFormatter.ofPattern("MM/dd hh:mm a")));
 
                         sender.sendMessage(EyeOfOnyx.EOO + "Time confirmed! Your challenge will take place " + selectedTime.format(DateTimeFormatter.ofPattern("MM/dd hh:mm a")) + "!");
-                        new Notification(challenge.defender, "Challenge date confirmed!", "The time of your challenge with " + PlayerUtility.getUsernameOfUuid(challenge.attacker.toString()) + " will be " + selectedTime.format(DateTimeFormatter.ofPattern("MM/dd hh:mm a")) + ".", NotificationType.GENERIC).create();
+                        new Notification(challenge.defender, "Challenge date confirmed!", "The time of your challenge with " + PlayerUtility.getUsernameOfUuid(challenge.attacker.toString()) + " will be " + selectedTime.format(DateTimeFormatter.ofPattern("MM/dd hh:mm a")) + ".", Notification.Type.GENERIC).create();
 
                         // Remove CHALLENGE_ACCEPTED notification
-                        try {
-                            for (Notification notification : Notification.getNotificationsOfPlayer(player.getUniqueId())) {
-                                if (notification.type == NotificationType.CHALLENGE_ACCEPTED)
-                                    Notification.removeNotification(notification);
-                            }
-                        } catch (IOException | InvalidConfigurationException e) {
-                            throw new RuntimeException(e);
+                        for (Notification notification : Notification.getNotificationsOfPlayer(player.getUniqueId())) {
+                            if (notification.type == Notification.Type.CHALLENGE_ACCEPTED)
+                                Notification.removeNotification(notification);
                         }
                     }
                     case "cancel" -> {
                         if (challenge != null) {
-                            try {
-                                if (challenge.attacker.equals(player.getUniqueId())) challenge.cancelAttacker();
-                                if (challenge.defender.equals(player.getUniqueId())) challenge.cancelDefender();
-                                sender.sendMessage(EyeOfOnyx.EOO + "Cancel request sent.");
-                            } catch (IOException | InvalidConfigurationException e) {
-                                player.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "A problem occurred with changing the details of you challenge.");
-                            }
+                            if (challenge.attacker.equals(player.getUniqueId())) challenge.cancelAttacker();
+                            if (challenge.defender.equals(player.getUniqueId())) challenge.cancelDefender();
+                            sender.sendMessage(EyeOfOnyx.EOO + "Cancel request sent.");
                         }
                     }
                     default ->

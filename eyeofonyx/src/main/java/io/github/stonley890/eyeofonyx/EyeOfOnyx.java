@@ -158,7 +158,7 @@ public class EyeOfOnyx extends JavaPlugin {
 
                                 for (Notification notification : notifications) {
                                     // If notification is CHALLENGE_REQUESTED and time is beyond challenge-acknowledgement-time
-                                    if (notification.type == NotificationType.CHALLENGE_REQUESTED && notification.time.isBefore(LocalDateTime.now().minusDays(getConfig().getInt("challenge-acknowledgement-time")))) {
+                                    if (notification.type == Notification.Type.CHALLENGE_REQUESTED && notification.time.isBefore(LocalDateTime.now().minusDays(getConfig().getInt("challenge-acknowledgement-time")))) {
 
                                         // Check if it was seen or not
                                         if (!notification.seen) {
@@ -168,13 +168,13 @@ public class EyeOfOnyx extends JavaPlugin {
 
                                             // Send expired notification to defender
                                             Notification.removeNotification(notification);
-                                            new Notification(uuid, "You missed a challenge notification.", "You did not acknowledge a challenge request within the allowed time, but you will remain on the royalty board because you were unable to receive it.", NotificationType.GENERIC).create();
+                                            new Notification(uuid, "You missed a challenge notification.", "You did not acknowledge a challenge request within the allowed time, but you will remain on the royalty board because you were unable to receive it.", Notification.Type.GENERIC).create();
 
                                             // Send notification to attacker
                                             UUID attackerUuid = RoyaltyBoard.getAttacker(PlayerTribe.getTribeOfPlayer(uuid), RoyaltyBoard.getPositionIndexOfUUID(uuid));
                                             if (attackerUuid != null) {
                                                 String defenderUsername = new Mojang().connect().getPlayerProfile(uuid.toString()).getUsername();
-                                                new Notification(attackerUuid, "Your challenge to " + defenderUsername + " was not seen.", "Your challenge request was nullified because the user you challenged was unable to receive the notification.", NotificationType.GENERIC).create();
+                                                new Notification(attackerUuid, "Your challenge to " + defenderUsername + " was not seen.", "Your challenge request was nullified because the user you challenged was unable to receive the notification.", Notification.Type.GENERIC).create();
                                             }
 
                                             // Set data
@@ -184,9 +184,9 @@ public class EyeOfOnyx extends JavaPlugin {
                                             // Kick from board if seen and ignored.
 
                                             // Remove all notifications that are CHALLENGE_REQUESTED
-                                            Notification.removeNotificationsOfPlayer(uuid, NotificationType.CHALLENGE_REQUESTED);
+                                            Notification.removeNotificationsOfPlayer(uuid, Notification.Type.CHALLENGE_REQUESTED);
 
-                                            new Notification(uuid, "You were removed from the royalty board!", "You did not acknowledge a challenge request within the allowed time.", NotificationType.GENERIC).create();
+                                            new Notification(uuid, "You were removed from the royalty board!", "You did not acknowledge a challenge request within the allowed time.", Notification.Type.GENERIC).create();
 
                                             RoyaltyBoard.removePlayer(tribe, pos, true);
                                             RoyaltyBoard.updateBoard(tribe, false);
@@ -198,7 +198,7 @@ public class EyeOfOnyx extends JavaPlugin {
                                     }
                                 }
 
-                            } catch (IOException | InvalidConfigurationException | NotFoundException e) {
+                            } catch (IOException | NotFoundException e) {
                                 throw new RuntimeException(e);
                             }
                     }
