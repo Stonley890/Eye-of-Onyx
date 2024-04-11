@@ -28,6 +28,15 @@
       <id>jitpack.io</id>
       <url>https://jitpack.io</url>
     </repository>
+    <repository>
+      <id>essentialsx-releases</id>
+      <name>EssentialsX API Repository</name>
+      <url>https://repo.essentialsx.net/releases</url>
+    </repository>
+    <repository>
+      <id>paper-repo</id>
+      <url>https://papermc.io/repo/repository/maven-public/</url>
+    </repository>
   </repositories>
 
   <dependencies>
@@ -72,9 +81,10 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>com.github.Mokulu</groupId>
-      <artifactId>discord-oauth2-api</artifactId>
-      <version>1.0.2</version>
+      <groupId>net.essentialsx</groupId>
+      <artifactId>EssentialsX</artifactId>
+      <version>2.20.1</version>
+      <scope>provided</scope>
     </dependency>
 
   </dependencies>

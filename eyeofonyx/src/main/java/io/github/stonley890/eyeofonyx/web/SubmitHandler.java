@@ -30,6 +30,26 @@ import java.util.List;
 import java.util.UUID;
 
 public class SubmitHandler implements HttpHandler {
+    private static String getHtml(String errorExplanation) {
+        TemplateEngine templateEngine = new TemplateEngine();
+        ClassLoaderTemplateResolver templateResolver = new ClassLoaderTemplateResolver();
+        templateResolver.setPrefix("/"); // This sets the path to the resources directory
+        templateResolver.setSuffix(".html");
+        templateResolver.setCharacterEncoding(StandardCharsets.UTF_8.name());
+        templateEngine.setTemplateResolver(templateResolver);
+
+        // Create a Thymeleaf context and add the maxDaysConfigValue as a variable
+        Context context = new Context();
+        context.setVariable("errorExplanation", errorExplanation);
+
+        // Render the HTML template with Thymeleaf and get the final HTML content
+        return templateEngine.process("availability_invalid", context);
+    }
+
+    //
+    //
+    //
+
     @Override
     public void handle(@NotNull HttpExchange httpExchange) throws IOException {
 
@@ -268,10 +288,6 @@ public class SubmitHandler implements HttpHandler {
         }
     }
 
-    //
-    //
-    //
-
     private void sendInvalid(HttpExchange httpExchange, String errorExplanation) throws IOException {
 
         // Load the Thymeleaf template engine with the correct template resolver
@@ -313,22 +329,6 @@ public class SubmitHandler implements HttpHandler {
         sendResponse(httpExchange, 200, responseBuilder.toString());
 
          */
-    }
-
-    private static String getHtml(String errorExplanation) {
-        TemplateEngine templateEngine = new TemplateEngine();
-        ClassLoaderTemplateResolver templateResolver = new ClassLoaderTemplateResolver();
-        templateResolver.setPrefix("/"); // This sets the path to the resources directory
-        templateResolver.setSuffix(".html");
-        templateResolver.setCharacterEncoding(StandardCharsets.UTF_8.name());
-        templateEngine.setTemplateResolver(templateResolver);
-
-        // Create a Thymeleaf context and add the maxDaysConfigValue as a variable
-        Context context = new Context();
-        context.setVariable("errorExplanation", errorExplanation);
-
-        // Render the HTML template with Thymeleaf and get the final HTML content
-        return templateEngine.process("availability_invalid", context);
     }
 
     private void sendResponse(@NotNull HttpExchange httpExchange, int statusCode, @NotNull String response) throws IOException {
