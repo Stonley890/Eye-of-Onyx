@@ -11,7 +11,6 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.shanerx.mojang.Mojang;
 
 import java.io.File;
 import java.io.IOException;
@@ -142,8 +141,8 @@ public class Challenge {
 
     /**
      * Get all challenges that contain both the given players.
-     * @param attacker the first player whose challenges to delete.
-     * @param defender the second player whose challenges to delete.
+     * @param attacker the first player whose challenges to get.
+     * @param defender the second player whose challenges to get.
      */
     public static @Nullable Challenge getChallengeOfPlayers(UUID attacker, UUID defender) {
         for (Challenge challenge : getChallenges()) {
@@ -242,13 +241,25 @@ public class Challenge {
     public void cancelAttacker() {
         attackerCanceled = true;
         if (defenderCanceled) cancel();
-        else new Notification(defender, "Your opponent wants to cancel their challenge", "Your opponent, " + PlayerUtility.getUsernameOfUuid(attacker) + ", wants to cancel their challenge. Run /challenge to open the details of your challenge and complete the cancellation.", Notification.Type.GENERIC).create();
+        else {
+            new Notification(defender, "Your opponent wants to cancel their challenge", "Your opponent, " + PlayerUtility.getUsernameOfUuid(attacker) + ", wants to cancel their challenge. Run /challenge to open the details of your challenge and complete the cancellation.", Notification.Type.GENERIC).create();
+            String attackerUsername = PlayerUtility.getUsernameOfUuid(attacker);
+            String defenderUsername = PlayerUtility.getUsernameOfUuid(defender);
+            RoyaltyBoard.report(null, attackerUsername + " requested to cancel their challenge with " + defenderUsername);
+        }
+
+
     }
 
     public void cancelDefender() {
         defenderCanceled = true;
         if (attackerCanceled) cancel();
-        else new Notification(attacker, "Your opponent wants to cancel their challenge", "Your opponent, " + PlayerUtility.getUsernameOfUuid(defender) + ", wants to cancel their challenge. Run /challenge to open the details of your challenge and complete the cancellation.", Notification.Type.GENERIC).create();
+        else {
+            new Notification(attacker, "Your opponent wants to cancel their challenge", "Your opponent, " + PlayerUtility.getUsernameOfUuid(defender) + ", wants to cancel their challenge. Run /challenge to open the details of your challenge and complete the cancellation.", Notification.Type.GENERIC).create();
+            String attackerUsername = PlayerUtility.getUsernameOfUuid(attacker);
+            String defenderUsername = PlayerUtility.getUsernameOfUuid(defender);
+            RoyaltyBoard.report(null, defenderUsername + " requested to cancel their challenge with " + attackerUsername);
+        }
     }
 
     private void cancel() {
@@ -269,12 +280,12 @@ public class Challenge {
     }
 
     /**
-     * ADDS the challenge to challenge.yml on disk
+     * Saves the challenge to challenge.yml on disk.
+     * If the challenge given matches an attacker/defender pair, it will be updated.
       */
-    @SuppressWarnings("unchecked")
     public void save() {
 
-        Dreamvisitor.debug("Creating new challenge...");
+        Dreamvisitor.debug("Saving challenge...");
 
         /* Challenges in challenges.yml are saved as a list of string lists
 
@@ -295,50 +306,38 @@ public class Challenge {
 
          */
 
-        YamlConfiguration fileConfig = getConfig();
+        List<Challenge> challenges = getChallenges();
 
-        // Get the list of challenges
-        List<List<Object>> challenges = (List<List<Object>>) fileConfig.getList("challenges");
-        Dreamvisitor.debug("Got list of challenges.");
-
-        // Init if null or empty
-        if (challenges == null || challenges.isEmpty()) {
-            Dreamvisitor.debug("No challenges; creating a new list");
-            challenges = new ArrayList<>();
+        Challenge challenge = getChallengeOfPlayers(attacker, defender);
+        if (challenge != null) {
+            challenges.remove(challenge);
+            challenges.add(this);
         }
 
         // Challenge -> List
-        List<Object> yamlChallenge = new ArrayList<>();
+        YamlConfiguration fileConfig = getConfig();
+        List<List<Object>> yamlChallenges = new ArrayList<>();
 
-        Dreamvisitor.debug("Converting to YAML...");
-        yamlChallenge.add(this.attacker);
-        yamlChallenge.add(this.defender);
+        for (Challenge challengeToConvert : challenges) {
+            List<Object> yamlChallenge = new ArrayList<>();
 
-        List<String> dateTimes = new ArrayList<>();
+            Dreamvisitor.debug("Converting to YAML...");
+            yamlChallenge.add(challengeToConvert.attacker);
+            yamlChallenge.add(challengeToConvert.defender);
 
-        for (LocalDateTime dateTime : this.time) {
-            dateTimes.add(dateTime.format(DateTimeFormatter.ISO_DATE_TIME));
+            List<String> dateTimes = new ArrayList<>();
+
+            for (LocalDateTime dateTime : challengeToConvert.time) dateTimes.add(dateTime.format(DateTimeFormatter.ISO_DATE_TIME));
+            yamlChallenge.add(dateTimes);
+            yamlChallenge.add(challengeToConvert.state);
+
+            // Add the given challenge
+            yamlChallenges.add(yamlChallenge);
         }
-        yamlChallenge.add(dateTimes);
-        yamlChallenge.add(this.state);
 
-        // Add the given challenge
-        challenges.add(yamlChallenge);
-        Dreamvisitor.debug("Added to List");
-
-        fileConfig.set("challenges", challenges);
-
-        Dreamvisitor.debug("Creating notification...");
-        Mojang mojang = new Mojang().connect();
-
-        String defenderUsername = mojang.getPlayerProfile(defender.toString()).getUsername();
-        String content = defenderUsername + " accepted your challenge! Please select from one of the following times:";
-
-        Dreamvisitor.debug("Saving to file");
+        fileConfig.set("challenges", yamlChallenges);
         saveFile(fileConfig);
 
-        // Create notification
-        new Notification(attacker, "Your challenge was accepted!", content, Notification.Type.CHALLENGE_ACCEPTED).create();
     }
 
     public enum State {

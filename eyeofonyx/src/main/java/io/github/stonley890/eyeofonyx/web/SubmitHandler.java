@@ -3,6 +3,7 @@ package io.github.stonley890.eyeofonyx.web;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import io.github.stonley890.dreamvisitor.Dreamvisitor;
+import io.github.stonley890.dreamvisitor.data.PlayerUtility;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import io.github.stonley890.eyeofonyx.commands.CmdChallenge;
 import io.github.stonley890.eyeofonyx.files.Challenge;
@@ -45,10 +46,6 @@ public class SubmitHandler implements HttpHandler {
         // Render the HTML template with Thymeleaf and get the final HTML content
         return templateEngine.process("availability_invalid", context);
     }
-
-    //
-    //
-    //
 
     @Override
     public void handle(@NotNull HttpExchange httpExchange) throws IOException {
@@ -103,6 +100,7 @@ public class SubmitHandler implements HttpHandler {
 
                 }
             } catch (Exception e) {
+                sendInvalid(httpExchange, "Something went wrong. Contact a staff member.");
                 e.printStackTrace();
             }
 
@@ -110,18 +108,34 @@ public class SubmitHandler implements HttpHandler {
             // Now you have the code and the list of LocalDateTime objects representing availabilities.
             // You can further process or store this data as needed.
 
-            Player player = null;
+            Player player;
 
             Dreamvisitor.debug("Checking code match.");
 
             // Check code match
-            if (!CmdChallenge.codesOnForm.isEmpty()) {
+            if (CmdChallenge.codesOnForm.isEmpty()) {
+                // No codes exist
+                Bukkit.getLogger().warning("No codes exist.");
+
+                sendInvalid(httpExchange, "Your code is invalid or expired.");
+
+                return;
+
+            } else {
+
                 for (int i = 0; i < CmdChallenge.codesOnForm.size(); i++) {
                     if (CmdChallenge.codesOnForm.get(i).equals(code)) {
 
                         Dreamvisitor.debug("Found code match.");
 
                         player = CmdChallenge.playersOnForm.get(i);
+
+                        // Player was not found
+                        if (player == null) {
+                            Bukkit.getLogger().warning("Could not find player from code.");
+                            sendInvalid(httpExchange, "Your code is invalid or expired.");
+                            return;
+                        }
 
                         for (LocalDateTime availability : availabilities) {
                             if (availability.isBefore(LocalDateTime.now())) {
@@ -134,7 +148,6 @@ public class SubmitHandler implements HttpHandler {
                                 return;
 
                             } else {
-
                                 // Time cannot be within 30 minutes of another challenge
                                 for (Challenge challenge : Challenge.getChallenges()) {
                                     for (LocalDateTime time : challenge.time) {
@@ -214,6 +227,11 @@ public class SubmitHandler implements HttpHandler {
                                 return;
                             }
                             challenge.state = Challenge.State.ACCEPTED;
+                            challenge.save();
+
+                            String defenderUsername = PlayerUtility.getUsernameOfUuid(challenge.defender);
+                            String content = defenderUsername + " accepted your challenge! Please select from one of the following times:";
+                            new Notification(challenge.attacker, "Your challenge was accepted!", content, Notification.Type.CHALLENGE_ACCEPTED).create();
                         });
 
                         Dreamvisitor.debug("Created the challenge");
@@ -230,24 +248,6 @@ public class SubmitHandler implements HttpHandler {
                         break;
                     }
                 }
-
-                // Player was not found
-                if (player == null) {
-                    Bukkit.getLogger().warning("Could not find player from code.");
-
-                    sendInvalid(httpExchange, "Your code is invalid or expired.");
-
-                    return;
-                }
-
-            } else {
-                // No codes exist
-                Bukkit.getLogger().warning("No codes exist.");
-
-                sendInvalid(httpExchange, "Your code is invalid or expired.");
-
-                return;
-
             }
 
             // Success

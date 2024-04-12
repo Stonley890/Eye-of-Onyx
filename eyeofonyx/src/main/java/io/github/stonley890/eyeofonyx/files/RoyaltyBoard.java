@@ -39,8 +39,6 @@ import java.util.concurrent.CompletableFuture;
 public class RoyaltyBoard {
 
     // Stored values
-    public static final String UUID = "uuid";
-    public static final String TITLE = "title";
     public static final int RULER = 0;
     public static final int HEIR1 = 1;
     public static final int HEIR2 = 2;
@@ -139,8 +137,6 @@ public class RoyaltyBoard {
 
     /**
      * Reload the file from disk.
-     *
-     * @return
      */
     public static @NotNull Map<Integer, BoardState> getBoard() {
         YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
@@ -253,7 +249,18 @@ public class RoyaltyBoard {
         String challenger = "N/A";
         String challenging = "N/A";
 
-        if (position.player != null) uuid = position.player.toString();
+        String discordUser = "N/A";
+
+        if (position.player != null) {
+            uuid = position.player.toString();
+            try {
+                long discordId = AccountLink.getDiscordId(position.player);
+                net.dv8tion.jda.api.entities.User user = Bot.getJda().retrieveUserById(discordId).complete();
+                if (user != null) discordUser = user.getAsMention();
+            } catch (NullPointerException IllegalArgumentException) {
+                // No user
+            }
+        }
         if (position.player != null) username = PlayerUtility.getUsernameOfUuid(uuid);
         if (position.name != null) ocName = position.name;
         if (position.lastOnline != null) lastOnline = position.lastOnline.toString();
@@ -262,16 +269,6 @@ public class RoyaltyBoard {
         if (position.joinedPosition != null) joinedPos = position.joinedPosition.toString();
         if (position.challenger != null) challenger = PlayerUtility.getUsernameOfUuid(position.challenger);
         if (position.challenging != null) challenging = PlayerUtility.getUsernameOfUuid(position.challenging);
-
-        String discordUser = "N/A";
-
-        try {
-            long discordId = AccountLink.getDiscordId(position.player);
-            net.dv8tion.jda.api.entities.User user = Bot.getJda().retrieveUserById(discordId).complete();
-            if (user != null) discordUser = user.getAsMention();
-        } catch (NullPointerException IllegalArgumentException) {
-            // No user
-        }
 
         assert username != null;
         assert challenger != null;
