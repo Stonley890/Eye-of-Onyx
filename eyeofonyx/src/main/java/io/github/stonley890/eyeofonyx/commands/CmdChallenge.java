@@ -37,8 +37,16 @@ public class CmdChallenge implements CommandExecutor {
     public static List<Player> playersOnForm = new ArrayList<>();
     public static List<String> codesOnForm = new ArrayList<>();
 
+    public static Map<Player, Player> quickChallenges = new HashMap<>();
+
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
+
+        for (Player player : quickChallenges.keySet()) {
+            if (!player.isOnline()) {
+                quickChallenges.remove(player);
+            }
+        }
 
         if (sender instanceof Player player) {
 
@@ -209,6 +217,16 @@ public class CmdChallenge implements CommandExecutor {
                                 if (challenge.defender.equals(player.getUniqueId())) challenge.cancelDefender();
                                 sender.sendMessage(EyeOfOnyx.EOO + "Cancel request sent.");
                             }
+                        }
+                        case "quickaccept" -> {
+                            for (Player quickChallengePlayer : quickChallenges.keySet()) {
+                                if (Objects.equals(quickChallenges.get(quickChallengePlayer), player)) {
+                                    Competition.call(new Challenge(quickChallengePlayer.getUniqueId(), player.getUniqueId(), null, Challenge.State.SCHEDULED));
+                                    quickChallenges.remove(quickChallengePlayer);
+                                    return;
+                                }
+                            }
+                            sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "That quick challenge proposal either expired or does not exist.");
                         }
                         default -> sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Incorrect arguments! Use the text GUI with /challenge");
                     }
@@ -458,29 +476,54 @@ public class CmdChallenge implements CommandExecutor {
             }
 
             UUID targetUuid = RoyaltyBoard.getUuid(playerTribe, targetPosition);
-
-            BoardState oldBoard = RoyaltyBoard.getBoardOf(playerTribe).clone();
-
-            // set values in board.yml
-            RoyaltyBoard.setAttacker(playerTribe, targetPosition, player.getUniqueId());
-            if (playerPosition != 5) RoyaltyBoard.setAttacking(playerTribe, playerPosition, targetUuid);
-
-            BoardState newBoard = RoyaltyBoard.getBoardOf(playerTribe).clone();
-            if (!oldBoard.equals(newBoard)) RoyaltyBoard.reportChange(new RoyaltyAction(sender.getName(), playerTribe, oldBoard, newBoard));
-
-            // create notification for target
-            String title = "You've been challenged!";
-            String content = player.getName() + " has challenged your position for " + positions[targetPosition].replace('_', ' ') + ".";
-            new Notification(targetUuid, title, content, Notification.Type.CHALLENGE_REQUESTED).create();
-
-            // create challenge
-            new Challenge(player.getUniqueId(), targetUuid, null, Challenge.State.PROPOSED).save();
-
             assert targetUuid != null;
-            report(player.getName(), player.getName() + " initiated a challenge against " + PlayerUtility.getUsernameOfUuid(targetUuid) + ".");
 
-            builder.append("Challenge initiated!");
-            sender.spigot().sendMessage(builder.create());
+            if (args[1].equals("quick")) {
+                Player targetPlayer = Bukkit.getPlayer(targetUuid);
+                if (targetPlayer == null) {
+                    sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "That player is not currently online.");
+                    return;
+                }
+                if (Competition.activeChallenge == null) {
+                    sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You cannot start a challenge while one is currently occurring.");
+                    return;
+                }
+
+                quickChallenges.put(player, targetPlayer);
+                new Notification(
+                        targetUuid,
+                        "You have been challenged!",
+                        player.getName() + " wants to quick-challenge you. This will start an immediate challenge if you accept. You can ignore this type of challenge with no consequence.",
+                        Notification.Type.GENERIC
+                ).create();
+                sender.sendMessage(EyeOfOnyx.EOO + "Quick challenge sent!");
+
+
+            } else {
+                BoardState oldBoard = RoyaltyBoard.getBoardOf(playerTribe).clone();
+
+                // set values in board.yml
+                RoyaltyBoard.setAttacker(playerTribe, targetPosition, player.getUniqueId());
+                if (playerPosition != 5) RoyaltyBoard.setAttacking(playerTribe, playerPosition, targetUuid);
+
+                BoardState newBoard = RoyaltyBoard.getBoardOf(playerTribe).clone();
+                if (!oldBoard.equals(newBoard)) RoyaltyBoard.reportChange(new RoyaltyAction(sender.getName(), playerTribe, oldBoard, newBoard));
+
+                // create notification for target
+                String title = "You've been challenged!";
+                String content = player.getName() + " has challenged your position for " + positions[targetPosition].replace('_', ' ') + ".";
+                new Notification(targetUuid, title, content, Notification.Type.CHALLENGE_REQUESTED).create();
+
+                // create challenge
+                new Challenge(player.getUniqueId(), targetUuid, null, Challenge.State.PROPOSED).save();
+
+                report(player.getName(), player.getName() + " initiated a challenge against " + PlayerUtility.getUsernameOfUuid(targetUuid) + ".");
+
+                builder.append("Challenge initiated!");
+                sender.spigot().sendMessage(builder.create());
+            }
+
+
         }
     }
 

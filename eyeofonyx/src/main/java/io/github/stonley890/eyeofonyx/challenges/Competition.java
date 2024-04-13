@@ -26,7 +26,7 @@ public class Competition {
     public int tribe;
     public boolean started = false;
 
-    public static void call(@NotNull Challenge challenge) throws IOException, InvalidConfigurationException {
+    public static void call(@NotNull Challenge challenge) {
 
         Dreamvisitor.debug("Challenge " + challenge.attacker + " vs " + challenge.defender + " is getting ready to start.");
         // Add to activeChallenges list

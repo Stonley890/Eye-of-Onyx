@@ -5,7 +5,9 @@ import io.github.stonley890.eyeofonyx.web.IpUtils;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
+import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
+import net.md_5.bungee.api.chat.hover.content.Text;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -344,9 +346,22 @@ public class Notification {
 
                 RoyaltyBoard.report(onlinePlayer.getName(), onlinePlayer.getName() + " has been shown the notification for their challenge scheduling.");
 
-            }   else if (type == Type.GENERIC) {
+            } else if (type == Type.GENERIC) {
 
                 // Do not show notification again
+                removeNotification(this);
+
+            } else if (type == Type.QUICK_CHALLENGE) {
+
+                TextComponent accept = new TextComponent();
+                accept.setText("[Accept]");
+                accept.setColor(ChatColor.YELLOW);
+                accept.setUnderlined(true);
+                accept.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("Start the quick challenge now.")));
+                accept.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/challenge quickaccept"));
+
+                buttons.add(accept);
+
                 removeNotification(this);
 
             }
@@ -400,7 +415,14 @@ public class Notification {
          * Includes buttons with available times.
          * Deletes when acknowledged.
          */
-        CHALLENGE_ACCEPTED
+        CHALLENGE_ACCEPTED,
+
+        /**
+         * Quick challenge request notification.
+         * Includes accept and deny buttons.
+         * Deletes when read.
+         */
+        QUICK_CHALLENGE
 
     }
 }
