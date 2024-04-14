@@ -57,6 +57,7 @@ public class PlayerTribe {
             YamlConfiguration configuration = new YamlConfiguration();
             configuration.load(file);
             configuration.set(uuid.toString(), teamName);
+            configuration.save(file);
         } catch (IOException | InvalidConfigurationException e) {
             Bukkit.getLogger().severe("Unable to load " + file.getName() + "!");
             Bukkit.getPluginManager().disablePlugin(plugin);
@@ -75,19 +76,15 @@ public class PlayerTribe {
 
         String tribeName = getPlayer(playerUuid);
 
-        // If not in file, try to get from online player
-        if (tribeName == null) {
-            Player player = Bukkit.getPlayer(playerUuid);
+        Dreamvisitor.debug(tribeName);
 
-            // If player not online, throw exception
-            if (player == null) throw new NotFoundException("The given player does not have a recorded tribe.");
-            else {
-                // if online, try to get from team or tag
-                try {
-                    updateTribeOfPlayer(player.getUniqueId());
-                } catch (Exception e) {
-                    throw new NotFoundException("The given player does not have a recorded tribe.");
-                }
+        // If not in file, try to update
+        if (tribeName == null) {
+            try {
+                updateTribeOfPlayer(playerUuid);
+                tribeName = getPlayer(playerUuid);
+            } catch (Exception e) {
+                throw new NotFoundException("The given player does not have a recorded tribe.");
             }
         }
 

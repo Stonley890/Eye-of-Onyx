@@ -1,5 +1,6 @@
 io/github/stonley890/eyeofonyx/Discord.class
 io/github/stonley890/eyeofonyx/EyeOfOnyx.class
+io/github/stonley890/eyeofonyx/files/Challenge$State.class
 io/github/stonley890/eyeofonyx/files/RoyaltyBoard.class
 io/github/stonley890/eyeofonyx/commands/tabcomplete/TabUpdatePlayer.class
 io/github/stonley890/eyeofonyx/files/BoardState.class
@@ -10,7 +11,6 @@ io/github/stonley890/eyeofonyx/commands/tabcomplete/TabRoyalty.class
 io/github/stonley890/eyeofonyx/files/MessageFormat.class
 io/github/stonley890/eyeofonyx/listeners/ListenJoin.class
 io/github/stonley890/eyeofonyx/EyeOfOnyx$1.class
-io/github/stonley890/eyeofonyx/web/DashboardHandler.class
 io/github/stonley890/eyeofonyx/commands/CmdUpdatePlayer.class
 io/github/stonley890/eyeofonyx/web/AvailabilityHandler.class
 io/github/stonley890/eyeofonyx/files/Banned.class
@@ -18,18 +18,20 @@ io/github/stonley890/eyeofonyx/commands/tabcomplete/TabCompetition.class
 io/github/stonley890/eyeofonyx/files/BoardPosition.class
 io/github/stonley890/eyeofonyx/commands/CmdEyeOfOnyx$1.class
 io/github/stonley890/eyeofonyx/commands/tabcomplete/TabChallenge.class
+io/github/stonley890/eyeofonyx/discord/commands/DCmdRoyalinfo.class
 io/github/stonley890/eyeofonyx/commands/CmdRoyalty.class
 io/github/stonley890/eyeofonyx/commands/tabcomplete/TabEyeOfOnyx.class
-io/github/stonley890/eyeofonyx/files/ChallengeType.class
 io/github/stonley890/eyeofonyx/web/IpUtils.class
 io/github/stonley890/eyeofonyx/commands/CmdCompetition.class
+io/github/stonley890/eyeofonyx/discord/commands/DCmdEyeOfOnyx.class
 io/github/stonley890/eyeofonyx/Utils.class
 io/github/stonley890/eyeofonyx/commands/CmdChallenge.class
 io/github/stonley890/eyeofonyx/commands/CmdEyeOfOnyx.class
 io/github/stonley890/eyeofonyx/challenges/Competition.class
-io/github/stonley890/eyeofonyx/files/NotificationType.class
+io/github/stonley890/eyeofonyx/discord/commands/DCmdRoyalty.class
 io/github/stonley890/eyeofonyx/listeners/ListenLeave.class
 io/github/stonley890/eyeofonyx/commands/CmdForfeit.class
+io/github/stonley890/eyeofonyx/files/Notification$Type.class
 io/github/stonley890/eyeofonyx/files/Notification.class
 io/github/stonley890/eyeofonyx/files/Challenge.class
 io/github/stonley890/eyeofonyx/web/SubmitHandler.class

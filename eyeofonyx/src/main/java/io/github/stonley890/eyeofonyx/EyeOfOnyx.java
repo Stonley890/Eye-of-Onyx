@@ -16,7 +16,6 @@ import net.luckperms.api.LuckPerms;
 import net.md_5.bungee.api.ChatColor;
 import openrp.OpenRP;
 import org.bukkit.Bukkit;
-import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -129,23 +128,18 @@ public class EyeOfOnyx extends JavaPlugin {
             @Override
             public void run() {
 
-                try {
-                    List<Challenge> challenges = Challenge.getChallenges();
+                List<Challenge> challenges = Challenge.getChallenges();
 
-                    Dreamvisitor.debug("Checking for challenges.");
+                Dreamvisitor.debug("Checking for challenges.");
 
-                    if (!challenges.isEmpty()) {
-                        Dreamvisitor.debug("There are/is " + challenges.size() + " challenge(s) pending.");
-                        for (Challenge challenge : challenges) {
-                            if (challenge.time.size() == 1 && challenge.time.get(0).isBefore(LocalDateTime.now()) && challenge.state == Challenge.State.SCHEDULED) {
-                                Dreamvisitor.debug("Challenge ready to be called.");
-                                Competition.call(challenge);
-                            }
+                if (!challenges.isEmpty()) {
+                    Dreamvisitor.debug("There are/is " + challenges.size() + " challenge(s) pending.");
+                    for (Challenge challenge : challenges) {
+                        if (challenge.time.size() == 1 && challenge.time.get(0).isBefore(LocalDateTime.now()) && challenge.state == Challenge.State.SCHEDULED) {
+                            Dreamvisitor.debug("Challenge ready to be called.");
+                            Competition.call(challenge);
                         }
                     }
-
-                } catch (IOException | InvalidConfigurationException e) {
-                    Bukkit.getLogger().warning("An I/O exception of some sort has occurred. Eye of Onyx could not initialize files. Does the server have write access?");
                 }
 
                 // Check for unnoticed challenges
@@ -216,6 +210,7 @@ public class EyeOfOnyx extends JavaPlugin {
                                 String ocName = (String) EyeOfOnyx.openrp.getDesc().getUserdata().get(player.getUniqueId() + ".name");
                                 // only update if oc name is not equal to currently stored OC name
                                 if (ocName != null && !ocName.equals("No name set") && !ocName.equals(RoyaltyBoard.getOcName(tribe, pos))) {
+                                    RoyaltyBoard.setOcName(tribe, pos, ocName);
                                     RoyaltyBoard.updateDiscordBoard(tribe);
                                 }
                             }
@@ -242,7 +237,6 @@ public class EyeOfOnyx extends JavaPlugin {
     @Override
     public void onDisable() {
         // Finish up
-        RoyaltyBoard.saveToDisk();
         server.stop(1);
     }
 

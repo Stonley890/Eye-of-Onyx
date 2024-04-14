@@ -89,7 +89,6 @@ public class CmdRoyalty implements CommandExecutor {
         } else
             sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Invalid arguments! /royalty <set|list|clear|update|manage>");
 
-        RoyaltyBoard.saveToDisk();
         return true;
     }
 
@@ -209,6 +208,11 @@ public class CmdRoyalty implements CommandExecutor {
 
         BoardPosition pos1 = RoyaltyBoard.getBoardOf(tribeIndex).getPos(posIndex1);
         BoardPosition pos2 = RoyaltyBoard.getBoardOf(tribeIndex).getPos(posIndex2);
+
+        if (pos1.player == null || pos2.player == null) {
+            sender.sendMessage(EyeOfOnyx.EOO + net.md_5.bungee.api.ChatColor.RED + "You cannot swap with an empty position!");
+            return;
+        }
 
         // Remove challenges
         Challenge.removeChallengesOfPlayer(pos1.player, "The player who was in your challenge was moved to a different position.");

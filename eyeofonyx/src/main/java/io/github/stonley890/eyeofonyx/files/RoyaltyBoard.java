@@ -131,8 +131,8 @@ public class RoyaltyBoard {
         }
     }
 
-    public static void saveToDisk() {
-        saveFile(BoardState.createYamlConfiguration(getBoard()));
+    private static void saveToDisk(Map<Integer, BoardState> board) {
+        saveFile(BoardState.createYamlConfiguration(board));
     }
 
     /**
@@ -391,7 +391,7 @@ public class RoyaltyBoard {
             reportChange(new RoyaltyAction(null, tribe, oldPos, royaltyBoard.get(tribe)));
         }
 
-        saveToDisk();
+        saveToDisk(royaltyBoard);
         updatePermissions(tribe);
     }
 
@@ -413,6 +413,8 @@ public class RoyaltyBoard {
                 }
             }
         }
+
+        saveToDisk(royaltyBoard);
     }
 
     /**
@@ -960,6 +962,12 @@ public class RoyaltyBoard {
         return getBoard().get(tribe).getPos(pos).name;
     }
 
+    public static void setOcName(int tribe, int pos, String name) {
+        Map<Integer, BoardState> royaltyBoard = getBoard();
+        royaltyBoard.put(tribe, royaltyBoard.get(tribe).setName(pos, name));
+        saveToDisk(royaltyBoard);
+    }
+
     /**
      * Get the date joined position of a spot on the board.
      *
@@ -1003,6 +1011,7 @@ public class RoyaltyBoard {
     public static void setLastOnline(int tribe, int pos, LocalDateTime time) {
         Map<Integer, BoardState> royaltyBoard = getBoard();
         royaltyBoard.put(tribe, royaltyBoard.get(tribe).setLastOnline(pos, time));
+        saveToDisk(royaltyBoard);
     }
 
     /**
@@ -1027,6 +1036,7 @@ public class RoyaltyBoard {
     public static void setLastChallengeDate(int tribe, int pos, LocalDateTime time) {
         Map<Integer, BoardState> royaltyBoard = getBoard();
         royaltyBoard.put(tribe, royaltyBoard.get(tribe).setLastChallenge(pos, time));
+        saveToDisk(royaltyBoard);
     }
 
     /**
@@ -1051,6 +1061,7 @@ public class RoyaltyBoard {
     public static void setAttacker(int tribe, int pos, UUID uuid) {
         Map<Integer, BoardState> royaltyBoard = getBoard();
         royaltyBoard.put(tribe, royaltyBoard.get(tribe).setChallenger(pos, uuid));
+        saveToDisk(royaltyBoard);
     }
 
     /**
@@ -1074,6 +1085,7 @@ public class RoyaltyBoard {
     public static void setAttacking(int tribe, int pos, UUID uuid) {
         Map<Integer, BoardState> royaltyBoard = getBoard();
         royaltyBoard.put(tribe, royaltyBoard.get(tribe).setChallenging(pos, uuid));
+        saveToDisk(royaltyBoard);
     }
 
     /**
@@ -1106,6 +1118,7 @@ public class RoyaltyBoard {
     public static void replace(int tribe, int fromPos, int toPos) {
         Map<Integer, BoardState> royaltyBoard = getBoard();
         royaltyBoard.put(tribe, royaltyBoard.get(tribe).replace(fromPos, toPos));
+        saveToDisk(royaltyBoard);
     }
 
     /**
@@ -1130,15 +1143,19 @@ public class RoyaltyBoard {
                 Bot.getJda().retrieveUserById(discordId).queue(RoyaltyBoard::updateRoles);
             } catch (NullPointerException ignored) {}
         }
+        saveToDisk(royaltyBoard);
     }
 
     public static void set(int tribe, int pos, BoardPosition newPosition) {
         Map<Integer, BoardState> royaltyBoard = getBoard();
         royaltyBoard.put(tribe, royaltyBoard.get(tribe).updatePosition(pos, newPosition));
+        saveToDisk(royaltyBoard);
+
     }
 
     public static void set(int tribe, BoardState newState) {
         Map<Integer, BoardState> royaltyBoard = getBoard();
         royaltyBoard.put(tribe, newState);
+        saveToDisk(royaltyBoard);
     }
 }

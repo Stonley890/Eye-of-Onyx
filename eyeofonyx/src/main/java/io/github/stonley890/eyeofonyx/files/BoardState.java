@@ -1,6 +1,5 @@
 package io.github.stonley890.eyeofonyx.files;
 
-import io.github.stonley890.dreamvisitor.Dreamvisitor;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -116,7 +115,6 @@ public class BoardState {
                 // Get UUID
                 UUID uuid;
                 String uuidString = config.getString(tribe + "." + position + ".uuid");
-                Dreamvisitor.debug("UUID: " + uuidString);
                 // Attempt to parse
                 try {
                     if (uuidString == null || uuidString.equals("none")) uuid = null;

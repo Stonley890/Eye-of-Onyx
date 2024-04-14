@@ -14,7 +14,6 @@ import net.md_5.bungee.api.chat.*;
 import net.md_5.bungee.api.chat.hover.content.Text;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Sound;
 import org.bukkit.Statistic;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -87,6 +86,7 @@ public class CmdChallenge implements CommandExecutor {
                 // Check if alt account
                 if (AltFamily.getParent(member.getIdLong()) != member.getIdLong()) {
                     sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Your account is marked as an alt. Please contact staff if this is incorrect.");
+                    return;
                 }
 
                 int playerPosition = RoyaltyBoard.getPositionIndexOfUUID(playerTribe, player.getUniqueId());
@@ -97,9 +97,10 @@ public class CmdChallenge implements CommandExecutor {
                     return;
                 }
 
-                Challenge challenge = Challenge.getChallenge(player);
-                if (challenge != null) {
+                Challenge challenge = Challenge.getChallenge(player.getUniqueId());
+                if (args.length == 0 && challenge != null) {
                     sendChallengeDetails(player, challenge);
+                    return;
                 }
 
                 if (playerPosition != CIVILIAN && RoyaltyBoard.isOnCoolDown(playerTribe, playerPosition)) {
@@ -119,7 +120,7 @@ public class CmdChallenge implements CommandExecutor {
 
                     return;
 
-                } else if (playerPosition != CIVILIAN && playerPosition != RULER && RoyaltyBoard.getAttacking(playerTribe, playerPosition) != null) {
+                } else if (playerPosition != CIVILIAN && playerPosition != RULER && RoyaltyBoard.getAttacking(playerTribe, playerPosition) != null && (args.length == 0 || !args[0].equals("cancel"))) {
 
                     if (args.length == 0 || (!args[0].equals("date") && !args[0].equals("start"))) {
                         // Player has already initiated a challenge
@@ -177,22 +178,22 @@ public class CmdChallenge implements CommandExecutor {
                             builder.append(button);
 
                         } else {
-                            builder.append(challengeEntry(playerTribe, NOBLE1, "position1"))
-                                    .append(challengeEntry(playerTribe, NOBLE2, "position2"))
-                                    .append(challengeEntry(playerTribe, NOBLE3, "position3"))
-                                    .append(challengeEntry(playerTribe, NOBLE4, "position4"))
-                                    .append(challengeEntry(playerTribe, NOBLE5, "position5"));
+                            builder.append(challengeEntry(playerTribe, NOBLE1, "position1"), ComponentBuilder.FormatRetention.NONE).reset()
+                                    .append(challengeEntry(playerTribe, NOBLE2, "position2"), ComponentBuilder.FormatRetention.NONE).reset()
+                                    .append(challengeEntry(playerTribe, NOBLE3, "position3"), ComponentBuilder.FormatRetention.NONE).reset()
+                                    .append(challengeEntry(playerTribe, NOBLE4, "position4"), ComponentBuilder.FormatRetention.NONE).reset()
+                                    .append(challengeEntry(playerTribe, NOBLE5, "position5"), ComponentBuilder.FormatRetention.NONE).reset();
 
                         }
                     } else if /* Player is a noble */ (playerPosition == NOBLE2 || playerPosition == NOBLE1) {
 
-                        builder.append(challengeEntry(playerTribe, HEIR1, "position1"))
-                                .append(challengeEntry(playerTribe, HEIR2, "position2"))
-                                .append(challengeEntry(playerTribe, HEIR3, "position3"));
+                        builder.append(challengeEntry(playerTribe, HEIR1, "position1"), ComponentBuilder.FormatRetention.NONE).reset()
+                                .append(challengeEntry(playerTribe, HEIR2, "position2"), ComponentBuilder.FormatRetention.NONE).reset()
+                                .append(challengeEntry(playerTribe, HEIR3, "position3"), ComponentBuilder.FormatRetention.NONE).reset();
 
                     } else if /* Player is an heir */ (playerPosition == HEIR2 || playerPosition == HEIR1) {
 
-                        builder.append(challengeEntry(playerTribe, RULER, "position1"));
+                        builder.append(challengeEntry(playerTribe, RULER, "position1"), ComponentBuilder.FormatRetention.NONE).reset();
 
                     } else if /* Player is ruler */ (playerPosition == RULER) {
 
@@ -216,12 +217,12 @@ public class CmdChallenge implements CommandExecutor {
                                 if (challenge.attacker.equals(player.getUniqueId())) challenge.cancelAttacker();
                                 if (challenge.defender.equals(player.getUniqueId())) challenge.cancelDefender();
                                 sender.sendMessage(EyeOfOnyx.EOO + "Cancel request sent.");
-                            }
+                            } else sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You do not have a challenge to cancel!");
                         }
                         case "quickaccept" -> {
                             for (Player quickChallengePlayer : quickChallenges.keySet()) {
                                 if (Objects.equals(quickChallenges.get(quickChallengePlayer), player)) {
-                                    Competition.call(new Challenge(quickChallengePlayer.getUniqueId(), player.getUniqueId(), null, Challenge.State.SCHEDULED));
+                                    Competition.call(new Challenge(quickChallengePlayer.getUniqueId(), player.getUniqueId(), new ArrayList<>(), Challenge.State.SCHEDULED));
                                     quickChallenges.remove(quickChallengePlayer);
                                     return;
                                 }
@@ -404,7 +405,7 @@ public class CmdChallenge implements CommandExecutor {
                 RoyaltyBoard.set(playerTribe, nextEmptyPosition, new BoardPosition(player.getUniqueId(), null, LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now(), null, null));
                 BoardState newBoard = getBoardOf(playerTribe).clone();
                 reportChange(new RoyaltyAction(player.getName(), playerTribe, oldBoard, newBoard));
-                updateBoard(playerTribe, false);
+                updateBoard(playerTribe, true);
 
                 sender.sendMessage(EyeOfOnyx.EOO + "You are now " + getValidPositions()[nextEmptyPosition].toUpperCase().replace("_", " ") + " of the " + getTeamNames()[playerTribe].toUpperCase() + "s!");
                 try {
@@ -457,13 +458,10 @@ public class CmdChallenge implements CommandExecutor {
 
         // Check that target is not being challenged
         if (!(RoyaltyBoard.getAttacker(playerTribe, targetPosition) == null || (targetPosition != RULER && RoyaltyBoard.getAttacking(playerTribe, targetPosition) != null))) {
-            player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
             builder.append("That player is already in a challenge!");
             sender.spigot().sendMessage(builder.create());
         } else {
 
-            // Check for cooldown
-            player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
             // Unless position is empty...
             if (!RoyaltyBoard.isPositionEmpty(playerTribe, targetPosition)) {
 
@@ -478,13 +476,13 @@ public class CmdChallenge implements CommandExecutor {
             UUID targetUuid = RoyaltyBoard.getUuid(playerTribe, targetPosition);
             assert targetUuid != null;
 
-            if (args[1].equals("quick")) {
+            if (args.length > 1 && args[1].equals("quick")) {
                 Player targetPlayer = Bukkit.getPlayer(targetUuid);
                 if (targetPlayer == null) {
                     sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "That player is not currently online.");
                     return;
                 }
-                if (Competition.activeChallenge == null) {
+                if (Competition.activeChallenge != null) {
                     sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You cannot start a challenge while one is currently occurring.");
                     return;
                 }
@@ -494,7 +492,7 @@ public class CmdChallenge implements CommandExecutor {
                         targetUuid,
                         "You have been challenged!",
                         player.getName() + " wants to quick-challenge you. This will start an immediate challenge if you accept. You can ignore this type of challenge with no consequence.",
-                        Notification.Type.GENERIC
+                        Notification.Type.QUICK_CHALLENGE
                 ).create();
                 sender.sendMessage(EyeOfOnyx.EOO + "Quick challenge sent!");
 
@@ -515,7 +513,7 @@ public class CmdChallenge implements CommandExecutor {
                 new Notification(targetUuid, title, content, Notification.Type.CHALLENGE_REQUESTED).create();
 
                 // create challenge
-                new Challenge(player.getUniqueId(), targetUuid, null, Challenge.State.PROPOSED).save();
+                new Challenge(player.getUniqueId(), targetUuid, new ArrayList<>(), Challenge.State.PROPOSED).save();
 
                 report(player.getName(), player.getName() + " initiated a challenge against " + PlayerUtility.getUsernameOfUuid(targetUuid) + ".");
 
@@ -528,11 +526,11 @@ public class CmdChallenge implements CommandExecutor {
     }
 
     private static void sendChallengeDetails(@NotNull Player player, @NotNull Challenge challenge) {
-        boolean attacker = true;
+        boolean attacker = false;
         java.util.UUID opponentUuid = challenge.attacker;
         if (opponentUuid.equals(player.getUniqueId())) {
             opponentUuid = challenge.defender;
-            attacker = false;
+            attacker = true;
         }
         String opponentName = PlayerUtility.getUsernameOfUuid(opponentUuid);
 
@@ -545,14 +543,13 @@ public class CmdChallenge implements CommandExecutor {
         builder.append("] Accepted\n[").color(ChatColor.WHITE);
         if (challenge.isScheduled()) builder.append("✓").color(ChatColor.GREEN);
         else builder.append("-").color(ChatColor.RED);
-        builder.append("] Scheduled\n[").color(ChatColor.WHITE);
-        if (challenge.isActive()) builder.append("✓").color(ChatColor.GREEN);
-        else builder.append("-").color(ChatColor.RED);
-        builder.append("] Active\n[").color(ChatColor.WHITE)
+        builder.append("] Scheduled\n[").color(ChatColor.WHITE)
                 .append("Cancel");
         if ((attacker && !challenge.isAttackerCanceled()) || (!attacker && !challenge.isDefenderCanceled())) builder.underlined(true).color(ChatColor.RED).event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("If both you and your opponent agree, the challenge will be canceled."))).event(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/challenge cancel"));
         else builder.color(ChatColor.GRAY).event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("You already pressed cancel.")));
         builder.append("]").color(ChatColor.WHITE).underlined(false);
+
+        player.spigot().sendMessage(builder.create());
     }
 
     private static BaseComponent[] challengeEntry(int tribe, int pos, String command) {
@@ -580,12 +577,11 @@ public class CmdChallenge implements CommandExecutor {
                 .append(PlayerUtility.getUsernameOfUuid(Objects.requireNonNull(getUuid(tribe, pos)))).color(ChatColor.YELLOW)
                 .append("\n");
 
-        builder.append(challengeButton)
-                .color(ChatColor.RESET)
-                .append(" ").reset();
+        builder.append(challengeButton).append("")
+                .append(" ").reset().retain(ComponentBuilder.FormatRetention.NONE);
 
-        if (Bukkit.getPlayer(Objects.requireNonNull(getUuid(tribe, pos))) == null) builder.append(disabledQuickChallengeButton);
-        else builder.append(quickChallengeButton);
+        if (Bukkit.getPlayer(Objects.requireNonNull(getUuid(tribe, pos))) == null) builder.append(disabledQuickChallengeButton, ComponentBuilder.FormatRetention.NONE);
+        else builder.append(quickChallengeButton, ComponentBuilder.FormatRetention.NONE);
 
         return builder.append("\n").reset().create();
     }

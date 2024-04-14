@@ -52,19 +52,6 @@ main-royalty-roles: {
   noble: 916438547232325642
 }
 
-# The royalty role IDs for the sister server.
-sister-royalty-roles:
-  - 1103731972058124400
-  - 1103732364640800808
-  - 1103732387252289677
-  - 1103732404360859763
-  - 1103732420131426404
-  - 1103735040795480105
-  - 1103732436631822509
-  - 1103732455812382720
-  - 1103732474330222592
-  - 1103732497340190800
-
 # Cool down period:
 # The number of DAYS that a user is unable to participate in a challenge after they have moved.
 # Default: 7

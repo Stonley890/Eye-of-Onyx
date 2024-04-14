@@ -1,5 +1,6 @@
 package io.github.stonley890.eyeofonyx.commands;
 
+import io.github.stonley890.dreamvisitor.data.PlayerUtility;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import io.github.stonley890.eyeofonyx.challenges.Competition;
 import io.github.stonley890.eyeofonyx.files.BoardState;
@@ -14,15 +15,12 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-import org.shanerx.mojang.Mojang;
 
 import java.io.IOException;
 import java.util.Objects;
 
 
 public class CmdCompetition implements CommandExecutor {
-
-    private final Mojang mojang = new Mojang().connect();
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String s, @NotNull String @NotNull [] args) {
@@ -53,8 +51,8 @@ public class CmdCompetition implements CommandExecutor {
                 try {
                     builder.append("Competition Information\n")
                             .append("Tribe: ").append(RoyaltyBoard.getTribes()[Competition.activeChallenge.tribe])
-                            .append("Attacker: ").append(attackerPos).append(" ").append(mojang.getPlayerProfile(Competition.activeChallenge.attacker.toString()).getUsername())
-                            .append("Defender: ").append(RoyaltyBoard.getValidPositions()[RoyaltyBoard.getPositionIndexOfUUID(Competition.activeChallenge.defender)].toUpperCase().replace('_', ' ')).append(" ").append(mojang.getPlayerProfile(Competition.activeChallenge.attacker.toString()).getUsername());
+                            .append("Attacker: ").append(attackerPos).append(" ").append(PlayerUtility.getUsernameOfUuid(Competition.activeChallenge.attacker))
+                            .append("Defender: ").append(RoyaltyBoard.getValidPositions()[RoyaltyBoard.getPositionIndexOfUUID(Competition.activeChallenge.defender)].toUpperCase().replace('_', ' ')).append(" ").append(PlayerUtility.getUsernameOfUuid(Competition.activeChallenge.attacker));
                 } catch (NotFoundException e) {
                     // Attacker does not have an associate tribe (should not happen)
                     sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Attacker does not have an associated tribe!");
@@ -171,9 +169,9 @@ public class CmdCompetition implements CommandExecutor {
 
                             if (args[1].equals("attacker")) {
 
+                                RoyaltyBoard.setAttacking(tribe, attackerPos, null);
                                 RoyaltyBoard.replace(tribe, attackerPos, defenderPos);
                                 RoyaltyBoard.removePlayer(tribe, attackerPos, true);
-                                RoyaltyBoard.saveToDisk();
                                 RoyaltyBoard.updateBoard(tribe, false);
                                 try {
                                     RoyaltyBoard.updateDiscordBoard(tribe);
@@ -185,7 +183,7 @@ public class CmdCompetition implements CommandExecutor {
 
                                 // Defender win; remove attacker
                                 RoyaltyBoard.removePlayer(Competition.activeChallenge.tribe, attackerPos, true);
-                                RoyaltyBoard.saveToDisk();
+                                RoyaltyBoard.setAttacker(tribe, defenderPos, null);
                                 RoyaltyBoard.updateBoard(tribe, false);
                                 try {
                                     RoyaltyBoard.updateDiscordBoard(tribe);
