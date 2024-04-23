@@ -52,7 +52,7 @@ public class CmdForfeit implements CommandExecutor {
                 try {
                     RoyaltyBoard.updateDiscordBoard(tribe);
                 } catch (IOException e) {
-                    sender.sendMessage(EyeOfOnyx.EOO + org.bukkit.ChatColor.RED + "An I/O error occurred while attempting to update Discord board.");
+                    sender.sendMessage(EyeOfOnyx.EOO + org.bukkit.ChatColor.RED + "An I/O error occurred while attempting to update Discord board. " + e.getMessage());
                 }
             } else {
                 partingPlayers.add(player);

@@ -23,25 +23,38 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 public class Notification {
 
-    private static File file;
     private static final EyeOfOnyx plugin = EyeOfOnyx.getPlugin();
-
+    private static File file;
+    public final Type type;
     private final UUID player;
     private final String title;
     private final String content;
-    public final Type type;
     public LocalDateTime time;
     public boolean seen = false;
 
     /**
+     * Creates a notification. Append .create() to automatically try to send and save to disk.
+     *
+     * @param playerUuid          The UUID of the player to deliver this message to.
+     * @param notificationTitle   The title of the message.
+     * @param notificationContent The content of the message.
+     * @param notificationType    The type of Notification. This will determine the buttons added and actions taken upon delivery.
+     */
+    public Notification(UUID playerUuid, String notificationTitle, String notificationContent, Type notificationType) {
+        player = playerUuid;
+        title = notificationTitle;
+        content = notificationContent;
+        type = notificationType;
+        time = LocalDateTime.now();
+    }
+
+    /**
      * Initializes the notification storage.
+     *
      * @throws IOException If the file could not be created.
      */
     public static void setup() throws IOException {
@@ -69,6 +82,7 @@ public class Notification {
 
     /**
      * Saves the current file configuration to disk.
+     *
      * @param board The file configuration to save.
      */
     private static void save(FileConfiguration board) {
@@ -81,6 +95,7 @@ public class Notification {
 
     /**
      * Saves the notification to notifications.yml on disk
+     *
      * @param notification The notification to save.
      */
     @SuppressWarnings("unchecked")
@@ -133,6 +148,7 @@ public class Notification {
 
     /**
      * Retrieves all notifications of a given player UUID.
+     *
      * @param uuid The player UUID to get notifications of.
      * @return A list of {@link Notification}s. If none exist, the list will return empty.
      */
@@ -183,13 +199,12 @@ public class Notification {
         // Get list of notifications of given player
         List<Notification> notifications = getNotificationsOfPlayer(notification.player);
 
-        // Init if null or empty
         if (notifications.isEmpty()) {
             return;
         }
 
         // Remove given notification
-        notifications.removeIf(notification1 -> (notification1.player.equals(notification.player)) && (notification1.type.equals(notification.type)) && (notification1.content.equals(notification.content)));
+        notifications.removeIf(next -> next.equals(notification));
 
         // Notification -> List
         List<List<String>> yamlNotifications = new ArrayList<>();
@@ -212,19 +227,11 @@ public class Notification {
         save(fileConfig);
     }
 
-    /**
-     * Creates a notification. Append .create() to automatically try to send and save to disk.
-     * @param playerUuid The UUID of the player to deliver this message to.
-     * @param notificationTitle The title of the message.
-     * @param notificationContent The content of the message.
-     * @param notificationType The type of Notification. This will determine the buttons added and actions taken upon delivery.
-     */
-    public Notification(UUID playerUuid, String notificationTitle, String notificationContent, Type notificationType) {
-        player = playerUuid;
-        title = notificationTitle;
-        content = notificationContent;
-        type = notificationType;
-        time = LocalDateTime.now();
+    public static void removeNotificationsOfPlayer(@NotNull UUID uuid, Type type) {
+        for (Notification notification : Notification.getNotificationsOfPlayer(uuid)) {
+            if (notification.type == type)
+                Notification.removeNotification(notification);
+        }
     }
 
     /**
@@ -239,11 +246,14 @@ public class Notification {
 
     /**
      * Attempts to send the message to the player.
+     *
      * @return Whether the message was sent.
      */
     public boolean sendMessage() {
         Player onlinePlayer = Bukkit.getPlayer(player);
         if (onlinePlayer != null) {
+
+            boolean remove = false;
 
             /*
 
@@ -310,7 +320,7 @@ public class Notification {
                 List<LocalDateTime> dates = challenge.time;
                 List<ZonedDateTime> offsetDates = new ArrayList<>();
 
-                ZonedDateTime playerTime =  IpUtils.ipToTime(Objects.requireNonNull(onlinePlayer.getAddress()).getAddress().getHostAddress());
+                ZonedDateTime playerTime = IpUtils.ipToTime(Objects.requireNonNull(onlinePlayer.getAddress()).getAddress().getHostAddress());
                 if (playerTime != null) {
                     ZoneId playerOffset = playerTime.getZone();
 
@@ -324,8 +334,10 @@ public class Notification {
                 for (int i = 0; i < dates.size(); i++) {
                     TextComponent button = new TextComponent();
 
-                    if (playerTime == null) button.setText("[" + dates.get(i).format(DateTimeFormatter.ofPattern("MM dd uuuu hh:mm a ")) + ZoneOffset.systemDefault().getId() + "]\n");
-                    else button.setText("[" + offsetDates.get(i).format(DateTimeFormatter.ofPattern("MM dd uuuu hh:mm a z")) + "]\n");
+                    if (playerTime == null)
+                        button.setText("[" + dates.get(i).format(DateTimeFormatter.ofPattern("MM dd uuuu hh:mm a ")) + ZoneOffset.systemDefault().getId() + "]\n");
+                    else
+                        button.setText("[" + offsetDates.get(i).format(DateTimeFormatter.ofPattern("MM dd uuuu hh:mm a z")) + "]\n");
 
                     button.setColor(ChatColor.YELLOW);
                     button.setUnderlined(true);
@@ -349,7 +361,7 @@ public class Notification {
             } else if (type == Type.GENERIC) {
 
                 // Do not show notification again
-                removeNotification(this);
+                remove = true;
 
             } else if (type == Type.QUICK_CHALLENGE) {
 
@@ -362,7 +374,7 @@ public class Notification {
 
                 buttons.add(accept);
 
-                removeNotification(this);
+                remove = true;
 
             }
 
@@ -378,9 +390,11 @@ public class Notification {
             onlinePlayer.spigot().sendMessage(message.create());
 
             // Mark notification as seen
-            removeNotification(this);
-            this.seen = true;
-            Notification.saveNotification(this);
+            if (remove) removeNotification(this);
+            else {
+                this.seen = true;
+                Notification.saveNotification(this);
+            }
 
             return true;
         } else {
@@ -388,11 +402,20 @@ public class Notification {
         }
     }
 
-    public static void removeNotificationsOfPlayer(@NotNull UUID uuid, Type type) {
-        for (Notification notification : Notification.getNotificationsOfPlayer(uuid)) {
-            if (notification.type == type)
-                Notification.removeNotification(notification);
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) return true;
+        if (obj instanceof Notification that) {
+            return (
+                    this.player == that.player &&
+                            this.type == that.type &&
+                            Objects.equals(this.content, that.content) &&
+                            Objects.equals(this.time, that.time) &&
+                            Objects.equals(this.title, that.title) &&
+                            this.seen == that.seen
+            );
         }
+        return false;
     }
 
     public enum Type {

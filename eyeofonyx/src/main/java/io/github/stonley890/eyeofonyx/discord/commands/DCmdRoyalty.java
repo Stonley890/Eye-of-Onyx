@@ -12,7 +12,6 @@ import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -20,7 +19,6 @@ import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
-import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -135,6 +133,8 @@ public class DCmdRoyalty implements DiscordCommand {
             return;
         }
 
+        event.deferReply().setEphemeral(false).queue();
+
         switch (subCommand) {
             case "set" -> {
 
@@ -145,7 +145,7 @@ public class DCmdRoyalty implements DiscordCommand {
                     targetUser = Objects.requireNonNull(event.getOption("user")).getAsUser();
                     position = Objects.requireNonNull(event.getOption("position")).getAsString();
                 } catch (NullPointerException e) {
-                    event.reply("Missing arguments!").setEphemeral(true).queue();
+                    event.getHook().setEphemeral(true).editOriginal("Missing arguments!").queue();
                     return;
                 }
 
@@ -153,13 +153,13 @@ public class DCmdRoyalty implements DiscordCommand {
                 UUID targetPlayerUUID = AccountLink.getUuid(targetUser.getIdLong());
 
                 if (targetPlayerUUID == null) {
-                    event.reply("That user is not associated with a Minecraft account.").queue();
+                    event.getHook().setEphemeral(false).editOriginal("That user is not associated with a Minecraft account.").queue();
                     return;
                 }
 
                 // Check for ban
                 if (Banned.isPlayerBanned(targetPlayerUUID)) {
-                    event.reply("This player must be unbanned first.").queue();
+                    event.getHook().setEphemeral(false).editOriginal("This player must be unbanned first.").queue();
                     return;
                 }
 
@@ -171,7 +171,7 @@ public class DCmdRoyalty implements DiscordCommand {
 
                     // Make sure player is not already on the board
                     if (RoyaltyBoard.getPositionIndexOfUUID(playerTribe, targetPlayerUUID) != RoyaltyBoard.CIVILIAN) {
-                        event.reply("That player is already on the royalty board. Use the swap command instead.").queue();
+                        event.getHook().setEphemeral(false).editOriginal("That player is already on the royalty board. Use the swap command instead.").queue();
                         return;
                     }
 
@@ -198,24 +198,24 @@ public class DCmdRoyalty implements DiscordCommand {
                         BoardState newBoard = RoyaltyBoard.getBoardOf(playerTribe).clone();
                         RoyaltyBoard.reportChange(new RoyaltyAction(Objects.requireNonNull(event.getMember()).getId(), playerTribe, oldBoard, newBoard));
 
-                        event.reply("✅ " + targetUser.getAsMention() + " is now " + position.toUpperCase().replace('_', ' ')).queue();
+                        event.getHook().setEphemeral(false).editOriginal("✅ " + targetUser.getAsMention() + " is now " + position.toUpperCase().replace('_', ' ')).queue();
 
                         RoyaltyBoard.updateBoard(playerTribe, false);
 
                         try {
                             RoyaltyBoard.updateDiscordBoard(playerTribe);
                         } catch (IOException e) {
-                            Bukkit.getLogger().warning(EyeOfOnyx.EOO + ChatColor.RED + "An I/O error occurred while attempting to update Discord board.");
+                            Bukkit.getLogger().warning(EyeOfOnyx.EOO + ChatColor.RED + "An I/O error occurred while attempting to update Discord board. " + e.getMessage());
                         }
 
                     } else
-                        event.reply("Invalid position. Valid positions: " + Arrays.toString(RoyaltyBoard.getValidPositions())).queue();
+                        event.getHook().setEphemeral(true).editOriginal("Invalid position. Valid positions: " + Arrays.toString(RoyaltyBoard.getValidPositions())).queue();
 
                 } catch (IllegalArgumentException e) {
                     // getTeam() throws IllegalArgumentException if teams do not exist
-                    event.reply("Required teams do not exist!").queue();
+                    event.getHook().setEphemeral(false).editOriginal("Required teams do not exist!").queue();
                 } catch (NotFoundException e) {
-                    event.reply("Player is not associated with a tribe!").queue();
+                    event.getHook().setEphemeral(false).editOriginal("Player is not associated with a tribe!").queue();
                     if (Dreamvisitor.debugMode) e.printStackTrace();
                 }
             }
@@ -228,7 +228,7 @@ public class DCmdRoyalty implements DiscordCommand {
                     tribe = Objects.requireNonNull(event.getOption("tribe")).getAsString();
                     position = Objects.requireNonNull(event.getOption("position")).getAsString();
                 } catch (NullPointerException e) {
-                    event.reply("Missing arguments!").setEphemeral(true).queue();
+                    event.getHook().setEphemeral(true).editOriginal("Missing arguments!").queue();
                     return;
                 }
 
@@ -236,17 +236,17 @@ public class DCmdRoyalty implements DiscordCommand {
                 int posIndex = io.github.stonley890.eyeofonyx.Utils.posIndexFromString(position);
 
                 if (tribeIndex == -1) {
-                    event.reply("Not a valid tribe!").queue();
+                    event.getHook().setEphemeral(true).editOriginal("Not a valid tribe!").queue();
                     return;
                 }
                 if (posIndex == -1) {
-                    event.reply("Not a valid position!").queue();
+                    event.getHook().setEphemeral(true).editOriginal("Not a valid position!").queue();
                     return;
                 }
 
                 UUID uuid = RoyaltyBoard.getUuid(tribeIndex, posIndex);
                 if (uuid == null) {
-                    event.reply("That position is already empty!").queue();
+                    event.getHook().setEphemeral(false).editOriginal("That position is already empty!").queue();
                     return;
                 }
 
@@ -268,7 +268,7 @@ public class DCmdRoyalty implements DiscordCommand {
                 } catch (IOException e) {
                     Bukkit.getLogger().warning(EyeOfOnyx.EOO + ChatColor.RED + "An I/O error occurred while attempting to update Discord board.");
                 }
-                event.reply("✅ " + tribe.toUpperCase() + " " + position.toUpperCase() + " position cleared.").queue();
+                event.getHook().setEphemeral(false).editOriginal("✅ " + tribe.toUpperCase() + " " + position.toUpperCase() + " position cleared.").queue();
 
             }
             case "swap" -> {
@@ -282,7 +282,7 @@ public class DCmdRoyalty implements DiscordCommand {
                 position2 = event.getOption("position-2", OptionMapping::getAsString);
 
                 if (Objects.equals(position1, position2)) {
-                    event.reply("You cannot swap a position with itself!").queue();
+                    event.getHook().setEphemeral(false).editOriginal("You cannot swap a position with itself!").queue();
                     return;
                 }
 
@@ -291,11 +291,11 @@ public class DCmdRoyalty implements DiscordCommand {
                 int posIndex2 = io.github.stonley890.eyeofonyx.Utils.posIndexFromString(position2);
 
                 if (tribeIndex == -1) {
-                    event.reply("Not a valid tribe!").queue();
+                    event.getHook().setEphemeral(true).editOriginal("Not a valid tribe!").queue();
                     return;
                 }
                 if (posIndex1 == -1 || posIndex2 == -1) {
-                    event.reply("Not a valid position!").queue();
+                    event.getHook().setEphemeral(true).editOriginal("Not a valid position!").queue();
                     return;
                 }
 
@@ -305,7 +305,7 @@ public class DCmdRoyalty implements DiscordCommand {
                 BoardPosition pos2 = RoyaltyBoard.getBoardOf(tribeIndex).getPos(posIndex2);
 
                 if (pos1.player == null || pos2.player == null) {
-                    event.reply("You cannot swap with an empty position!").queue();
+                    event.getHook().setEphemeral(false).editOriginal("You cannot swap with an empty position!").queue();
                     return;
                 }
 
@@ -337,7 +337,7 @@ public class DCmdRoyalty implements DiscordCommand {
                 assert position1 != null;
                 assert position2 != null;
                 assert tribe != null;
-                event.reply("Swapped " + position1.toUpperCase() + " and " + position2.toUpperCase() + " of " + tribe.toUpperCase()).queue();
+                event.getHook().setEphemeral(false).editOriginal("Swapped " + position1.toUpperCase() + " and " + position2.toUpperCase() + " of " + tribe.toUpperCase()).queue();
 
                 RoyaltyBoard.updateBoard(tribeIndex, false);
                 try {
@@ -348,8 +348,6 @@ public class DCmdRoyalty implements DiscordCommand {
 
             }
             case "update" -> {
-                InteractionHook hook = event.getHook();
-                event.deferReply().queue();
 
                 try {
                     for (int i = 0; i < RoyaltyBoard.getTribes().length; i++) {
@@ -359,11 +357,17 @@ public class DCmdRoyalty implements DiscordCommand {
                 } catch (IOException e) {
                     Bukkit.getLogger().warning(EyeOfOnyx.EOO + ChatColor.RED + "An I/O error occurred while attempting to update Discord board.");
                 }
-                hook.editOriginal("✅ Board updated. It may take some time for changes to apply everywhere.").queue();
+                event.getHook().setEphemeral(false).editOriginal("✅ Board updated. It may take some time for changes to apply everywhere.").queue();
             } case "challenge" -> {
                 Member member = event.getOption("user", OptionMapping::getAsMember);
                 if (member == null) {
+
                     List<Challenge> challenges = Challenge.getChallenges();
+
+                    if (challenges.isEmpty()) {
+                        event.getHook().setEphemeral(false).editOriginal("There are no challenges currently ongoing.").queue();
+                        return;
+                    }
 
                     EmbedBuilder embed = new EmbedBuilder();
 
@@ -376,19 +380,19 @@ public class DCmdRoyalty implements DiscordCommand {
                         if (defenderName == null) defenderName = challenge.defender.toString();
 
                         embed.addField(attackerName + " VS " + defenderName, "Status: " + challenge.state, false);
-
-                        event.replyEmbeds(embed.build()).queue();
                     }
+
+                    event.getHook().setEphemeral(false).editOriginalEmbeds(embed.build()).queue();
                 } else {
                     UUID uuid = AccountLink.getUuid(member.getIdLong());
                     if (uuid == null) {
-                        event.reply("That member does not have a linked Minecraft account.").queue();
+                        event.getHook().setEphemeral(false).editOriginal("That member does not have a linked Minecraft account.").queue();
                         return;
                     }
 
                     Challenge challenge = Challenge.getChallenge(uuid);
                     if (challenge == null) {
-                        event.reply("That member is not currently organizing a challenge.").queue();
+                        event.getHook().setEphemeral(false).editOriginal("That member is not currently organizing a challenge.").queue();
                         return;
                     }
 
@@ -418,15 +422,15 @@ public class DCmdRoyalty implements DiscordCommand {
                     if (challenge.state == Challenge.State.ACCEPTED) embed.setDescription(Challenge.State.ACCEPTED + ": This challenge has been accepted by the defender and the times below have been suggested.");
                     if (challenge.state == Challenge.State.SCHEDULED) embed.setDescription(Challenge.State.SCHEDULED + ": The attacker and defender have agreed upon the time listed.");
 
-                    ActionRow buttons = ActionRow.of(Button.danger("challenge-delete-" + challenge.attacker, "Delete"));
+                    Button danger = Button.danger("challenge-delete-" + challenge.attacker, "Delete");
 
-                    event.replyEmbeds(embed.build()).addActionRows(buttons).queue();
+                    event.getHook().setEphemeral(true).editOriginalEmbeds(embed.build()).setActionRow(danger).queue();
                 }
 
 
             }
             default ->
-                    event.reply("Invalid arguments! /royalty <set|clear|update>").queue();
+                    event.getHook().setEphemeral(true).editOriginal("Invalid arguments! /royalty <set|clear|update>").queue();
         }
 
 

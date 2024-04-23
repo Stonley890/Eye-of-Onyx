@@ -66,11 +66,11 @@ public class PlayerTribe {
     }
 
     /**
-     * Gets the stored tribe of a given player.
+     * Gets the stored tribe of a given player. If it does not exist, this method will try to update it.
      *
      * @param playerUuid The player UUID to search for.
      * @return The index of their tribe.
-     * @throws NotFoundException The given player does not have a recorded tribe. Use {@code updateTribeOfPlayer(Player player)} to get and record it from an online player.
+     * @throws NotFoundException The given player does not have a recorded tribe.
      */
     public static int getTribeOfPlayer(@NotNull UUID playerUuid) throws NotFoundException {
 

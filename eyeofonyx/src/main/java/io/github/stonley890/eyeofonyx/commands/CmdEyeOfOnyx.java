@@ -30,7 +30,7 @@ public class CmdEyeOfOnyx implements CommandExecutor {
     boolean disabling = false;
 
     @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String @NotNull [] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
 
         if (args.length == 0) {
             sender.sendMessage(ChatColor.YELLOW + "Eye of Onyx " + main.version + "\nStonley890 / iHeron");
@@ -85,7 +85,7 @@ public class CmdEyeOfOnyx implements CommandExecutor {
         }
     }
 
-    private void config(@NotNull CommandSender sender, String @NotNull [] args) {
+    private void config(@NotNull CommandSender sender, @NotNull String[] args) {
         if (args.length < 2) {
             sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Missing arguments! /eyeofonyx config <key> <value>");
         } else {
@@ -324,7 +324,7 @@ public class CmdEyeOfOnyx implements CommandExecutor {
         }
     }
 
-    private static boolean unban(@NotNull CommandSender sender, String @NotNull [] args) {
+    private static boolean unban(@NotNull CommandSender sender, String[] args) {
         // Player must have permission eyeofonxy.ban
         if (!sender.hasPermission("eyeofonxy.ban"))
             sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You do not have permission to run that command.");
@@ -349,7 +349,7 @@ public class CmdEyeOfOnyx implements CommandExecutor {
         return false;
     }
 
-    private static boolean ban(@NotNull CommandSender sender, String @NotNull [] args) {
+    private static boolean ban(@NotNull CommandSender sender, String[] args) {
         // Player must have permission eyeofonxy.ban
         if (!sender.hasPermission("eyeofonxy.ban"))
             sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You do not have permission to run that command.");

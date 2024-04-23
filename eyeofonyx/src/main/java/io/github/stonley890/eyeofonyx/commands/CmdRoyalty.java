@@ -40,7 +40,7 @@ public class CmdRoyalty implements CommandExecutor {
     private static final String[] validPositions = RoyaltyBoard.getValidPositions();
 
     @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String @NotNull [] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
 
         sender.sendMessage(EyeOfOnyx.EOO + "Please wait...");
 
@@ -93,7 +93,7 @@ public class CmdRoyalty implements CommandExecutor {
     }
 
     // royalty set <player> <position> [name]
-    public static void set(CommandSender sender, String @NotNull [] args) {
+    public static void set(CommandSender sender, @NotNull String[] args) {
 
         UUID targetPlayerUUID;
 
@@ -180,7 +180,7 @@ public class CmdRoyalty implements CommandExecutor {
 
     }
 
-    static void swap(CommandSender sender, String @NotNull [] args) {
+    static void swap(CommandSender sender, @NotNull String[] args) {
 
         String tribe = args[1];
         String position1 = args[2];
@@ -250,7 +250,7 @@ public class CmdRoyalty implements CommandExecutor {
     }
 
     // royalty list [tribe]
-    static void list(CommandSender sender, String @NotNull [] args) {
+    static void list(CommandSender sender, @NotNull String[] args) {
 
         // If no other arguments, build and send full board
         if (args.length < 2) {
@@ -293,7 +293,7 @@ public class CmdRoyalty implements CommandExecutor {
     }
 
     // royalty clear <tribe> <position>
-    static void clear(CommandSender sender, String @NotNull [] args) {
+    static void clear(CommandSender sender, @NotNull String[] args) {
 
         Dreamvisitor.debug("Clearing...");
 
@@ -342,7 +342,7 @@ public class CmdRoyalty implements CommandExecutor {
     }
 
     // royalty manage <tribe> <position> [key] [value]
-    void manage(CommandSender sender, String @NotNull [] args) {
+    void manage(CommandSender sender, @NotNull String[] args) {
 
         if (args.length < 3)
             sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Missing arguments! /royalty manage <tribe> <position> [key] [value]");

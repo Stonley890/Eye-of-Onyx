@@ -240,7 +240,7 @@ public class CmdChallenge implements CommandExecutor {
         return true;
     }
 
-    private static void date(@NotNull CommandSender sender, @NotNull String @NotNull [] args, Player player, Challenge challenge) {
+    private static void date(@NotNull CommandSender sender, @NotNull String[] args, Player player, Challenge challenge) {
         if (challenge == null) {
             sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You are not in any scheduled challenges!");
             return;
@@ -373,7 +373,7 @@ public class CmdChallenge implements CommandExecutor {
         sender.spigot().sendMessage(builder.create());
     }
 
-    private void initiate(@NotNull CommandSender sender, @NotNull String @NotNull [] args, Player player, int playerPosition, int playerTribe) {
+    private void initiate(@NotNull CommandSender sender, @NotNull String[] args, Player player, int playerPosition, int playerTribe) {
         ComponentBuilder builder = new ComponentBuilder();
         builder.append(EyeOfOnyx.EOO);
 

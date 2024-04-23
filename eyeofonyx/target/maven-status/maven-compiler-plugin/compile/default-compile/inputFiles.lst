@@ -7,12 +7,12 @@
 /home/stonley890/Documents/Plugins/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/challenges/Competition.java
 /home/stonley890/Documents/Plugins/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/commands/tabcomplete/TabEyeOfOnyx.java
 /home/stonley890/Documents/Plugins/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/files/BoardPosition.java
+/home/stonley890/Documents/Plugins/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/discord/Discord.java
 /home/stonley890/Documents/Plugins/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/files/Challenge.java
 /home/stonley890/Documents/Plugins/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/files/Banned.java
 /home/stonley890/Documents/Plugins/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/commands/CmdRoyalty.java
 /home/stonley890/Documents/Plugins/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/files/BoardState.java
 /home/stonley890/Documents/Plugins/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/files/Notification.java
-/home/stonley890/Documents/Plugins/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/Discord.java
 /home/stonley890/Documents/Plugins/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/commands/CmdChallenge.java
 /home/stonley890/Documents/Plugins/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/commands/tabcomplete/TabChallenge.java
 /home/stonley890/Documents/Plugins/Eye-of-Onyx/eyeofonyx/src/main/java/io/github/stonley890/eyeofonyx/files/MessageFormat.java

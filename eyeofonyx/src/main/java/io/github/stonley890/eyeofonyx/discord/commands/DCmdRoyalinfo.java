@@ -13,11 +13,12 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
+import net.dv8tion.jda.api.utils.TimeFormat;
 import net.md_5.bungee.api.ChatColor;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.time.ZoneOffset;
 import java.util.UUID;
 
 public class DCmdRoyalinfo implements DiscordCommand {
@@ -101,13 +102,13 @@ public class DCmdRoyalinfo implements DiscordCommand {
             if (displayName == null) displayName = "Not set";
 
             if (joinedBoardDate == null) joinedBoardDateString = "Unknown";
-            else joinedBoardDateString = joinedBoardDate.format(DateTimeFormatter.ofPattern("MM/dd/yyyy"));
+            else joinedBoardDateString = TimeFormat.DATE_SHORT.format(joinedBoardDate.toEpochSecond(ZoneOffset.UTC));
 
             if (joinedPosDate == null) joinedPosDateString = "Unknown";
-            else joinedPosDateString = joinedPosDate.format(DateTimeFormatter.ofPattern("MM/dd/yyyy"));
+            else joinedPosDateString = TimeFormat.DATE_SHORT.format(joinedPosDate.toEpochSecond(ZoneOffset.UTC));
 
             if (cooldownEnd == null) cooldownEndString = "Unknown";
-            else cooldownEndString = cooldownEnd.format(DateTimeFormatter.ofPattern("MM/dd/yyyy"));
+            else cooldownEndString = TimeFormat.DATE_SHORT.format(cooldownEnd.toEpochSecond(ZoneOffset.UTC));
 
             embed.addField("Username", username, true)
                     .addField("Character Name", ChatColor.stripColor(displayName), true)

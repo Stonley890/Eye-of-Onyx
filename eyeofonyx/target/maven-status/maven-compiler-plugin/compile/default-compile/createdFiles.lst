@@ -1,4 +1,3 @@
-io/github/stonley890/eyeofonyx/Discord.class
 io/github/stonley890/eyeofonyx/EyeOfOnyx.class
 io/github/stonley890/eyeofonyx/files/Challenge$State.class
 io/github/stonley890/eyeofonyx/files/RoyaltyBoard.class
@@ -24,6 +23,7 @@ io/github/stonley890/eyeofonyx/commands/tabcomplete/TabEyeOfOnyx.class
 io/github/stonley890/eyeofonyx/web/IpUtils.class
 io/github/stonley890/eyeofonyx/commands/CmdCompetition.class
 io/github/stonley890/eyeofonyx/discord/commands/DCmdEyeOfOnyx.class
+io/github/stonley890/eyeofonyx/discord/Discord.class
 io/github/stonley890/eyeofonyx/Utils.class
 io/github/stonley890/eyeofonyx/commands/CmdChallenge.class
 io/github/stonley890/eyeofonyx/commands/CmdEyeOfOnyx.class

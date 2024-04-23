@@ -1,4 +1,4 @@
-package io.github.stonley890.eyeofonyx;
+package io.github.stonley890.eyeofonyx.discord;
 
 import io.github.stonley890.dreamvisitor.Bot;
 import io.github.stonley890.dreamvisitor.data.AccountLink;
@@ -14,7 +14,6 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
-import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import org.jetbrains.annotations.NotNull;
 
@@ -114,8 +113,8 @@ public class Discord extends ListenerAdapter {
 
                     }
 
-                    ActionRow actionRow = ActionRow.of(Button.danger("revertconfirm-" + royaltyAction.id, "Yes, revert to this state."));
-                    event.replyEmbeds(embed.build()).addActionRows(actionRow).queue();
+                    Button danger = Button.danger("revertconfirm-" + royaltyAction.id, "Yes, revert to this state.");
+                    event.replyEmbeds(embed.build()).addActionRow(danger).queue();
                     break;
                 }
             }

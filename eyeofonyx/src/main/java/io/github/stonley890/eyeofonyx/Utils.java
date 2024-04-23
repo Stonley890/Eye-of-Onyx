@@ -1,5 +1,6 @@
 package io.github.stonley890.eyeofonyx;
 
+import io.github.stonley890.dreamvisitor.Dreamvisitor;
 import io.github.stonley890.eyeofonyx.files.RoyaltyBoard;
 import io.github.stonley890.eyeofonyx.web.IpUtils;
 import javassist.NotFoundException;
@@ -53,6 +54,7 @@ public class Utils {
      */
     public static void setPlayerPerms(UUID playerUuid, int tribeIndex, int posIndex) {
         if (EyeOfOnyx.luckperms != null) {
+            Dreamvisitor.debug("[setPlayerPerms] Setting permissions for " + playerUuid + " of tribe " + tribeIndex + " pos " + posIndex);
             // Get user manager
             UserManager userManager = EyeOfOnyx.luckperms.getUserManager();
 
@@ -73,6 +75,7 @@ public class Utils {
                             // Get the group from lp and remove it from the user.
                             Group group = EyeOfOnyx.luckperms.getGroupManager().getGroup(groupName);
                             user.getInheritedGroups(user.getQueryOptions()).remove(group);
+                            Dreamvisitor.debug("[setPlayerPerms] Removed " + groupName);
 
                         } else
                             Bukkit.getLogger().warning("Group " + position + "." + tribe + " is null in the config!");
@@ -86,6 +89,7 @@ public class Utils {
                     // Get the group from lp and add it to the user.
                     Group group = EyeOfOnyx.luckperms.getGroupManager().getGroup(groupName);
                     user.getInheritedGroups(user.getQueryOptions()).add(group);
+                    Dreamvisitor.debug("[setPlayerPerms] Added " + groupName);
                 }
 
             });

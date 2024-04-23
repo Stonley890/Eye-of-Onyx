@@ -6,6 +6,7 @@ import io.github.stonley890.dreamvisitor.Dreamvisitor;
 import io.github.stonley890.eyeofonyx.challenges.Competition;
 import io.github.stonley890.eyeofonyx.commands.*;
 import io.github.stonley890.eyeofonyx.commands.tabcomplete.*;
+import io.github.stonley890.eyeofonyx.discord.Discord;
 import io.github.stonley890.eyeofonyx.files.*;
 import io.github.stonley890.eyeofonyx.listeners.ListenJoin;
 import io.github.stonley890.eyeofonyx.listeners.ListenLeave;

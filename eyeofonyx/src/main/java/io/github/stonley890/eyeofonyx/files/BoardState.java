@@ -338,11 +338,16 @@ public class BoardState {
 
     /**
      * Check if this {@link BoardState} contains the same information as another.
-     * @param state the {@link BoardState} to compare this with.
+     * @param obj the {@link BoardState} to compare this with.
      * @return whether the data is the same.
      */
-    public boolean equals(BoardState state) {
-        for (int pos = 0; pos < this.positions.size(); pos++) if (!this.positions.get(pos).equals(state.positions.get(pos))) return false;
-        return true;
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj instanceof BoardState that) {
+            for (int pos = 0; pos < this.positions.size(); pos++) if (!this.positions.get(pos).equals(that.positions.get(pos))) return false;
+            return true;
+        }
+        return false;
     }
 }

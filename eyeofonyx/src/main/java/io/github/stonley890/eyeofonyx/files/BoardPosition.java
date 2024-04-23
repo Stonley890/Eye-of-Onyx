@@ -1,6 +1,5 @@
 package io.github.stonley890.eyeofonyx.files;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.LocalDateTime;
@@ -75,15 +74,21 @@ public class BoardPosition {
         return this;
     }
 
-    public boolean equals(@NotNull BoardPosition that) {
-        if (this.player != that.player) return false;
-        if (!Objects.equals(this.name, that.name)) return false;
-        if (!Objects.equals(this.joinedBoard, that.joinedBoard)) return false;
-        if (!Objects.equals(this.joinedPosition, that.joinedPosition)) return false;
-        if (!Objects.equals(this.lastOnline, that.lastOnline)) return false;
-        if (!Objects.equals(this.lastChallenge, that.lastChallenge)) return false;
-        if (this.challenger != that.challenger) return false;
-        return this.challenging == that.challenging;
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj instanceof BoardPosition that) {
+            if (!Objects.equals(this.player, that.player)) return false;
+            if (!Objects.equals(this.name, that.name)) return false;
+            if (!Objects.equals(this.joinedBoard, that.joinedBoard)) return false;
+            if (!Objects.equals(this.joinedPosition, that.joinedPosition)) return false;
+            if (!Objects.equals(this.lastOnline, that.lastOnline)) return false;
+            if (!Objects.equals(this.lastChallenge, that.lastChallenge)) return false;
+            if (!Objects.equals(this.challenger, that.challenger)) return false;
+            return (Objects.equals(this.challenging, that.challenging));
+        }
+        return false;
+
     }
 
 }

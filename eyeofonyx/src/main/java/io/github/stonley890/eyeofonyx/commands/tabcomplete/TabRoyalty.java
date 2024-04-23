@@ -18,7 +18,7 @@ public class TabRoyalty implements TabCompleter {
     static String[] positions = RoyaltyBoard.getValidPositions();
 
     @Override
-    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String @NotNull [] args) {
+    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
 
         List<String> suggestions = new ArrayList<>();
 

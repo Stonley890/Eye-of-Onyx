@@ -12,11 +12,9 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
-import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.exceptions.ErrorHandler;
-import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
-import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.luckperms.api.model.user.User;
@@ -133,6 +131,7 @@ public class RoyaltyBoard {
 
     private static void saveToDisk(Map<Integer, BoardState> board) {
         saveFile(BoardState.createYamlConfiguration(board));
+        Dreamvisitor.debug("[saveToDisk] Saved royalty board to disk.");
     }
 
     /**
@@ -196,9 +195,9 @@ public class RoyaltyBoard {
             if (builder.getFields().isEmpty()) builder.addField("Something went wrong!","That's odd... It looks like someone filed a report without any changes.", false);
 
             TextChannel logChannel = Bot.getJda().getTextChannelById(channelID);
-            ActionRow actionRow = ActionRow.of(Button.danger("revertaction-" + action.id, "Revert"));
+            Button danger = Button.danger("revertaction-" + action.id, "Revert");
 
-            if (logChannel != null) logChannel.sendMessageEmbeds(builder.build()).setActionRows(actionRow).queue();
+            if (logChannel != null) logChannel.sendMessageEmbeds(builder.build()).setActionRow(danger).queue();
         });
     }
 
@@ -299,7 +298,7 @@ public class RoyaltyBoard {
      */
     public static void updateBoard(int tribe, boolean updateDiscord) {
 
-        Dreamvisitor.debug("Updating royalty board.");
+        Dreamvisitor.debug("[updateBoard] Updating royalty board.");
 
         Map<Integer, BoardState> royaltyBoard = getBoard();
 
@@ -323,11 +322,13 @@ public class RoyaltyBoard {
             last_online = getLastOnline(tribe, pos);
             if (last_online != null && last_online.isBefore(LocalDateTime.now().minusDays(plugin.getConfig().getInt("inactivity-timer")))) {
                 RoyaltyBoard.set(tribe, pos, royaltyBoard.get(tribe).getPos(positionsEmpty).setLastOnline(null));
+                royaltyBoard = getBoard();
             }
 
             // If last_online is empty, clear position
             if (last_online == null) {
                 // This position is empty, so count up positionsEmpty
+                Dreamvisitor.debug("[updateBoard] Tribe " + tribe + " pos " + pos + " (" + uuid + ") is empty");
                 positionsEmpty += 1;
 
                 if (uuid != null) {
@@ -348,6 +349,7 @@ public class RoyaltyBoard {
 
                 // Clear data
                 RoyaltyBoard.removePlayer(tribe, pos, true);
+                royaltyBoard = getBoard();
 
             } // If position is held by an active player
             else {
@@ -355,16 +357,18 @@ public class RoyaltyBoard {
                 // positionsEmpty is initialized as 0 so this cannot run as ruler
                 if (positionsEmpty > 0) {
 
-                    Dreamvisitor.debug("Positions empty: " + positionsEmpty);
-                    Dreamvisitor.debug("Current position: " + pos);
+                    Dreamvisitor.debug("[updateBoard] Positions empty: " + positionsEmpty);
+                    Dreamvisitor.debug("[updateBoard] Current position: " + pos);
 
                     int emptyPosition = pos - positionsEmpty;
 
                     RoyaltyBoard.replace(tribe, pos, emptyPosition);
+                    royaltyBoard = getBoard();
 
                     // Notify the user who has moved
                     java.util.UUID movedUser = royaltyBoard.get(tribe).getPos(emptyPosition).player;
                     if (movedUser != null) {
+                        Dreamvisitor.debug("[updateBoard] Moved user " + movedUser);
                         new Notification(movedUser, "You've been promoted!", "A player was removed from the royalty board and you moved into a higher position. Because of this, any challenges have been canceled.", Notification.Type.GENERIC).create();
 
                         // Remove challenges
@@ -383,7 +387,6 @@ public class RoyaltyBoard {
 
         if (updateDiscord && !oldPos.equals(royaltyBoard.get(tribe))) {
             try {
-                Dreamvisitor.debug("Updating Discord board for tribe " + tribe);
                 updateDiscordBoard(tribe);
             } catch (IOException e) {
                 Bukkit.getLogger().warning("Eye of Onyx was unable to update the Discord board!");
@@ -424,7 +427,7 @@ public class RoyaltyBoard {
      */
     public static void updateDiscordBoard(int tribeIndex) throws IOException {
 
-        Dreamvisitor.debug("Discord updating...");
+        Dreamvisitor.debug("[updateDiscordBoard] Updating Discord board for " + tribeIndex);
 
         // Get channel and message
         List<Long> messageIDs = plugin.getConfig().getLongList("royalty-board-message");
@@ -460,12 +463,12 @@ public class RoyaltyBoard {
                 String username = "N/A";
                 String joined = "";
 
-                Dreamvisitor.debug("Getting info for tribe " + tribeIndex + " position " + j);
+                Dreamvisitor.debug("[updateDiscordBoard] Getting info for tribe " + tribeIndex + " position " + j);
 
                 // Get info if not empty
                 java.util.UUID uuid = RoyaltyBoard.getUuid(tribeIndex, j);
                 if (uuid != null) {
-                    Dreamvisitor.debug("Player here");
+                    Dreamvisitor.debug("[updateDiscordBoard] Player " + uuid + " found.");
 
                     username = PlayerUtility.getUsernameOfUuid(uuid);
 
@@ -495,15 +498,13 @@ public class RoyaltyBoard {
                 final Long targetMessageId = messageIDs.get(tribeIndex);
                 try {
                     boardChannel.retrieveMessageById(targetMessageId).queue((targetMessage) -> targetMessage.editMessage(finalMessage).queue(), new ErrorHandler().handle(ErrorResponse.UNKNOWN_MESSAGE, (error) -> Bukkit.getLogger().warning("Unknwon Message! Couldn't get message " + targetMessageId)));
-
+                    Dreamvisitor.debug("[updateDiscordBoard] Message edit queued.");
                 } catch (InsufficientPermissionException e) {
-                    Bukkit.getLogger().warning("Main Bot does not have permission to get the royalty board message!");
+                    Bukkit.getLogger().warning("Main Bot does not have permission to get the royalty board message! " + e.getMessage());
                 }
             }
 
             // Update Discord roles
-            Dreamvisitor.debug("Updaing roles.");
-
             Bukkit.getScheduler().runTaskAsynchronously(EyeOfOnyx.getPlugin(), () -> {
                 removeRoles(tribeIndex);
                 applyRoles(tribeIndex);
@@ -534,11 +535,11 @@ public class RoyaltyBoard {
             } catch (NotFoundException ignored) {}
         }
 
-        Dreamvisitor.debug("Updating roles of UUID " + uuid + ". Tribe " + tribe + ", pos " + pos);
+        Dreamvisitor.debug("[updateRoles] Updating roles of UUID " + uuid + ". Tribe " + tribe + ", pos " + pos);
 
         FileConfiguration config = EyeOfOnyx.getPlugin().getConfig();
 
-        Dreamvisitor.debug("Getting guilds and roles...");
+        Dreamvisitor.debug("[updateRoles] Getting guilds and roles...");
 
         // Get guilds
         Guild mainGuild = Bot.getGameLogChannel().getGuild();
@@ -549,23 +550,23 @@ public class RoyaltyBoard {
         Role heirRole = Bot.getJda().getRoleById(config.getLong("main-royalty-roles.heir"));
         Role nobleRole = Bot.getJda().getRoleById(config.getLong("main-royalty-roles.noble"));
 
-        Dreamvisitor.debug("Getting member...");
+        Dreamvisitor.debug("[updateRoles] Getting member...");
         int finalPos = pos;
         mainGuild.retrieveMember(user).queue(member -> {
-            Dreamvisitor.debug("Got member. Null? " + (member == null));
+            Dreamvisitor.debug("[updateRoles] Got member. Null? " + (member == null));
 
             if (member != null) {
                 // Remove roles if applicable
-                Dreamvisitor.debug("Removing main guild roles if needed.");
-                Dreamvisitor.debug("Is pos RULER? " + (finalPos != RULER));
-                Dreamvisitor.debug("Is ruler role null? " + (rulerRole != null));
-                Dreamvisitor.debug("Does roles contain ruler? " + (member.getRoles().contains(rulerRole)));
+                Dreamvisitor.debug("[updateRoles] Removing main guild roles if needed.");
+                Dreamvisitor.debug("[updateRoles] Is pos RULER? " + (finalPos != RULER));
+                Dreamvisitor.debug("[updateRoles] Is ruler role null? " + (rulerRole != null));
+                Dreamvisitor.debug("[updateRoles] Does roles contain ruler? " + (member.getRoles().contains(rulerRole)));
                 if (finalPos != RULER && rulerRole != null && member.getRoles().contains(rulerRole)) mainGuild.removeRoleFromMember(member, rulerRole).queue();
                 if (finalPos != HEIR1 && finalPos != HEIR2 && finalPos != HEIR3 && heirRole != null && member.getRoles().contains(heirRole)) mainGuild.removeRoleFromMember(member, heirRole).queue();
                 if (finalPos != NOBLE1 && finalPos != NOBLE2 && finalPos != NOBLE3 && finalPos != NOBLE4 && finalPos != NOBLE5 && nobleRole != null && member.getRoles().contains(nobleRole)) mainGuild.removeRoleFromMember(member, nobleRole).queue();
 
                 // Add roles if applicable
-                Dreamvisitor.debug("Adding main guild roles if needed.");
+                Dreamvisitor.debug("[updateRoles] Adding main guild roles if needed.");
                 if (finalPos == RULER && rulerRole != null && !member.getRoles().contains(rulerRole)) mainGuild.addRoleToMember(member, rulerRole).queue();
                 if ((finalPos == HEIR1 || finalPos == HEIR2 || finalPos == HEIR3) && heirRole != null && !member.getRoles().contains(heirRole)) mainGuild.addRoleToMember(member, heirRole).queue();
                 if ((finalPos == NOBLE1 || finalPos == NOBLE2 || finalPos == NOBLE3 || finalPos == NOBLE4 || finalPos == NOBLE5) && nobleRole != null && !member.getRoles().contains(nobleRole)) mainGuild.addRoleToMember(member, nobleRole).queue();
@@ -613,7 +614,7 @@ public class RoyaltyBoard {
      */
     public static void removeRoles(int tribe) {
 
-        Dreamvisitor.debug("Removing roles...");
+        Dreamvisitor.debug("[removeRoles] Removing roles for tribe " + tribe);
         FileConfiguration config = EyeOfOnyx.getPlugin().getConfig();
 
         // Get guilds
@@ -624,14 +625,14 @@ public class RoyaltyBoard {
         Role heirRole = Bot.getJda().getRoleById(config.getLong("main-royalty-roles.heir"));
         Role nobleRole = Bot.getJda().getRoleById(config.getLong("main-royalty-roles.noble"));
 
-        Dreamvisitor.debug("Got main roles.");
+        Dreamvisitor.debug("[removeRoles] Got roles.");
 
         // Remove roles
         for (int pos = 0; pos < validPositions.length; pos++) {
-            Dreamvisitor.debug("Checking pos " + pos);
+            Dreamvisitor.debug("[removeRoles] Checking pos " + pos);
             java.util.UUID uuid = getBoardOf(tribe).getPos(pos).player;
 
-            Dreamvisitor.debug("UUID is " + uuid);
+            Dreamvisitor.debug("[removeRoles] UUID is " + uuid);
 
             if (uuid == null) continue;
 
@@ -653,11 +654,12 @@ public class RoyaltyBoard {
                 if (pos != RULER && rulerRole != null && member.getRoles().contains(rulerRole)) mainGuild.removeRoleFromMember(member, rulerRole).complete();
                 if (pos != HEIR1 && pos != HEIR2 && pos != HEIR3 && heirRole != null && member.getRoles().contains(heirRole)) mainGuild.removeRoleFromMember(member, heirRole).complete();
                 if (pos != NOBLE1 && pos != NOBLE2 && pos != NOBLE3 && pos != NOBLE4 && pos != NOBLE5 && nobleRole != null && member.getRoles().contains(nobleRole)) mainGuild.removeRoleFromMember(member, nobleRole).complete();
+                Dreamvisitor.debug("[removeRoles] Roles removed.");
             }
 
         }
 
-        Dreamvisitor.debug("Finished removing roles.");
+        Dreamvisitor.debug("[removeRoles] Finished removing roles.");
     }
 
     /**
@@ -667,65 +669,36 @@ public class RoyaltyBoard {
      */
     public static void applyRoles(int tribe) {
 
-        Dreamvisitor.debug("Applying roles...");
+        Dreamvisitor.debug("[applyRoles] Applying roles for tribe " + tribe);
         FileConfiguration config = EyeOfOnyx.getPlugin().getConfig();
 
-        Dreamvisitor.debug("ASYNC ap");
-
-        // Get guilds
+        // Get guild
         Guild mainGuild = Bot.getGameLogChannel().getGuild();
-        Guild sisterGuild = Bot.getJda().getGuildById(config.getLong("tribeGuildID"));
-
-        if (sisterGuild == null) {
-            Bukkit.getLogger().warning("Sister guild could not be found! Ensure the correct guild ID is set in the Eye of Onyx config.");
-        }
-
-        Dreamvisitor.debug("Got guilds.");
 
         // Get roles
         Role rulerRole = Bot.getJda().getRoleById(config.getLong("main-royalty-roles.ruler"));
         Role heirRole = Bot.getJda().getRoleById(config.getLong("main-royalty-roles.heir"));
         Role nobleRole = Bot.getJda().getRoleById(config.getLong("main-royalty-roles.noble"));
 
-        Dreamvisitor.debug("Got main roles.");
-
-        Role sisterTribeRole = null;
-        if (sisterGuild != null) {
-            List<Long> sisterRoyaltyRoles = config.getLongList("sister-royalty-roles");
-            sisterTribeRole = Bot.getJda().getRoleById(sisterRoyaltyRoles.get(tribe));
-        }
-
-        Dreamvisitor.debug("Got sister role. Checking positions...");
+        Dreamvisitor.debug("[applyRoles] Got roles.");
 
         // Check each position
         for (int pos = 0; pos < validPositions.length; pos++) {
 
-            Dreamvisitor.debug("Checking tribe " + tribe + " position " + pos);
+            Dreamvisitor.debug("[applyRoles] Checking tribe " + tribe + " position " + pos);
 
             // Skip if empty.
             // Not breaking from loop because up-to-date positions cannot be guaranteed,
             // and it's not that much extra computation.
             if (isPositionEmpty(tribe, pos)) continue;
 
-            Dreamvisitor.debug("Not empty");
+            Dreamvisitor.debug("[applyRoles] Not empty");
 
             // Get recorded user ID
             try {
-                Dreamvisitor.debug("Getting ID");
+                Dreamvisitor.debug("[applyRoles] Getting ID");
                 long userId = AccountLink.getDiscordId(Objects.requireNonNull(getUuid(tribe, pos)));
                 Member member;
-
-                // Get user and add role
-                if (sisterGuild != null) {
-                    try {
-                        member = sisterGuild.retrieveMemberById(userId).complete();
-                        if (sisterTribeRole != null) sisterGuild.addRoleToMember(member, sisterTribeRole).complete();
-                        else Dreamvisitor.debug("Added sister role");
-
-                    } catch (ErrorResponseException ignored) {
-                        Dreamvisitor.debug("User is not in sister server");
-                    }
-                }
 
                 // Get appropriate role
                 Role royaltyRole = null;
@@ -736,7 +709,7 @@ public class RoyaltyBoard {
                 member = mainGuild.retrieveMemberById(userId).complete();
                 if (royaltyRole != null) mainGuild.addRoleToMember(member, royaltyRole).complete();
 
-                Dreamvisitor.debug("Added main role");
+                Dreamvisitor.debug("[applyRoles] Added main role");
 
             } catch (NullPointerException e) {
 
@@ -749,6 +722,9 @@ public class RoyaltyBoard {
 
     public static void updatePermissions(@NotNull UUID uuid) {
         if (EyeOfOnyx.luckperms != null) {
+
+            Dreamvisitor.debug("[updatePermissions] Updating permissions for user " + uuid);
+
             // Get user manager
             UserManager userManager = EyeOfOnyx.luckperms.getUserManager();
             // Get user at tribe t and position p
@@ -762,7 +738,7 @@ public class RoyaltyBoard {
                 playerPos = getPositionIndexOfUUID(playerTribe, uuid);
             } catch (NotFoundException ignored) {}
 
-            Dreamvisitor.debug("Updating permissions of UUID " + uuid + " of tribe " + playerTribe + " pos " + playerPos);
+            Dreamvisitor.debug("[updatePermissions] Updating permissions of UUID " + uuid + " of tribe " + playerTribe + " pos " + playerPos);
 
             // Run async
             int finalPlayerPos = playerPos;
@@ -778,7 +754,7 @@ public class RoyaltyBoard {
                         String groupName = plugin.getConfig().getString(position + "." + tribeName);
 
                         if (groupName != null) {
-                            Dreamvisitor.debug("Removing group " + groupName + " from " + uuid);
+                            Dreamvisitor.debug("[updatePermissions] Removing group " + groupName + " from " + uuid);
                             // Get the group from lp and remove it from the user.
                             user.data().remove(Node.builder("group." + groupName).build());
 
@@ -802,7 +778,7 @@ public class RoyaltyBoard {
                     String groupName = plugin.getConfig().getString(group + "." + tribes[finalPlayerTribe]);
 
                     if (groupName != null) {
-                        Dreamvisitor.debug("Adding group " + groupName + " to " + uuid + " (pos " + finalPlayerPos + ")");
+                        Dreamvisitor.debug("[updatePermissions] Adding group " + groupName + " to " + uuid + " (pos " + finalPlayerPos + ")");
                         // Get the group from lp and add it to the user.
                         user.data().add(Node.builder("group." + groupName).build());
                     }
@@ -820,7 +796,7 @@ public class RoyaltyBoard {
      */
     public static void updatePermissions(int tribe) {
 
-        Dreamvisitor.debug("Updating LuckPerms permissions");
+        Dreamvisitor.debug("[updatePermissions] Updating LuckPerms permissions for tribe " + tribe);
         if (EyeOfOnyx.luckperms != null) {
 
             // Get user manager
@@ -833,7 +809,7 @@ public class RoyaltyBoard {
                 java.util.UUID uuid = getUuid(tribe, p);
                 if (uuid != null) {
 
-                    Dreamvisitor.debug("Checking permissions of tribe " + tribe + " pos " + p + ", which is occupied by UUID " + uuid);
+                    Dreamvisitor.debug("[updatePermissions] Checking permissions of tribe " + tribe + " pos " + p + ", which is occupied by UUID " + uuid);
 
                     // Get user at tribe t and position p
                     CompletableFuture<User> userFuture = userManager.loadUser(uuid);
@@ -1116,6 +1092,7 @@ public class RoyaltyBoard {
      * @param toPos the second position to swap.
      */
     public static void replace(int tribe, int fromPos, int toPos) {
+        Dreamvisitor.debug("[replace] Replacing tribe " + tribe + " from pos " + fromPos + "(" + getUuid(tribe, fromPos) + ") to pos " + toPos + " (" + getUuid(tribe, toPos) + ")");
         Map<Integer, BoardState> royaltyBoard = getBoard();
         royaltyBoard.put(tribe, royaltyBoard.get(tribe).replace(fromPos, toPos));
         saveToDisk(royaltyBoard);
@@ -1129,17 +1106,17 @@ public class RoyaltyBoard {
      */
     public static void removePlayer(int tribe, int pos, boolean complete) {
         Map<Integer, BoardState> royaltyBoard = getBoard();
-        Dreamvisitor.debug("Removing player at tribe " + tribe + " pos " + pos + ". Complete? " + complete);
+        Dreamvisitor.debug("[removePlayer] Removing player at tribe " + tribe + " pos " + pos + ". Complete? " + complete);
         java.util.UUID uuid = null;
         if (complete) uuid = royaltyBoard.get(tribe).getPos(pos).player;
-        Dreamvisitor.debug("UUID: " + uuid);
+        Dreamvisitor.debug("[removePlayer] UUID: " + uuid);
         royaltyBoard.put(tribe, royaltyBoard.get(tribe).clear(pos));
         if (uuid != null) {
-            Dreamvisitor.debug("Updating permissions...");
+            Dreamvisitor.debug("[removePlayer] Updating permissions...");
             updatePermissions(uuid);
             try {
                 long discordId = AccountLink.getDiscordId(uuid);
-                Dreamvisitor.debug("Player has a linked Discord account by ID " + discordId + ". Updating roles...");
+                Dreamvisitor.debug("[removePlayer] Player has a linked Discord account by ID " + discordId + ". Updating roles...");
                 Bot.getJda().retrieveUserById(discordId).queue(RoyaltyBoard::updateRoles);
             } catch (NullPointerException ignored) {}
         }
