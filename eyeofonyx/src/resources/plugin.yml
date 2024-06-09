@@ -1,6 +1,6 @@
 main: io.github.stonley890.eyeofonyx.EyeOfOnyx
 name: EyeOfOnyx
-version: 1.3.1
+version: 1.3.2
 api-version: 1.19
 description: A plugin that manages the royalty board on Wings of Fire The New World
 authors: [Stonley890, iHeron]
@@ -11,32 +11,32 @@ softdepend:
   - OpenRP
   - LuckPerms
 
-commands:
-  eyeofonyx:
-    description: Manage Eye of Onyx.
-    usage: /<command> <ban|unban|freeze|disable|config|senddiscord>
-  royalty:
-    description: Access or manage the royalty board.
-    usage: /<command> <set|list|clear|update|manage>
-  challenge:
-    description: Initiate a challenge.
-    usage: /<command>
-    permission: eyeofonyx.challenge
-  competition:
-    description: Control challenges.
-    usage: /<command> <player> type <challenge type>
-    permission: eyeofonyx.managechallenge
-  updateplayer:
-    description: Update stored player tribes in Eye of Onyx.
-    usage: /<command> <targets>
-    permission: op
-  forfeit:
-    description: Remove yourself from the royalty board.
-    usage: /<command>
-  royalinfo:
-    description: Get information about a royalty position.
-    usage: /<command> <tribe> <position>
-    permission: eyeofonyx.royalinfo
+#commands:
+#  eyeofonyx:
+#    description: Manage Eye of Onyx.
+#    usage: /<command> <ban|unban|freeze|disable|config|senddiscord>
+#  royalty:
+#    description: Access or manage the royalty board.
+#    usage: /<command> <set|list|clear|update|manage>
+#  challenge:
+#    description: Initiate a challenge.
+#    usage: /<command>
+#    permission: eyeofonyx.challenge
+#  competition:
+#    description: Control challenges.
+#    usage: /<command> <player> type <challenge type>
+#    permission: eyeofonyx.managechallenge
+#  updateplayer:
+#    description: Update stored player tribes in Eye of Onyx.
+#    usage: /<command> <targets>
+#    permission: op
+#  forfeit:
+#    description: Remove yourself from the royalty board.
+#    usage: /<command>
+#  royalinfo:
+#    description: Get information about a royalty position.
+#    usage: /<command> <tribe> <position>
+#    permission: eyeofonyx.royalinfo
 
 permissions:
   eyeofonyx.challenge:

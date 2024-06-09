@@ -3,14 +3,14 @@ package io.github.stonley890.eyeofonyx.web;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import io.github.stonley890.dreamvisitor.Dreamvisitor;
+import io.github.stonley890.dreamvisitor.data.PlayerTribe;
 import io.github.stonley890.dreamvisitor.data.PlayerUtility;
+import io.github.stonley890.dreamvisitor.data.Tribe;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import io.github.stonley890.eyeofonyx.commands.CmdChallenge;
 import io.github.stonley890.eyeofonyx.files.Challenge;
 import io.github.stonley890.eyeofonyx.files.Notification;
-import io.github.stonley890.eyeofonyx.files.PlayerTribe;
 import io.github.stonley890.eyeofonyx.files.RoyaltyBoard;
-import javassist.NotFoundException;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
@@ -28,7 +28,6 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 public class SubmitHandler implements HttpHandler {
     private static String getHtml(String errorExplanation) {
@@ -175,57 +174,25 @@ public class SubmitHandler implements HttpHandler {
                             }
                         }
 
-                        int playerTribe = 0;
-                        try {
-                            playerTribe = PlayerTribe.getTribeOfPlayer(player.getUniqueId());
-                        } catch (NotFoundException e) {
+                        Tribe playerTribe;
+                        playerTribe = PlayerTribe.getTribeOfPlayer(player.getUniqueId());
+                        if (playerTribe == null) {
                             // Player has no associated tribe (should not happen)
                             sendInvalid(httpExchange, "You do not have an associated tribe! Contact a staff member.");
                             player.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You do not have an associated tribe! Contact a staff member.");
-                        }
-
-                        Dreamvisitor.debug("Finding attacker.");
-                        // Notify attacker
-                        UUID attackerUuid = null;
-                        try {
-                            attackerUuid = RoyaltyBoard.getAttacker(playerTribe, RoyaltyBoard.getPositionIndexOfUUID(player.getUniqueId()));
-                        } catch (NotFoundException e) {
-                            // Player has no associated tribe (should not happen)
-                            sendInvalid(httpExchange, "You do not have an associated tribe! Contact a staff member.");
-                            player.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You do not have an associated tribe! Contact a staff member.");
-                        }
-
-                        if (attackerUuid == null) {
-
-                            Bukkit.getLogger().warning("Could not find attacker.");
-
-                            // Could not find the attacker
-                            Bukkit.getLogger().warning("Could not find attacker of player " + player.getUniqueId() + "\nTribe: " + playerTribe + "\n");
-                            player.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "There was a problem finding your challenger. Please contact a staff member.");
-
-                            sendInvalid(httpExchange, "There was a problem finding your challenger. Please contact a staff member.");
                             return;
                         }
 
-                        // Set attacker in board.yml
-                        try {
-                            RoyaltyBoard.setAttacker(playerTribe, RoyaltyBoard.getPositionIndexOfUUID(player.getUniqueId()), attackerUuid);
-                        } catch (NotFoundException e) {
-                            // Player has no associated tribe (should not happen)
-                            sendInvalid(httpExchange, "You do not have an associated tribe! Contact a staff member.");
-                            player.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You do not have an associated tribe! Contact a staff member.");
+                        Dreamvisitor.debug("Finding attacker.");
+                        Challenge challenge = Challenge.getChallenge(player.getUniqueId());
+                        if (challenge == null) {
+                            player.sendMessage(EyeOfOnyx.EOO + net.md_5.bungee.api.ChatColor.RED + "Your challenge could not be found! Contact a staff member.");
+                            return;
                         }
-                        Dreamvisitor.debug("Set data in board.yml");
 
                         // Modify challenge
-                        UUID finalAttackerUuid = attackerUuid;
-                        Player finalPlayer = player;
                         Bukkit.getScheduler().runTaskAsynchronously(EyeOfOnyx.getPlugin(), () -> {
-                            Challenge challenge = Challenge.getChallengeOfPlayers(finalAttackerUuid, finalPlayer.getUniqueId());
-                            if (challenge == null) {
-                                finalPlayer.sendMessage(EyeOfOnyx.EOO + net.md_5.bungee.api.ChatColor.RED + "Your challenge could not be found! Contact a staff member.");
-                                return;
-                            }
+                            challenge.time = availabilities;
                             challenge.state = Challenge.State.ACCEPTED;
                             challenge.save();
 

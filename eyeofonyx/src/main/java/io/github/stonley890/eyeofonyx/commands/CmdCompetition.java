@@ -1,18 +1,18 @@
 package io.github.stonley890.eyeofonyx.commands;
 
-import io.github.stonley890.dreamvisitor.data.PlayerUtility;
+import dev.jorel.commandapi.CommandAPI;
+import dev.jorel.commandapi.CommandAPICommand;
+import dev.jorel.commandapi.ExecutableCommand;
+import dev.jorel.commandapi.arguments.ArgumentSuggestions;
+import dev.jorel.commandapi.arguments.StringArgument;
+import io.github.stonley890.dreamvisitor.data.Tribe;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import io.github.stonley890.eyeofonyx.challenges.Competition;
 import io.github.stonley890.eyeofonyx.files.BoardState;
 import io.github.stonley890.eyeofonyx.files.RoyaltyAction;
 import io.github.stonley890.eyeofonyx.files.RoyaltyBoard;
-import javassist.NotFoundException;
-import net.md_5.bungee.api.chat.ComponentBuilder;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
@@ -20,209 +20,112 @@ import java.io.IOException;
 import java.util.Objects;
 
 
-public class CmdCompetition implements CommandExecutor {
+public class CmdCompetition {
 
-    @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String s, @NotNull String[] args) {
+    @NotNull
+    public ExecutableCommand<?, ?> getCommand() {
+        return new CommandAPICommand("competition")
+                .withHelp("Control challenges.", "Control active challenges.")
+                .withPermission("eyeofonyx.managechallenge")
+                .withSubcommands(
+                        new CommandAPICommand("start")
+                                .executesNative((sender, args) -> {
+                                    if (Competition.activeChallenge == null) throw CommandAPI.failWithString("There is no currently active challenge.");
+                                    else if (!Competition.activeChallenge.started) {
 
-        if (args.length == 0) {
-            // Send information
+                                        // Get participants as players
+                                        Player attacker = Bukkit.getPlayer(Competition.activeChallenge.attacker);
+                                        Player defender = Bukkit.getPlayer(Competition.activeChallenge.defender);
 
-            if (Competition.activeChallenge == null) sender.sendMessage(EyeOfOnyx.EOO + "There is no currently active challenge. Create one with /challenge create <attacker> <defender>");
-            else {
-                // competition
-                // Print into about competition
-                ComponentBuilder builder = new ComponentBuilder(EyeOfOnyx.EOO);
+                                        // Ensure both players are online
+                                        if (attacker != null && defender != null) {
 
-                int attackerPosIndex = 0;
-                try {
-                    attackerPosIndex = RoyaltyBoard.getPositionIndexOfUUID(Competition.activeChallenge.attacker);
-                } catch (NotFoundException e) {
-                    // Attacker does not have an associate tribe (should not happen)
-                    sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Attacker does not have an associated tribe!");
-                }
-                String attackerPos;
-                if (attackerPosIndex == RoyaltyBoard.CIVILIAN) {
-                    attackerPos = "CIVILIAN";
-                } else {
-                    attackerPos = RoyaltyBoard.getValidPositions()[attackerPosIndex].toUpperCase().replace('_', ' ');
-                }
+                                            // Add scoreboard tags
+                                            try {
+                                                Objects.requireNonNull(Objects.requireNonNull(Bukkit.getScoreboardManager()).getMainScoreboard().getTeam("eoo.attacker")).addEntry(attacker.getName());
+                                                Objects.requireNonNull(Bukkit.getScoreboardManager().getMainScoreboard().getTeam("eoo.defender")).addEntry(defender.getName());
+                                            } catch (NullPointerException e) {
+                                                throw CommandAPI.failWithString("Teams eoo.attacker or eoo.defender do not exist!");
+                                            }
+                                            // Start challenge
+                                            Competition.activeChallenge.started = true;
 
-                try {
-                    builder.append("Competition Information\n")
-                            .append("Tribe: ").append(RoyaltyBoard.getTribes()[Competition.activeChallenge.tribe])
-                            .append("Attacker: ").append(attackerPos).append(" ").append(PlayerUtility.getUsernameOfUuid(Competition.activeChallenge.attacker))
-                            .append("Defender: ").append(RoyaltyBoard.getValidPositions()[RoyaltyBoard.getPositionIndexOfUUID(Competition.activeChallenge.defender)].toUpperCase().replace('_', ' ')).append(" ").append(PlayerUtility.getUsernameOfUuid(Competition.activeChallenge.attacker));
-                } catch (NotFoundException e) {
-                    // Attacker does not have an associate tribe (should not happen)
-                    sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Attacker does not have an associated tribe!");
-                }
+                                            sender.sendMessage(EyeOfOnyx.EOO + "Competition is now started.");
+                                        } else {
+                                            throw CommandAPI.failWithString("Both players must be online!");
+                                        }
+                                    } else throw CommandAPI.failWithString("This challenge has already started!");
+                                }),
+                        new CommandAPICommand("cancel")
+                                .executesNative((sender, args) -> {
+                                    if (Competition.activeChallenge == null) throw CommandAPI.failWithString("There is no currently active challenge.");
+                                    else {
+                                        // delete competition
+                                        Tribe tribe = Competition.activeChallenge.tribe;
 
-                sender.spigot().sendMessage(builder.create());
-            }
-        } else {
-            // competition <action>
-            switch (args[0]) {
-                case "start" -> {
-                    if (Competition.activeChallenge == null) sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "There is no currently active challenge.");
-                    else if (!Competition.activeChallenge.started) {
+                                        // Set teams back
+                                        Objects.requireNonNull(Objects.requireNonNull(Bukkit.getScoreboardManager()).getMainScoreboard().getTeam(tribe.getTeamName())).addEntry(Objects.requireNonNull(Bukkit.getPlayer(Competition.activeChallenge.attacker)).getName());
+                                        Objects.requireNonNull(Bukkit.getScoreboardManager().getMainScoreboard().getTeam(tribe.getTeamName())).addEntry(Objects.requireNonNull(Bukkit.getPlayer(Competition.activeChallenge.defender)).getName());
 
-                        // Get participants as players
-                        Player attacker = Bukkit.getPlayer(Competition.activeChallenge.attacker);
-                        Player defender = Bukkit.getPlayer(Competition.activeChallenge.defender);
+                                        Competition.activeChallenge = null;
 
-                        // Ensure both players are online
-                        if (attacker != null && defender != null) {
+                                        sender.sendMessage(EyeOfOnyx.EOO + "Competition canceled.");
+                                    }
+                                }),
+                        new CommandAPICommand("end")
+                                .withArguments(new StringArgument("winner").includeSuggestions(ArgumentSuggestions.strings(
+                                        "attacker", "defender"
+                                )))
+                                .executesNative((sender, args) -> {
+                                    if (Competition.activeChallenge == null)
+                                        throw CommandAPI.failWithString("There is no currently active challenge.");
+                                    else if (Competition.activeChallenge.started) {
 
-                            int tribe = Competition.activeChallenge.tribe;
+                                        // Get positions
+                                        int attackerPos;
+                                        int defenderPos;
+                                        attackerPos = RoyaltyBoard.getPositionIndexOfUUID(Competition.activeChallenge.attacker);
+                                        defenderPos = RoyaltyBoard.getPositionIndexOfUUID(Competition.activeChallenge.defender);
 
-                            BoardState oldBoard = RoyaltyBoard.getBoardOf(tribe).clone();
+                                        Tribe tribe = Competition.activeChallenge.tribe;
+                                        BoardState oldBoard = RoyaltyBoard.getBoardOf(tribe).clone();
 
-                            // Get positions
-                            int attackerPos;
-                            int defenderPos;
-                            try {
-                                defenderPos = RoyaltyBoard.getPositionIndexOfUUID(Competition.activeChallenge.defender);
-                                attackerPos = RoyaltyBoard.getPositionIndexOfUUID(Competition.activeChallenge.attacker);
+                                        String winner = (String) args.get("winner");
 
-                                RoyaltyBoard.setAttacker(tribe, defenderPos, null);
-                                RoyaltyBoard.setAttacking(tribe, attackerPos, null);
-                            } catch (NotFoundException e) {
-                                // No associated tribe (should not happen)
-                                sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "One or more players do not have an associated tribe. Royalty board values will not be set.");
-                            }
+                                        assert winner != null;
+                                        if (winner.equals("attacker")) {
 
-                            // Add scoreboard tags
-                            Objects.requireNonNull(Objects.requireNonNull(Bukkit.getScoreboardManager()).getMainScoreboard().getTeam("eoo.attacker")).addEntry(attacker.getName());
-                            Objects.requireNonNull(Bukkit.getScoreboardManager().getMainScoreboard().getTeam("eoo.defender")).addEntry(defender.getName());
-                            // Start challenge
-                            Competition.activeChallenge.started = true;
+                                            RoyaltyBoard.replace(tribe, attackerPos, defenderPos);
+                                            RoyaltyBoard.removePlayer(tribe, attackerPos, true);
+                                            RoyaltyBoard.updatePermissions(Competition.activeChallenge.attacker);
+                                            RoyaltyBoard.updatePermissions(Competition.activeChallenge.defender);
+                                            RoyaltyBoard.updateBoard(tribe, false);
+                                            RoyaltyBoard.updateDiscordBoard(tribe);
 
-                            BoardState newBoard = RoyaltyBoard.getBoardOf(tribe).clone();
-                            RoyaltyBoard.reportChange(new RoyaltyAction(sender.getName(), tribe, newBoard, oldBoard));
+                                        } else if (winner.equals("defender")) {
 
-                            sender.sendMessage(EyeOfOnyx.EOO + "Competition is now started.");
-                        } else {
-                            sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Both players must be online!");
-                        }
-                    } else sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "This challenge has already started!");
+                                            // Defender win; remove attacker
+                                            RoyaltyBoard.removePlayer(Competition.activeChallenge.tribe, attackerPos, true);
+                                            RoyaltyBoard.updateBoard(tribe, false);
+                                            RoyaltyBoard.updateDiscordBoard(tribe);
 
+                                        } else throw CommandAPI.failWithString("Incorrect arguments! /competition end <attacker|defender>");
 
-                }
-                case "cancel" -> {
+                                        // Set teams back
+                                        Objects.requireNonNull(Objects.requireNonNull(Bukkit.getScoreboardManager()).getMainScoreboard().getTeam(tribe.getTeamName())).addEntry(Objects.requireNonNull(Bukkit.getPlayer(Competition.activeChallenge.attacker)).getName());
+                                        Objects.requireNonNull(Bukkit.getScoreboardManager().getMainScoreboard().getTeam(tribe.getTeamName())).addEntry(Objects.requireNonNull(Bukkit.getPlayer(Competition.activeChallenge.defender)).getName());
 
-                    if (Competition.activeChallenge == null) sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "There is no currently active challenge.");
-                    else {
-                        // Clear values in board.yml and delete competition
+                                        Competition.activeChallenge = null;
 
-                        int tribe = Competition.activeChallenge.tribe;
+                                        BoardState newBoard = RoyaltyBoard.getBoardOf(tribe);
+                                        RoyaltyBoard.reportChange(new RoyaltyAction(sender.getName(), tribe, oldBoard.clone(), newBoard));
 
-                        BoardState oldBoard = RoyaltyBoard.getBoardOf(tribe).clone();
+                                        RoyaltyBoard.updateDiscordBoard(tribe);
 
-                        // Get positions
-                        int attackerPos;
-                        int defenderPos;
-                        try {
-                            defenderPos = RoyaltyBoard.getPositionIndexOfUUID(Competition.activeChallenge.defender);
-                            attackerPos = RoyaltyBoard.getPositionIndexOfUUID(Competition.activeChallenge.attacker);
+                                        sender.sendMessage(EyeOfOnyx.EOO + "Board updated.");
 
-                            RoyaltyBoard.setAttacker(tribe, defenderPos, null);
-                            RoyaltyBoard.setAttacking(tribe, attackerPos, null);
-                        } catch (NotFoundException e) {
-                            // No associated tribe (should not happen)
-                            sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "One or more players do not have an associated tribe. Royalty board values will not be set.");
-                        }
-
-                        BoardState newBoard = RoyaltyBoard.getBoardOf(tribe).clone();
-                        RoyaltyBoard.reportChange(new RoyaltyAction(sender.getName(), tribe, oldBoard, newBoard));
-
-                        // Set teams back
-                        Objects.requireNonNull(Objects.requireNonNull(Bukkit.getScoreboardManager()).getMainScoreboard().getTeam(RoyaltyBoard.getTeamNames()[tribe])).addEntry(Objects.requireNonNull(Bukkit.getPlayer(Competition.activeChallenge.attacker)).getName());
-                        Objects.requireNonNull(Bukkit.getScoreboardManager().getMainScoreboard().getTeam(RoyaltyBoard.getTeamNames()[tribe])).addEntry(Objects.requireNonNull(Bukkit.getPlayer(Competition.activeChallenge.defender)).getName());
-
-                        Competition.activeChallenge = null;
-
-                        sender.sendMessage(EyeOfOnyx.EOO + "Competition canceled.");
-                    }
-                }
-                case "end" -> {
-
-                    if (Competition.activeChallenge == null) sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "There is no currently active challenge.");
-                    else if (Competition.activeChallenge.started) {
-
-                        if (args.length < 2) {
-                            sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Missing arguments! /competition end <attacker|defender>");
-                        } else {
-
-                            // Get positions
-                            int attackerPos;
-                            int defenderPos;
-                            try {
-                                attackerPos = RoyaltyBoard.getPositionIndexOfUUID(Competition.activeChallenge.attacker);
-                                defenderPos = RoyaltyBoard.getPositionIndexOfUUID(Competition.activeChallenge.defender);
-                            } catch (NotFoundException e) {
-                                throw new RuntimeException(e);
-                            }
-
-                            int tribe = Competition.activeChallenge.tribe;
-                            BoardState oldBoard = RoyaltyBoard.getBoardOf(tribe).clone();
-
-                            if (args[1].equals("attacker")) {
-
-                                RoyaltyBoard.setAttacking(tribe, attackerPos, null);
-                                RoyaltyBoard.replace(tribe, attackerPos, defenderPos);
-                                RoyaltyBoard.removePlayer(tribe, attackerPos, true);
-                                RoyaltyBoard.updateBoard(tribe, false);
-                                try {
-                                    RoyaltyBoard.updateDiscordBoard(tribe);
-                                } catch (IOException e) {
-                                    Bukkit.getLogger().warning("Unable to update Discord board.");
-                                }
-
-                            } else if (args[1].equals("defender")) {
-
-                                // Defender win; remove attacker
-                                RoyaltyBoard.removePlayer(Competition.activeChallenge.tribe, attackerPos, true);
-                                RoyaltyBoard.setAttacker(tribe, defenderPos, null);
-                                RoyaltyBoard.updateBoard(tribe, false);
-                                try {
-                                    RoyaltyBoard.updateDiscordBoard(tribe);
-                                } catch (IOException e) {
-                                    Bukkit.getLogger().warning("Unable to update Discord board.");
-                                }
-
-                            } else {
-                                sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Incorrect arguments! /competition end <attacker|defender>");
-                                return true;
-                            }
-
-                            // Set teams back
-                            Objects.requireNonNull(Objects.requireNonNull(Bukkit.getScoreboardManager()).getMainScoreboard().getTeam(RoyaltyBoard.getTeamNames()[tribe])).addEntry(Objects.requireNonNull(Bukkit.getPlayer(Competition.activeChallenge.attacker)).getName());
-                            Objects.requireNonNull(Bukkit.getScoreboardManager().getMainScoreboard().getTeam(RoyaltyBoard.getTeamNames()[tribe])).addEntry(Objects.requireNonNull(Bukkit.getPlayer(Competition.activeChallenge.defender)).getName());
-
-                            Competition.activeChallenge = null;
-
-                            BoardState newBoard = RoyaltyBoard.getBoardOf(tribe);
-                            RoyaltyBoard.reportChange(new RoyaltyAction(sender.getName(), tribe, oldBoard.clone(), newBoard));
-
-                            try {
-                                RoyaltyBoard.updateDiscordBoard(tribe);
-                            } catch (IOException e) {
-                                sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "An I/O error occurred while attempting to update Discord board.");
-                            }
-
-                            sender.sendMessage(EyeOfOnyx.EOO + "Board updated.");
-
-                        }
-
-                    } else sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "This challenge hasn't yet started!");
-
-                }
-                default ->
-                        sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Incorrect arguments! /competition <action> [value]");
-            }
-        }
-
-        return true;
+                                    } else throw CommandAPI.failWithString("This challenge hasn't yet started!");
+                                })
+                );
     }
 }

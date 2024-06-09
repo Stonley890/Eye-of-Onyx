@@ -1,18 +1,22 @@
 package io.github.stonley890.eyeofonyx;
 
 import com.sun.net.httpserver.HttpServer;
+import dev.jorel.commandapi.CommandAPICommand;
+import dev.jorel.commandapi.CommandTree;
+import dev.jorel.commandapi.ExecutableCommand;
 import io.github.stonley890.dreamvisitor.Bot;
 import io.github.stonley890.dreamvisitor.Dreamvisitor;
+import io.github.stonley890.dreamvisitor.data.PlayerTribe;
+import io.github.stonley890.dreamvisitor.data.Tribe;
+import io.github.stonley890.dreamvisitor.data.TribeUtil;
 import io.github.stonley890.eyeofonyx.challenges.Competition;
 import io.github.stonley890.eyeofonyx.commands.*;
-import io.github.stonley890.eyeofonyx.commands.tabcomplete.*;
 import io.github.stonley890.eyeofonyx.discord.Discord;
 import io.github.stonley890.eyeofonyx.files.*;
 import io.github.stonley890.eyeofonyx.listeners.ListenJoin;
 import io.github.stonley890.eyeofonyx.listeners.ListenLeave;
 import io.github.stonley890.eyeofonyx.web.AvailabilityHandler;
 import io.github.stonley890.eyeofonyx.web.SubmitHandler;
-import javassist.NotFoundException;
 import net.luckperms.api.LuckPerms;
 import net.md_5.bungee.api.ChatColor;
 import openrp.OpenRP;
@@ -26,6 +30,7 @@ import org.shanerx.mojang.Mojang;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -70,7 +75,6 @@ public class EyeOfOnyx extends JavaPlugin {
             Notification.setup();
             Challenge.setup();
             MessageFormat.setup();
-            PlayerTribe.setup();
         } catch (IOException e) {
             Bukkit.getLogger().warning("An I/O exception of some sort has occurred. Eye of Onyx could not initialize files. Does the server have write access?");
         }
@@ -80,20 +84,22 @@ public class EyeOfOnyx extends JavaPlugin {
         RoyaltyBoard.setFrozen(getConfig().getBoolean("frozen"));
 
         Dreamvisitor.debug("Setting up commands.");
-        // Initialize command executors
-        Objects.requireNonNull(getCommand("eyeofonyx")).setExecutor(new CmdEyeOfOnyx());
-        Objects.requireNonNull(getCommand("royalty")).setExecutor(new CmdRoyalty());
-        Objects.requireNonNull(getCommand("challenge")).setExecutor(new CmdChallenge());
-        Objects.requireNonNull(getCommand("competition")).setExecutor(new CmdCompetition());
-        Objects.requireNonNull(getCommand("updateplayer")).setExecutor(new CmdUpdatePlayer());
-        Objects.requireNonNull(getCommand("forfeit")).setExecutor(new CmdForfeit());
 
-        // Initialize tab completer
-        Objects.requireNonNull(getCommand("royalty")).setTabCompleter(new TabRoyalty());
-        Objects.requireNonNull(getCommand("eyeofonyx")).setTabCompleter(new TabEyeOfOnyx());
-        Objects.requireNonNull(getCommand("competition")).setTabCompleter(new TabCompetition());
-        Objects.requireNonNull(getCommand("updateplayer")).setTabCompleter(new TabUpdatePlayer());
-        Objects.requireNonNull(getCommand("challenge")).setTabCompleter(new TabChallenge());
+        // Initialize command executors
+        List<ExecutableCommand<?, ?>> commands = new ArrayList<>();
+        commands.add(new CmdEyeOfOnyx().getCommand());
+        commands.add(new CmdChallenge().getCommand());
+        commands.add(new CmdCompetition().getCommand());
+        commands.add(new CmdUpdatePlayer().getCommand());
+        commands.add(new CmdForfeit().getCommand());
+
+        for (ExecutableCommand<?, ?> command : commands) {
+            if (command instanceof CommandAPICommand apiCommand) {
+                apiCommand.register();
+            } else if (command instanceof CommandTree apiCommand) {
+                apiCommand.register();
+            }
+        }
 
         // Initialize listeners
         getServer().getPluginManager().registerEvents(new ListenJoin(), this);
@@ -144,58 +150,56 @@ public class EyeOfOnyx extends JavaPlugin {
                 }
 
                 // Check for unnoticed challenges
-                for (int tribe = 0; tribe < RoyaltyBoard.getTribes().length; tribe++) {
+                for (int t = 0; t < TribeUtil.tribes.length; t++) {
+                    Tribe tribe = TribeUtil.tribes[t];
                     for (int pos = 0; pos < RoyaltyBoard.getValidPositions().length; pos++) {
                         UUID uuid = RoyaltyBoard.getUuid(tribe, pos);
-                        if (uuid != null)
-                            try {
-                                List<Notification> notifications = Notification.getNotificationsOfPlayer(uuid);
+                        if (uuid != null) {
+                            List<Notification> notifications = Notification.getNotificationsOfPlayer(uuid);
 
-                                for (Notification notification : notifications) {
-                                    // If notification is CHALLENGE_REQUESTED and time is beyond challenge-acknowledgement-time
-                                    if (notification.type == Notification.Type.CHALLENGE_REQUESTED && notification.time.isBefore(LocalDateTime.now().minusDays(getConfig().getInt("challenge-acknowledgement-time")))) {
+                            for (Notification notification : notifications) {
+                                // If notification is CHALLENGE_REQUESTED and time is beyond challenge-acknowledgement-time
+                                if (notification.type == Notification.Type.CHALLENGE_REQUESTED && notification.time.isBefore(LocalDateTime.now().minusDays(getConfig().getInt("challenge-acknowledgement-time")))) {
 
-                                        // Check if it was seen or not
-                                        if (!notification.seen) {
+                                    // Check if it was seen or not
+                                    if (!notification.seen) {
 
-                                            // If seen, cancel the challenge.
-                                            Challenge.removeChallengesOfPlayers(uuid, RoyaltyBoard.getAttacker(tribe, pos));
+                                        // If seen, cancel the challenge.
+                                        Challenge challenge = Challenge.getChallenge(uuid);
 
-                                            // Send expired notification to defender
-                                            Notification.removeNotification(notification);
-                                            new Notification(uuid, "You missed a challenge notification.", "You did not acknowledge a challenge request within the allowed time, but you will remain on the royalty board because you were unable to receive it.", Notification.Type.GENERIC).create();
+                                        // Send expired notification to defender
+                                        Notification.removeNotification(notification);
+                                        new Notification(uuid, "You missed a challenge notification.", "You did not acknowledge a challenge request within the allowed time, but you will remain on the royalty board because you were unable to receive it.", Notification.Type.GENERIC).create();
 
+                                        if (challenge != null) {
                                             // Send notification to attacker
-                                            UUID attackerUuid = RoyaltyBoard.getAttacker(PlayerTribe.getTribeOfPlayer(uuid), RoyaltyBoard.getPositionIndexOfUUID(uuid));
-                                            if (attackerUuid != null) {
-                                                String defenderUsername = new Mojang().connect().getPlayerProfile(uuid.toString()).getUsername();
-                                                new Notification(attackerUuid, "Your challenge to " + defenderUsername + " was not seen.", "Your challenge request was nullified because the user you challenged was unable to receive the notification.", Notification.Type.GENERIC).create();
-                                            }
+                                            UUID attackerUuid = challenge.attacker;
+                                            String defenderUsername = new Mojang().connect().getPlayerProfile(uuid.toString()).getUsername();
+                                            new Notification(attackerUuid, "Your challenge to " + defenderUsername + " was not seen.", "Your challenge request was nullified because the user you challenged was unable to receive the notification.", Notification.Type.GENERIC).create();
 
                                             // Set data
-                                            RoyaltyBoard.setAttacker(tribe, pos, null);
-
-                                        } else {
-                                            // Kick from board if seen and ignored.
-
-                                            // Remove all notifications that are CHALLENGE_REQUESTED
-                                            Notification.removeNotificationsOfPlayer(uuid, Notification.Type.CHALLENGE_REQUESTED);
-
-                                            new Notification(uuid, "You were removed from the royalty board!", "You did not acknowledge a challenge request within the allowed time.", Notification.Type.GENERIC).create();
-
-                                            RoyaltyBoard.removePlayer(tribe, pos, true);
-                                            RoyaltyBoard.updateBoard(tribe, false);
-                                            RoyaltyBoard.updateDiscordBoard(tribe);
-
-                                            break;
+                                            Challenge.remove(challenge);
                                         }
 
-                                    }
-                                }
+                                    } else {
+                                        // Kick from board if seen and ignored.
 
-                            } catch (IOException | NotFoundException e) {
-                                throw new RuntimeException(e);
+                                        // Remove all notifications that are CHALLENGE_REQUESTED
+                                        Notification.removeNotificationsOfPlayer(uuid, Notification.Type.CHALLENGE_REQUESTED);
+
+                                        new Notification(uuid, "You were removed from the royalty board!", "You did not acknowledge a challenge request within the allowed time.", Notification.Type.GENERIC).create();
+
+                                        RoyaltyBoard.removePlayer(tribe, pos, true);
+                                        RoyaltyBoard.updateBoard(tribe, false);
+                                        RoyaltyBoard.updateDiscordBoard(tribe);
+
+                                        break;
+                                    }
+
+                                }
                             }
+
+                        }
                     }
                 }
 
@@ -203,8 +207,8 @@ public class EyeOfOnyx extends JavaPlugin {
                 if (EyeOfOnyx.openrp != null) {
                     for (Player player : Bukkit.getOnlinePlayers()) {
 
-                        try {
-                            int tribe = PlayerTribe.getTribeOfPlayer(player.getUniqueId());
+                        Tribe tribe = PlayerTribe.getTribeOfPlayer(player.getUniqueId());
+                        if (tribe != null) {
                             int pos = RoyaltyBoard.getPositionIndexOfUUID(tribe, player.getUniqueId());
 
                             if (pos != RoyaltyBoard.CIVILIAN) {
@@ -215,14 +219,8 @@ public class EyeOfOnyx extends JavaPlugin {
                                     RoyaltyBoard.updateDiscordBoard(tribe);
                                 }
                             }
-
-
-                        } catch (NotFoundException ignored) {
-
-                        } catch (IOException e) {
-                            Bukkit.getLogger().warning("Eye of Onyx was unable to edit the Discord royalty board!");
-                            if (Dreamvisitor.debugMode) e.printStackTrace();
                         }
+
                     }
                 }
             }

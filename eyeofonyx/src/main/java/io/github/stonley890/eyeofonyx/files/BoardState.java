@@ -1,5 +1,6 @@
 package io.github.stonley890.eyeofonyx.files;
 
+import io.github.stonley890.dreamvisitor.data.TribeUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -40,7 +41,7 @@ public class BoardState {
 
         YamlConfiguration config = new YamlConfiguration();
 
-        for (int i = 0; i < RoyaltyBoard.getTribes().length; i++) {
+        for (int i = 0; i < TribeUtil.tribes.length; i++) {
             for (int p = 0; p < RoyaltyBoard.getValidPositions().length; p++) {
                 String uuid = "none";
                 UUID player = boardStates.get(i).positions.get(p).player;
@@ -67,24 +68,14 @@ public class BoardState {
                 if (lastChallengeTime != null)
                     lastChallenge = lastChallengeTime.toString();
 
-                String challenger = "none";
-                UUID challengerUuid = boardStates.get(i).positions.get(p).challenger;
-                if (challengerUuid != null)
-                    challenger = challengerUuid.toString();
-
-                String challenging = "none";
-                UUID challengingUuid = boardStates.get(i).positions.get(p).challenging;
-                if (challengingUuid != null)
-                    challenging = challengingUuid.toString();
-
-                config.set(RoyaltyBoard.getTribes()[i] + "." + RoyaltyBoard.getValidPositions()[p] + ".uuid", uuid);
-                config.set(RoyaltyBoard.getTribes()[i] + "." + RoyaltyBoard.getValidPositions()[p] + ".name", boardStates.get(i).positions.get(p).name);
-                config.set(RoyaltyBoard.getTribes()[i] + "." + RoyaltyBoard.getValidPositions()[p] + ".joined_board", joinedBoard);
-                config.set(RoyaltyBoard.getTribes()[i] + "." + RoyaltyBoard.getValidPositions()[p] + ".joined_time", joinedTime);
-                config.set(RoyaltyBoard.getTribes()[i] + "." + RoyaltyBoard.getValidPositions()[p] + ".last_online", lastOnline);
-                config.set(RoyaltyBoard.getTribes()[i] + "." + RoyaltyBoard.getValidPositions()[p] + ".last_challenge_time", lastChallenge);
-                config.set(RoyaltyBoard.getTribes()[i] + "." + RoyaltyBoard.getValidPositions()[p] + ".challenger", challenger);
-                config.set(RoyaltyBoard.getTribes()[i] + "." + RoyaltyBoard.getValidPositions()[p] + ".challenging", challenging);
+                String tribeKey = TribeUtil.tribes[i].getName().toLowerCase();
+                String posKey = RoyaltyBoard.getValidPositions()[p];
+                config.set(tribeKey + "." + posKey + ".uuid", uuid);
+                config.set(tribeKey + "." + posKey + ".name", boardStates.get(i).positions.get(p).name);
+                config.set(tribeKey + "." + posKey + ".joined_board", joinedBoard);
+                config.set(tribeKey + "." + posKey + ".joined_time", joinedTime);
+                config.set(tribeKey + "." + posKey + ".last_online", lastOnline);
+                config.set(tribeKey + "." + posKey + ".last_challenge_time", lastChallenge);
             }
         }
 
@@ -100,11 +91,10 @@ public class BoardState {
 
         Map<Integer, BoardState> yamlBoard = new HashMap<>(10);
 
-        String[] tribes = RoyaltyBoard.getTribes();
         String[] positions = RoyaltyBoard.getValidPositions();
 
-        for /* each tribe */ (int i = 0; i < tribes.length; i++) {
-            String tribe = tribes[i];
+        for /* each tribe */ (int i = 0; i < TribeUtil.tribes.length; i++) {
+            String tribe = TribeUtil.tribes[i].getName().toLowerCase();
 
             // Create a board state for this tribe
             BoardState boardState = new BoardState();
@@ -164,26 +154,6 @@ public class BoardState {
                     lastChallenge = null;
                 }
 
-                UUID challenger;
-                String challengerString = config.getString(tribe + "." + position + ".challenger");
-                try {
-                    if (challengerString == null || challengerString.equals("none") || challengerString.equals("null")) challenger = null;
-                    else challenger = UUID.fromString(challengerString);
-                } catch (IllegalArgumentException e) {
-                    Bukkit.getLogger().warning("challenger of tribe " + tribe.toUpperCase() + " position " + position.toUpperCase() + " could not be parsed. It will be overwritten as empty.");
-                    challenger = null;
-                }
-
-                UUID challenging;
-                String challengingString = config.getString(tribe + "." + position + ".challenging");
-                try {
-                    if (challengingString == null || challengingString.equals("none") || challengingString.equals("null")) challenging = null;
-                    else challenging = UUID.fromString(challengingString);
-                } catch (IllegalArgumentException e) {
-                    Bukkit.getLogger().warning("challenging of tribe " + tribe.toUpperCase() + " position " + position.toUpperCase() + " could not be parsed. It will be overwritten as empty.");
-                    challenging = null;
-                }
-
                 // Set new position of BoardState we created earlier
                 boardState.positions.put(pos, new BoardPosition(
                         uuid,
@@ -191,9 +161,7 @@ public class BoardState {
                         joinedBoard,
                         joinedTime,
                         lastOnline,
-                        lastChallenge,
-                        challenger,
-                        challenging
+                        lastChallenge
                 ));
             }
 
@@ -242,18 +210,6 @@ public class BoardState {
         this.positions.put(pos, affectedPosition);
         return this;
     }
-    public BoardState setChallenger(int pos, UUID challenger) {
-        BoardPosition affectedPosition = this.positions.get(pos);
-        affectedPosition.challenger = challenger;
-        this.positions.put(pos, affectedPosition);
-        return this;
-    }
-    public BoardState setChallenging(int pos, UUID challenging) {
-        BoardPosition affectedPosition = this.positions.get(pos);
-        affectedPosition.challenging = challenging;
-        this.positions.put(pos, affectedPosition);
-        return this;
-    }
 
     /**
      * Check if a given position of this tribe is empty.
@@ -270,7 +226,7 @@ public class BoardState {
      * @return the modified {@link BoardState}.
      */
     public BoardState clear(int pos) {
-        this.updatePosition(pos, new BoardPosition(null, null, null, null, null, null, null, null));
+        this.updatePosition(pos, new BoardPosition(null, null, null, null, null, null));
         return this;
     }
 
@@ -284,8 +240,6 @@ public class BoardState {
     public BoardState replace(int fromPos, int toPos) {
 
         BoardPosition movingPos = positions.get(fromPos);
-        movingPos.challenging = null;
-        movingPos.challenger = null;
         movingPos.lastChallenge = LocalDateTime.now();
         clear(toPos);
         positions.put(toPos, movingPos);
@@ -306,12 +260,8 @@ public class BoardState {
         BoardPosition pos2 = getPos(toPos);
 
         // Update data
-        pos1.challenging = null;
-        pos1.challenger = null;
         pos1.lastChallenge = LocalDateTime.now();
 
-        pos2.challenging = null;
-        pos2.challenger = null;
         pos2.lastChallenge = LocalDateTime.now();
 
         // Swap positions

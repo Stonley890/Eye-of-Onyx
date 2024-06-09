@@ -4,9 +4,10 @@ import io.github.stonley890.dreamvisitor.Bot;
 import io.github.stonley890.dreamvisitor.Dreamvisitor;
 import io.github.stonley890.dreamvisitor.data.AccountLink;
 import io.github.stonley890.dreamvisitor.data.PlayerUtility;
+import io.github.stonley890.dreamvisitor.data.Tribe;
+import io.github.stonley890.dreamvisitor.data.TribeUtil;
+import io.github.stonley890.dreamvisitor.data.PlayerTribe;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
-import io.github.stonley890.eyeofonyx.Utils;
-import javassist.NotFoundException;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
@@ -17,7 +18,7 @@ import net.dv8tion.jda.api.exceptions.ErrorHandler;
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.requests.ErrorResponse;
-import net.luckperms.api.model.user.User;
+import net.dv8tion.jda.api.utils.TimeFormat;
 import net.luckperms.api.model.user.UserManager;
 import net.luckperms.api.node.Node;
 import org.bukkit.Bukkit;
@@ -27,12 +28,13 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
+import java.util.List;
 
 public class RoyaltyBoard {
 
@@ -50,15 +52,6 @@ public class RoyaltyBoard {
     public static final int NOBLE5 = 8;
     public static final int CIVILIAN = 9;
     private static final EyeOfOnyx plugin = EyeOfOnyx.getPlugin();
-    // Team names
-    private static final String[] teamNames = {
-            "HiveWing", "IceWing", "LeafWing", "MudWing", "NightWing", "RainWing", "SandWing", "SeaWing", "SilkWing",
-            "SkyWing"
-    };
-    // Tribe IDs
-    private static final String[] tribes = {
-            "hive", "ice", "leaf", "mud", "night", "rain", "sand", "sea", "silk", "sky"
-    };
     // Valid positions
     private static final String[] validPositions = {
             "ruler", "crown_heir", "apparent_heir", "presumptive_heir", "crown_noble", "grand_noble", "high_noble", "apparent_noble", "presumptive_noble"
@@ -72,16 +65,8 @@ public class RoyaltyBoard {
         throw new IllegalStateException("Utility class");
     }
 
-    public static BoardState getBoardOf(int tribe) {
-        return getBoard().get(tribe);
-    }
-
-    public static String[] getTeamNames() {
-        return teamNames;
-    }
-
-    public static String[] getTribes() {
-        return tribes;
+    public static BoardState getBoardOf(Tribe tribe) {
+        return getBoard().get(TribeUtil.indexOf(tribe));
     }
 
     public static String[] getValidPositions() {
@@ -115,13 +100,14 @@ public class RoyaltyBoard {
 
     }
 
+    @Nullable
     private static TextChannel getBoardChannel() {
         long channelID = plugin.getConfig().getLong("royalty-board-channel");
         JDA jda = Bot.getJda();
         return jda.getTextChannelById(channelID);
     }
 
-    private static void saveFile(FileConfiguration board) {
+    private static void saveFile(@NotNull FileConfiguration board) {
         try {
             board.save(file);
         } catch (Exception e) {
@@ -129,7 +115,7 @@ public class RoyaltyBoard {
         }
     }
 
-    private static void saveToDisk(Map<Integer, BoardState> board) {
+    private static void saveToDisk(@NotNull Map<Integer, BoardState> board) {
         saveFile(BoardState.createYamlConfiguration(board));
         Dreamvisitor.debug("[saveToDisk] Saved royalty board to disk.");
     }
@@ -147,7 +133,7 @@ public class RoyaltyBoard {
      * Send a board change report to the royalty log in Discord.
      * @param action the {@link RoyaltyAction} to report.
      */
-    public static void reportChange(RoyaltyAction action) {
+    public static void reportChange(@NotNull RoyaltyAction action) {
 
         // Run async
         Bukkit.getScheduler().runTaskAsynchronously(EyeOfOnyx.getPlugin(), () -> {
@@ -163,9 +149,10 @@ public class RoyaltyBoard {
             // Emblem in message title
             String emblem = "";
             List<String> emblems = EyeOfOnyx.getPlugin().getConfig().getStringList("tribe-emblems");
-            if (emblems.size() == tribes.length) emblem = emblems.get(action.affectedTribe) + " ";
+            if (emblems.size() == TribeUtil.tribes.length) emblem = emblems.get(TribeUtil.indexOf(action.affectedTribe)) + " ";
 
-            builder.setTitle(emblem + "Changes have been made to the " + teamNames[action.affectedTribe] + " board.");
+            builder.setAuthor("Board Data Change", null, emblem);
+            builder.setTitle("Changes have been made to the " + action.affectedTribe.getTeamName() + " board.");
 
             try {
                 long discordID = Long.parseLong(action.executor);
@@ -201,7 +188,7 @@ public class RoyaltyBoard {
         });
     }
 
-    public static void report(@Nullable String executor, String content) {
+    public static void report(@Nullable String executor, @Nullable String content) {
 
         // Run async
         Bukkit.getScheduler().runTaskAsynchronously(EyeOfOnyx.getPlugin(), () -> {
@@ -266,12 +253,8 @@ public class RoyaltyBoard {
         if (position.lastChallenge != null) lastChallenge = position.lastChallenge.toString();
         if (position.joinedBoard != null) joinedBoard = position.joinedBoard.toString();
         if (position.joinedPosition != null) joinedPos = position.joinedPosition.toString();
-        if (position.challenger != null) challenger = PlayerUtility.getUsernameOfUuid(position.challenger);
-        if (position.challenging != null) challenging = PlayerUtility.getUsernameOfUuid(position.challenging);
 
         assert username != null;
-        assert challenger != null;
-        assert challenging != null;
         changes.append("\nPlayer: ").append(Bot.escapeMarkdownFormatting(username))
                 .append("\nUUID: ").append(uuid)
                 .append("\nUser: ").append(discordUser)
@@ -279,9 +262,7 @@ public class RoyaltyBoard {
                 .append("\nLast Online: ").append(lastOnline)
                 .append("\nLast Challenge: ").append(lastChallenge)
                 .append("\nDate Joined Board: ").append(joinedBoard)
-                .append("\nDate Joined Position: ").append(joinedPos)
-                .append("\nChallenger: ").append(Bot.escapeMarkdownFormatting(challenger))
-                .append("\nChallenging: ").append(Bot.escapeMarkdownFormatting(challenging));
+                .append("\nDate Joined Position: ").append(joinedPos);
 
         return changes;
     }
@@ -296,7 +277,7 @@ public class RoyaltyBoard {
      *                      if an action has occurred before this
      *                      to reduce the chance that Discord will be updated twice or not at all.
      */
-    public static void updateBoard(int tribe, boolean updateDiscord) {
+    public static void updateBoard(@NotNull Tribe tribe, boolean updateDiscord) {
 
         Dreamvisitor.debug("[updateBoard] Updating royalty board.");
 
@@ -321,7 +302,7 @@ public class RoyaltyBoard {
             // If last_online is before inactivity period, clear position
             last_online = getLastOnline(tribe, pos);
             if (last_online != null && last_online.isBefore(LocalDateTime.now().minusDays(plugin.getConfig().getInt("inactivity-timer")))) {
-                RoyaltyBoard.set(tribe, pos, royaltyBoard.get(tribe).getPos(positionsEmpty).setLastOnline(null));
+                RoyaltyBoard.set(tribe, pos, royaltyBoard.get(TribeUtil.indexOf(tribe)).getPos(positionsEmpty).setLastOnline(null));
                 royaltyBoard = getBoard();
             }
 
@@ -333,12 +314,7 @@ public class RoyaltyBoard {
 
                 if (uuid != null) {
                     // Update LuckPerms
-                    try {
-                        int playerTribe = PlayerTribe.getTribeOfPlayer(uuid);
-                        Utils.setPlayerPerms(uuid, playerTribe, pos);
-                    } catch (NotFoundException e) {
-                        // no tribe
-                    }
+                    RoyaltyBoard.updatePermissions(uuid);
 
                     // Remove challenges
                     Challenge.removeChallengesOfPlayer(uuid, "The player you were challenging was removed from the royalty board for inactivity.");
@@ -366,7 +342,7 @@ public class RoyaltyBoard {
                     royaltyBoard = getBoard();
 
                     // Notify the user who has moved
-                    java.util.UUID movedUser = royaltyBoard.get(tribe).getPos(emptyPosition).player;
+                    java.util.UUID movedUser = royaltyBoard.get(TribeUtil.indexOf(tribe)).getPos(emptyPosition).player;
                     if (movedUser != null) {
                         Dreamvisitor.debug("[updateBoard] Moved user " + movedUser);
                         new Notification(movedUser, "You've been promoted!", "A player was removed from the royalty board and you moved into a higher position. Because of this, any challenges have been canceled.", Notification.Type.GENERIC).create();
@@ -376,6 +352,8 @@ public class RoyaltyBoard {
 
                         // Remove notifications
                         Notification.removeNotificationsOfPlayer(movedUser, Notification.Type.CHALLENGE_REQUESTED);
+
+                        RoyaltyBoard.updatePermissions(movedUser, tribe, emptyPosition);
                     }
 
                     // This position is now empty
@@ -385,17 +363,12 @@ public class RoyaltyBoard {
             }
         }
 
-        if (updateDiscord && !oldPos.equals(royaltyBoard.get(tribe))) {
-            try {
-                updateDiscordBoard(tribe);
-            } catch (IOException e) {
-                Bukkit.getLogger().warning("Eye of Onyx was unable to update the Discord board!");
-            }
-            reportChange(new RoyaltyAction(null, tribe, oldPos, royaltyBoard.get(tribe)));
+        if (updateDiscord && !oldPos.equals(royaltyBoard.get(TribeUtil.indexOf(tribe)))) {
+            updateDiscordBoard(tribe);
+            reportChange(new RoyaltyAction(null, tribe, oldPos, royaltyBoard.get(TribeUtil.indexOf(tribe))));
         }
 
         saveToDisk(royaltyBoard);
-        updatePermissions(tribe);
     }
 
     /**
@@ -403,7 +376,7 @@ public class RoyaltyBoard {
      * @param tribe tribe index.
      * @param pos position index.
      */
-    public static void updateOCName(int tribe, int pos) {
+    public static void updateOCName(@NotNull Tribe tribe, int pos) {
         UUID uuid = getUuid(tribe, pos);
         Map<Integer, BoardState> royaltyBoard = getBoard();
 
@@ -412,7 +385,7 @@ public class RoyaltyBoard {
             if (EyeOfOnyx.openrp != null) {
                 String ocName = (String) EyeOfOnyx.openrp.getDesc().getUserdata().get(uuid + ".name");
                 if (ocName != null && !ocName.equals("No name set")) {
-                    RoyaltyBoard.set(tribe, pos, royaltyBoard.get(tribe).getPos(pos).setName(ocName));
+                    RoyaltyBoard.set(tribe, pos, royaltyBoard.get(TribeUtil.indexOf(tribe)).getPos(pos).setName(ocName));
                 }
             }
         }
@@ -421,71 +394,98 @@ public class RoyaltyBoard {
     }
 
     /**
-     * Updates the Discord royalty boards
-     * @param tribeIndex the tribe whose board to update
-     * @throws IOException if messageformat.txt cannot be retrieved
+     * Updates the Discord royalty boards. This runs async.
+     * @param tribe the tribe whose board to update
      */
-    public static void updateDiscordBoard(int tribeIndex) throws IOException {
+    public static void updateDiscordBoard(@NotNull Tribe tribe) {
+        Dreamvisitor.debug("[updateDiscordBoard] Updating Discord board for " + tribe);
+        plugin.reloadConfig();
 
-        Dreamvisitor.debug("[updateDiscordBoard] Updating Discord board for " + tribeIndex);
+        Bukkit.getScheduler().runTaskAsynchronously(EyeOfOnyx.getPlugin(), () -> {
 
-        // Get channel and message
-        List<Long> messageIDs = plugin.getConfig().getLongList("royalty-board-message");
+            final Color[] tribeColors = {
+                    new Color(209, 91, 46), // Hive
+                    new Color(189, 220, 238), // Ice
+                    new Color(0, 107, 14), // Leaf
+                    new Color(151, 81, 9), // Mud
+                    new Color(107, 14, 239), // Night
+                    new Color(14, 240, 37), // Rain
+                    new Color(240, 217, 14), // Sand
+                    new Color(14, 57, 240), // Sea
+                    new Color(232, 75, 202), // Silk
+                    new Color(166, 41, 13) // Sky
+            };
+            final String rulerEmblem = "\uD83D\uDC51";
+            final String heirEmblem = "\uD83D\uDC8D";
+            final String nobleEmblem = "\uD83E\uDE99";
 
-        TextChannel boardChannel = getBoardChannel();
+            // Get channel and message
+            List<Long> messageIDs = plugin.getConfig().getLongList("royalty-board-message");
 
-        if (boardChannel == null) {
-            Bukkit.getLogger().warning("Could not get royalty board channel!");
-        } else {
+            TextChannel boardChannel = getBoardChannel();
+
+            if (boardChannel == null) {
+                Bukkit.getLogger().warning("Could not get royalty board channel!");
+                return;
+            }
 
             // Build message
+            EmbedBuilder embed = new EmbedBuilder();
+            embed.setTitle(tribe.getTeamName() + " Kingdom");
+            int tribeIndex = TribeUtil.indexOf(tribe);
+            embed.setColor(tribeColors[tribeIndex]);
+            embed.setTimestamp(Instant.now());
 
             if (messageIDs.size() != 10) messageIDs = new ArrayList<>(10);
             // Create message list
 
-            // Get base message from messageformat.txt
-            String message = MessageFormat.get();
-
             // Replace $EMBLEM with appropriate tribe emoji
             if (!plugin.getConfig().getStringList("tribe-emblems").isEmpty()) {
-                message = message.replace("$EMBLEM", plugin.getConfig().getStringList("tribe-emblems").get(tribeIndex));
+                String url = plugin.getConfig().getStringList("tribe-emblems").get(tribeIndex);
+                Dreamvisitor.debug("Emblem URL:" + url);
+                try {
+                    embed.setThumbnail(url);
+                } catch (IllegalArgumentException ignored) {}
             }
-
-            // Replace $TRIBE with appropriate tribe name
-            message = message.replace("$TRIBE", RoyaltyBoard.tribes[tribeIndex].substring(0, 1).toUpperCase() + RoyaltyBoard.tribes[tribeIndex].substring(1));
 
             // for each position...
             String[] positions = RoyaltyBoard.getValidPositions();
             for (int j = 0; j < positions.length; j++) {
                 final String position = positions[j];
 
-                String name = "N/A";
-                String username = "N/A";
-                String joined = "";
+                String name;
+                String username;
+                String joined;
 
-                Dreamvisitor.debug("[updateDiscordBoard] Getting info for tribe " + tribeIndex + " position " + j);
+                Dreamvisitor.debug("[updateDiscordBoard] Getting info for tribe " + tribe + " position " + j);
+
+                String emblem;
+                if (j == RULER) emblem = rulerEmblem;
+                else if (j >= HEIR2) emblem = heirEmblem;
+                else emblem = nobleEmblem;
+
+                String value = "*None*";
 
                 // Get info if not empty
-                java.util.UUID uuid = RoyaltyBoard.getUuid(tribeIndex, j);
+                java.util.UUID uuid = RoyaltyBoard.getUuid(tribe, j);
                 if (uuid != null) {
                     Dreamvisitor.debug("[updateDiscordBoard] Player " + uuid + " found.");
 
                     username = PlayerUtility.getUsernameOfUuid(uuid);
 
-                    name = ChatColor.stripColor(RoyaltyBoard.getOcName(tribeIndex, j));
+                    name = ChatColor.stripColor(RoyaltyBoard.getOcName(tribe, j));
                     if (name == null || name.equals("&c<No name set>")) name = username;
 
-                    LocalDateTime joinedPosDate = RoyaltyBoard.getJoinedPosDate(tribeIndex, j);
-                    if (joinedPosDate == null) joined = "(No join time)";
-                    else joined = "<t:" + joinedPosDate.toEpochSecond(ZoneOffset.UTC) + ":d>";
+                    LocalDateTime joinedPosDate = RoyaltyBoard.getJoinedPosDate(tribe, j);
+                    if (joinedPosDate == null) joined = "unknown";
+                    else joined = Bot.createTimestamp(joinedPosDate, TimeFormat.DATE_SHORT).toString();
+
+                    Member member = Bot.getGameLogChannel().getGuild().retrieveMemberById(AccountLink.getDiscordId(uuid)).complete();
+
+                    value = "**" + name + "** since " + joined + "\n" + member.getAsMention() + " | `" + username + "`";
                 }
 
-                // Replace in message
-                assert name != null;
-                assert username != null;
-                message = message.replace("$" + position.toUpperCase() + "-NAME", name)
-                        .replace("$" + position.toUpperCase() + "-USERNAME", username)
-                        .replace("$" + position.toUpperCase() + "-JOINED", joined);
+                embed.addField(emblem + " " + position.replace("_", " ").toUpperCase(), value, false);
             }
 
             if (messageIDs.isEmpty() || messageIDs.size() < 10) {
@@ -493,25 +493,29 @@ public class RoyaltyBoard {
             } else {
 
                 // Try to edit message
-                // Get message
-                final String finalMessage = message;
                 final Long targetMessageId = messageIDs.get(tribeIndex);
+                Dreamvisitor.debug("Message ID to edit: " + targetMessageId);
                 try {
-                    boardChannel.retrieveMessageById(targetMessageId).queue((targetMessage) -> targetMessage.editMessage(finalMessage).queue(), new ErrorHandler().handle(ErrorResponse.UNKNOWN_MESSAGE, (error) -> Bukkit.getLogger().warning("Unknwon Message! Couldn't get message " + targetMessageId)));
+                    boardChannel.retrieveMessageById(targetMessageId).queue((targetMessage) -> targetMessage.editMessageEmbeds(embed.build()).queue(), new ErrorHandler().handle(ErrorResponse.UNKNOWN_MESSAGE, (error) -> {
+                        Bukkit.getLogger().warning("Unknown Message! Couldn't get message " + targetMessageId);
+                        boardChannel.sendMessageEmbeds(embed.build()).queue(message -> {
+                            plugin.reloadConfig();
+                            List<Long> messageIds = plugin.getConfig().getLongList("royalty-board-message");
+                            messageIds.set(tribeIndex, message.getIdLong());
+                            plugin.getConfig().set("royalty-board-message", messageIds);
+                            plugin.saveConfig();
+                        });
+                    }));
                     Dreamvisitor.debug("[updateDiscordBoard] Message edit queued.");
                 } catch (InsufficientPermissionException e) {
                     Bukkit.getLogger().warning("Main Bot does not have permission to get the royalty board message! " + e.getMessage());
                 }
             }
 
-            // Update Discord roles
-            Bukkit.getScheduler().runTaskAsynchronously(EyeOfOnyx.getPlugin(), () -> {
-                removeRoles(tribeIndex);
-                applyRoles(tribeIndex);
-            });
-
-        }
-
+            // Update roles
+            removeRoles(tribe);
+            applyRoles(tribe);
+        });
     }
 
     /**
@@ -522,17 +526,17 @@ public class RoyaltyBoard {
     public static void updateRoles(@NotNull net.dv8tion.jda.api.entities.User user) {
 
         java.util.UUID uuid = AccountLink.getUuid(user.getIdLong());
-        int tribe = -1;
+        Tribe tribe = null;
         int pos = CIVILIAN;
 
         // Get tribe and position if possible.
         // If not, that is ok.
         // All roles will just be removed.
         if (uuid != null) {
-            try {
-                tribe = PlayerTribe.getTribeOfPlayer(uuid);
-                pos = getPositionIndexOfUUID(tribe, uuid);
-            } catch (NotFoundException ignored) {}
+
+            tribe = PlayerTribe.getTribeOfPlayer(uuid);
+            if (tribe != null) pos = getPositionIndexOfUUID(tribe, uuid);
+
         }
 
         Dreamvisitor.debug("[updateRoles] Updating roles of UUID " + uuid + ". Tribe " + tribe + ", pos " + pos);
@@ -543,7 +547,6 @@ public class RoyaltyBoard {
 
         // Get guilds
         Guild mainGuild = Bot.getGameLogChannel().getGuild();
-        Guild sisterGuild = Bot.getJda().getGuildById(config.getLong("tribeGuildID"));
 
         // Get roles
         Role rulerRole = Bot.getJda().getRoleById(config.getLong("main-royalty-roles.ruler"));
@@ -574,36 +577,6 @@ public class RoyaltyBoard {
 
         });
 
-        if (sisterGuild == null) {
-            Bukkit.getLogger().warning("Sister guild could not be found! Make sure the ID in the Eye of Onyx config is correct and restart!");
-            return;
-        }
-
-        int finalPos1 = pos;
-        int finalTribe = tribe;
-        sisterGuild.retrieveMember(user).queue(member -> {
-            if (member != null) {
-                // get sister guild roles
-                List<Role> sisterRoyaltyRoles = new ArrayList<>();
-                List<Long> sisterRoyaltyRoleIDs = config.getLongList("sister-royalty-roles");
-                if (sisterRoyaltyRoleIDs.size() < tribes.length) {
-                    Bukkit.getLogger().warning("Missing sister guild royalty role IDs! Check Eye of Onyx configuration and restart.");
-                    return;
-                }
-                for (Long roleID : sisterRoyaltyRoleIDs) {
-                    sisterRoyaltyRoles.add(Bot.getJda().getRoleById(roleID));
-                }
-
-                // For each position, remove royalty role if they are citizen or are not part of that tribe.
-                // Add role if applicable
-                for (int tribeRole = 0; tribeRole < tribes.length; tribeRole++) {
-                    Role role = sisterRoyaltyRoles.get(tribeRole);
-                    if (finalPos1 == CIVILIAN || finalTribe != tribeRole && member.getRoles().contains(role)) sisterGuild.removeRoleFromMember(member, role).queue();
-                    if (finalPos1 != CIVILIAN && finalTribe == tribeRole && !member.getRoles().contains(role)) sisterGuild.addRoleToMember(member, role).queue();
-                }
-            }
-        });
-
     }
 
     /**
@@ -612,7 +585,7 @@ public class RoyaltyBoard {
      * This does not apply to the sister guild due to how the roles are set up.
      * @param tribe the tribe whose roles to remove
      */
-    public static void removeRoles(int tribe) {
+    public static void removeRoles(@NotNull Tribe tribe) {
 
         Dreamvisitor.debug("[removeRoles] Removing roles for tribe " + tribe);
         FileConfiguration config = EyeOfOnyx.getPlugin().getConfig();
@@ -667,7 +640,7 @@ public class RoyaltyBoard {
      * This does not remove roles from non-royalty members. removeRoles() should be used to do that.
      * @param tribe the tribe to apply roles to.
      */
-    public static void applyRoles(int tribe) {
+    public static void applyRoles(@NotNull Tribe tribe) {
 
         Dreamvisitor.debug("[applyRoles] Applying roles for tribe " + tribe);
         FileConfiguration config = EyeOfOnyx.getPlugin().getConfig();
@@ -720,7 +693,13 @@ public class RoyaltyBoard {
         }
     }
 
-    public static void updatePermissions(@NotNull UUID uuid) {
+    /**
+     * This will set information regardless of current royalty board.
+     * @param uuid the UUID of player
+     * @param tribe the tribe to set
+     * @param pos the pos to set
+     */
+    public static void updatePermissions(@NotNull UUID uuid, @Nullable Tribe tribe, int pos) {
         if (EyeOfOnyx.luckperms != null) {
 
             Dreamvisitor.debug("[updatePermissions] Updating permissions for user " + uuid);
@@ -728,27 +707,16 @@ public class RoyaltyBoard {
             // Get user manager
             UserManager userManager = EyeOfOnyx.luckperms.getUserManager();
             // Get user at tribe t and position p
-            CompletableFuture<User> userFuture = userManager.loadUser(uuid);
 
-            int playerTribe = -1;
-            int playerPos = CIVILIAN;
-
-            try {
-                playerTribe = PlayerTribe.getTribeOfPlayer(uuid);
-                playerPos = getPositionIndexOfUUID(playerTribe, uuid);
-            } catch (NotFoundException ignored) {}
-
-            Dreamvisitor.debug("[updatePermissions] Updating permissions of UUID " + uuid + " of tribe " + playerTribe + " pos " + playerPos);
+            Dreamvisitor.debug("[updatePermissions] Updating permissions of UUID " + uuid + " of tribe " + tribe + " pos " + pos);
 
             // Run async
-            int finalPlayerPos = playerPos;
-            int finalPlayerTribe = playerTribe;
-            userFuture.thenAcceptAsync(user -> {
+            userManager.modifyUser(uuid, user -> {
 
                 String[] groupPositions = {"ruler", "heir", "noble", "citizen"};
 
                 // For each tribe and position...
-                for (String tribeName : tribes) {
+                for (String tribeName : Arrays.stream(TribeUtil.tribes).map(tribeCheck -> tribeCheck.getName().toLowerCase()).toList()) {
                     for (String position : groupPositions) {
                         // ...get the lp group name from config
                         String groupName = plugin.getConfig().getString(position + "." + tribeName);
@@ -764,106 +732,53 @@ public class RoyaltyBoard {
                 }
 
                 // Now that all have been removed, add the correct one
+                if (tribe != null) {
+                    String group = "citizen";
+                    if (pos == RULER) {
+                        group = "ruler";
+                    } else if (pos <= HEIR3) {
+                        group = "heir";
+                    } else if (pos <= NOBLE5) {
+                        group = "noble";
+                    }
 
-                String group = null;
-                if (finalPlayerPos == RULER) {
-                    group = "ruler";
-                } else if (finalPlayerPos < HEIR3) {
-                    group = "heir";
-                } else if (finalPlayerPos < NOBLE5) {
-                    group = "noble";
-                }
-
-                if (group != null) {
-                    String groupName = plugin.getConfig().getString(group + "." + tribes[finalPlayerTribe]);
+                    String groupName = plugin.getConfig().getString(group + "." + tribe.getName().toLowerCase());
 
                     if (groupName != null) {
-                        Dreamvisitor.debug("[updatePermissions] Adding group " + groupName + " to " + uuid + " (pos " + finalPlayerPos + ")");
+                        Dreamvisitor.debug("[updatePermissions] Adding group " + groupName + " to " + uuid + " (pos " + pos + ")");
                         // Get the group from lp and add it to the user.
                         user.data().add(Node.builder("group." + groupName).build());
                     }
                 }
 
-                userManager.saveUser(user);
             });
         } else
             Bukkit.getLogger().warning("Eye of Onyx could not hook into LuckPerms on startup. Permission update failed.");
     }
 
     /**
-     * Updates LuckPerms groups for all users on the specified royalty board. This will not work if LuckPerms was not initialized on enable.
-     * This does not remove roles from non-royalty members. {@code removePermissions()} should be used to do that.
+     * This will use the saved royalty board to fill information.
+     * @param uuid the UUID of player
      */
-    public static void updatePermissions(int tribe) {
-
-        Dreamvisitor.debug("[updatePermissions] Updating LuckPerms permissions for tribe " + tribe);
+    public static void updatePermissions(@NotNull UUID uuid) {
         if (EyeOfOnyx.luckperms != null) {
 
-            // Get user manager
-            UserManager userManager = EyeOfOnyx.luckperms.getUserManager();
+            Dreamvisitor.debug("[updatePermissions] Updating permissions for user " + uuid + " using info finding");
 
-            // Go through each entry in the royalty board
-            for (int p = 0; p < validPositions.length; p++) {
+            Tribe playerTribe;
+            int playerPos = CIVILIAN;
 
-                // Only update if there is a player in the position
-                java.util.UUID uuid = getUuid(tribe, p);
-                if (uuid != null) {
+            playerTribe = PlayerTribe.getTribeOfPlayer(uuid);
+            if (playerTribe != null) playerPos = getPositionIndexOfUUID(playerTribe, uuid);
 
-                    Dreamvisitor.debug("[updatePermissions] Checking permissions of tribe " + tribe + " pos " + p + ", which is occupied by UUID " + uuid);
-
-                    // Get user at tribe t and position p
-                    CompletableFuture<User> userFuture = userManager.loadUser(uuid);
-
-                    // Run async
-                    int finalP = p;
-                    userFuture.thenAcceptAsync(user -> {
-
-                        String[] groupPositions = {"ruler", "heir", "noble", "citizen"};
-
-                        // For each tribe and position...
-                        for (String tribeName : tribes) {
-                            for (String position : groupPositions) {
-
-                                // ...get the lp group name from config
-                                String groupName = plugin.getConfig().getString(position + "." + tribeName);
-
-                                if (groupName != null) {
-                                    // Get the group from lp and remove it from the user.
-                                    user.data().remove(Node.builder("group." + groupName).build());
-
-                                } else
-                                    Bukkit.getLogger().warning("Group " + position + "." + tribeName + " is null in the config!");
-                            }
-                        }
-
-                        // Now that all have been removed, add the correct one
-
-                        String group;
-                        if (finalP == RULER) {
-                            group = "ruler";
-                        } else if (finalP <= HEIR3) {
-                            group = "heir";
-                        } else {
-                            group = "noble";
-                        }
-
-                        String groupName = plugin.getConfig().getString(group + "." + tribes[tribe]);
-
-                        if (groupName != null) {
-                            // Get the group from lp and add it to the user.
-                            user.data().add(Node.builder("group." + groupName).build());
-                        }
-
-                        userManager.saveUser(user);
-                    });
-                }
-            }
+            // Run async
+            updatePermissions(uuid, playerTribe, playerPos);
         } else
             Bukkit.getLogger().warning("Eye of Onyx could not hook into LuckPerms on startup. Permission update failed.");
     }
 
-    public static boolean isPositionEmpty(int tribe, int pos) {
-        return getBoard().get(tribe).getPos(pos).player == null;
+    public static boolean isPositionEmpty(@NotNull Tribe tribe, int pos) {
+        return getBoard().get(TribeUtil.indexOf(tribe)).getPos(pos).player == null;
     }
 
     /**
@@ -872,10 +787,10 @@ public class RoyaltyBoard {
      * @param player The player UUID to search from.
      * @return The index of the position that the player holds.
      */
-    public static int getPositionIndexOfUUID(UUID player) throws NotFoundException {
+    public static int getPositionIndexOfUUID(@NotNull UUID player) {
 
         // Get player tribe
-        int playerTribe = PlayerTribe.getTribeOfPlayer(player);
+        Tribe playerTribe = PlayerTribe.getTribeOfPlayer(player);
 
         // Position is citizen by default
         int playerPosition = CIVILIAN;
@@ -899,7 +814,7 @@ public class RoyaltyBoard {
      * @param player The player UUID to search from.
      * @return The index of the position that the player holds.
      */
-    public static int getPositionIndexOfUUID(int tribe, UUID player) {
+    public static int getPositionIndexOfUUID(@NotNull Tribe tribe, @NotNull UUID player) {
 
         // Position is citizen by default
         int playerPosition = CIVILIAN;
@@ -923,8 +838,8 @@ public class RoyaltyBoard {
      * @param pos The position to fetch from.
      * @return The String UUID located at the given location.
      */
-    public static @Nullable java.util.UUID getUuid(int tribe, int pos) {
-        return getBoard().get(tribe).getPos(pos).player;
+    public static @Nullable java.util.UUID getUuid(@NotNull Tribe tribe, int pos) {
+        return getBoard().get(TribeUtil.indexOf(tribe)).getPos(pos).player;
     }
 
     /**
@@ -934,13 +849,13 @@ public class RoyaltyBoard {
      * @param pos the position to fetch from.
      * @return the character name located at the given location.
      */
-    public static @Nullable String getOcName(int tribe, int pos) {
-        return getBoard().get(tribe).getPos(pos).name;
+    public static @Nullable String getOcName(@NotNull Tribe tribe, int pos) {
+        return getBoard().get(TribeUtil.indexOf(tribe)).getPos(pos).name;
     }
 
-    public static void setOcName(int tribe, int pos, String name) {
+    public static void setOcName(@NotNull Tribe tribe, int pos, @NotNull String name) {
         Map<Integer, BoardState> royaltyBoard = getBoard();
-        royaltyBoard.put(tribe, royaltyBoard.get(tribe).setName(pos, name));
+        royaltyBoard.put(TribeUtil.indexOf(tribe), royaltyBoard.get(TribeUtil.indexOf(tribe)).setName(pos, name));
         saveToDisk(royaltyBoard);
     }
 
@@ -951,8 +866,8 @@ public class RoyaltyBoard {
      * @param pos the position to fetch from.
      * @return the date joined located at the given location.
      */
-    public static @Nullable LocalDateTime getJoinedPosDate(int tribe, int pos) {
-        return getBoard().get(tribe).getPos(pos).joinedPosition;
+    public static @Nullable LocalDateTime getJoinedPosDate(@NotNull Tribe tribe, int pos) {
+        return getBoard().get(TribeUtil.indexOf(tribe)).getPos(pos).joinedPosition;
     }
 
     /**
@@ -962,8 +877,8 @@ public class RoyaltyBoard {
      * @param pos the position to fetch from.
      * @return the date joined located at the given location.
      */
-    public static @Nullable LocalDateTime getJoinedBoardDate(int tribe, int pos) {
-        return getBoard().get(tribe).getPos(pos).joinedBoard;
+    public static @Nullable LocalDateTime getJoinedBoardDate(@NotNull Tribe tribe, int pos) {
+        return getBoard().get(TribeUtil.indexOf(tribe)).getPos(pos).joinedBoard;
     }
 
     /**
@@ -973,8 +888,8 @@ public class RoyaltyBoard {
      * @param pos the position to fetch from.
      * @return The date joined last online at the given location.
      */
-    public static @Nullable LocalDateTime getLastOnline(int tribe, int pos) {
-        return getBoard().get(tribe).getPos(pos).lastOnline;
+    public static @Nullable LocalDateTime getLastOnline(@NotNull Tribe tribe, int pos) {
+        return getBoard().get(TribeUtil.indexOf(tribe)).getPos(pos).lastOnline;
     }
 
     /**
@@ -984,9 +899,10 @@ public class RoyaltyBoard {
      * @param pos the position to fetch from.
      * @param time the date & time to set.
      */
-    public static void setLastOnline(int tribe, int pos, LocalDateTime time) {
+    public static void setLastOnline(@NotNull Tribe tribe, int pos, @NotNull LocalDateTime time) {
         Map<Integer, BoardState> royaltyBoard = getBoard();
-        royaltyBoard.put(tribe, royaltyBoard.get(tribe).setLastOnline(pos, time));
+        int tribeIndex = TribeUtil.indexOf(tribe);
+        royaltyBoard.put(tribeIndex, royaltyBoard.get(tribeIndex).setLastOnline(pos, time));
         saveToDisk(royaltyBoard);
     }
 
@@ -997,9 +913,9 @@ public class RoyaltyBoard {
      * @param pos The position to fetch from.
      * @return The date last challenged at the given location.
      */
-    public static @Nullable LocalDateTime getLastChallengeDate(int tribe, int pos) {
+    public static @Nullable LocalDateTime getLastChallengeDate(@NotNull Tribe tribe, int pos) {
         Map<Integer, BoardState> royaltyBoard = getBoard();
-        return royaltyBoard.get(tribe).getPos(pos).lastChallenge;
+        return royaltyBoard.get(TribeUtil.indexOf(tribe)).getPos(pos).lastChallenge;
     }
 
     /**
@@ -1009,58 +925,10 @@ public class RoyaltyBoard {
      * @param pos the position to fetch from.
      * @param time the date & time to set.
      */
-    public static void setLastChallengeDate(int tribe, int pos, LocalDateTime time) {
+    public static void setLastChallengeDate(@NotNull Tribe tribe, int pos, @NotNull LocalDateTime time) {
         Map<Integer, BoardState> royaltyBoard = getBoard();
-        royaltyBoard.put(tribe, royaltyBoard.get(tribe).setLastChallenge(pos, time));
-        saveToDisk(royaltyBoard);
-    }
-
-    /**
-     * Get the attacker of a spot on the board.
-     *
-     * @param tribe    The tribe to fetch from.
-     * @param pos The position to fetch from.
-     * @return The attacker at the given location.
-     */
-    public static @Nullable UUID getAttacker(int tribe, int pos) {
-        Map<Integer, BoardState> royaltyBoard = getBoard();
-        return royaltyBoard.get(tribe).getPos(pos).challenger;
-    }
-
-    /**
-     * Set the attacker of a spot on the board.
-     *
-     * @param tribe    The tribe to fetch from.
-     * @param pos The position to fetch from.
-     * @param uuid          The UUID to set as the attacker.
-     */
-    public static void setAttacker(int tribe, int pos, UUID uuid) {
-        Map<Integer, BoardState> royaltyBoard = getBoard();
-        royaltyBoard.put(tribe, royaltyBoard.get(tribe).setChallenger(pos, uuid));
-        saveToDisk(royaltyBoard);
-    }
-
-    /**
-     * Get the target of a spot on the board.
-     *
-     * @param tribe    The tribe to fetch from.
-     * @param pos The position to fetch from.
-     */
-    public static @Nullable UUID getAttacking(int tribe, int pos) {
-        Map<Integer, BoardState> royaltyBoard = getBoard();
-        return royaltyBoard.get(tribe).getPos(pos).challenging;
-    }
-
-    /**
-     * Set the target of a spot on the board.
-     *
-     * @param tribe    The tribe to fetch from.
-     * @param pos The position to fetch from.
-     * @param uuid          The UUID to set.
-     */
-    public static void setAttacking(int tribe, int pos, UUID uuid) {
-        Map<Integer, BoardState> royaltyBoard = getBoard();
-        royaltyBoard.put(tribe, royaltyBoard.get(tribe).setChallenging(pos, uuid));
+        int tribeIndex = TribeUtil.indexOf(tribe);
+        royaltyBoard.put(tribeIndex, royaltyBoard.get(tribeIndex).setLastChallenge(pos, time));
         saveToDisk(royaltyBoard);
     }
 
@@ -1070,17 +938,17 @@ public class RoyaltyBoard {
      * @param tribe    The tribe to fetch from.
      * @param pos The position to fetch from.
      */
-    public static boolean isOnCoolDown(int tribe, int pos) {
+    public static boolean isOnCoolDown(@NotNull Tribe tribe, int pos) {
         LocalDateTime lastChallenge = getLastChallengeDate(tribe, pos);
         if (lastChallenge != null) {
             return lastChallenge.isAfter(LocalDateTime.now().minusDays(plugin.getConfig().getInt("challenge-cool-down")));
         } else return false;
     }
 
-    public static @org.jetbrains.annotations.Nullable LocalDateTime getCooldownEnd(int tribe, int pos) {
+    public static @Nullable LocalDateTime getCooldownEnd(@NotNull Tribe tribe, int pos) {
         LocalDateTime lastChallenge = getLastChallengeDate(tribe, pos);
         if (lastChallenge != null) {
-            return LocalDateTime.now().minusDays(plugin.getConfig().getInt("challenge-cool-down"));
+            return lastChallenge.plusDays(plugin.getConfig().getInt("challenge-cool-down"));
         } else return null;
     }
 
@@ -1091,10 +959,10 @@ public class RoyaltyBoard {
      * @param fromPos the first position to swap.
      * @param toPos the second position to swap.
      */
-    public static void replace(int tribe, int fromPos, int toPos) {
+    public static void replace(@NotNull Tribe tribe, int fromPos, int toPos) {
         Dreamvisitor.debug("[replace] Replacing tribe " + tribe + " from pos " + fromPos + "(" + getUuid(tribe, fromPos) + ") to pos " + toPos + " (" + getUuid(tribe, toPos) + ")");
         Map<Integer, BoardState> royaltyBoard = getBoard();
-        royaltyBoard.put(tribe, royaltyBoard.get(tribe).replace(fromPos, toPos));
+        royaltyBoard.put(TribeUtil.indexOf(tribe), royaltyBoard.get(TribeUtil.indexOf(tribe)).replace(fromPos, toPos));
         saveToDisk(royaltyBoard);
     }
 
@@ -1104,35 +972,51 @@ public class RoyaltyBoard {
      * @param pos the position to target.
      * @param complete if {@code true}, also updates this user's LuckPerms permissions and Discord roles.
      */
-    public static void removePlayer(int tribe, int pos, boolean complete) {
+    public static void removePlayer(@NotNull Tribe tribe, int pos, boolean complete) {
         Map<Integer, BoardState> royaltyBoard = getBoard();
         Dreamvisitor.debug("[removePlayer] Removing player at tribe " + tribe + " pos " + pos + ". Complete? " + complete);
         java.util.UUID uuid = null;
-        if (complete) uuid = royaltyBoard.get(tribe).getPos(pos).player;
+        if (complete) uuid = royaltyBoard.get(TribeUtil.indexOf(tribe)).getPos(pos).player;
         Dreamvisitor.debug("[removePlayer] UUID: " + uuid);
-        royaltyBoard.put(tribe, royaltyBoard.get(tribe).clear(pos));
+        royaltyBoard.put(TribeUtil.indexOf(tribe), royaltyBoard.get(TribeUtil.indexOf(tribe)).clear(pos));
+        saveToDisk(royaltyBoard);
+
         if (uuid != null) {
             Dreamvisitor.debug("[removePlayer] Updating permissions...");
-            updatePermissions(uuid);
+            updatePermissions(uuid, tribe, CIVILIAN);
             try {
                 long discordId = AccountLink.getDiscordId(uuid);
                 Dreamvisitor.debug("[removePlayer] Player has a linked Discord account by ID " + discordId + ". Updating roles...");
                 Bot.getJda().retrieveUserById(discordId).queue(RoyaltyBoard::updateRoles);
             } catch (NullPointerException ignored) {}
         }
-        saveToDisk(royaltyBoard);
     }
 
-    public static void set(int tribe, int pos, BoardPosition newPosition) {
+    public static void set(@NotNull Tribe tribe, int pos, @NotNull BoardPosition newPosition) {
         Map<Integer, BoardState> royaltyBoard = getBoard();
-        royaltyBoard.put(tribe, royaltyBoard.get(tribe).updatePosition(pos, newPosition));
+        royaltyBoard.put(TribeUtil.indexOf(tribe), royaltyBoard.get(TribeUtil.indexOf(tribe)).updatePosition(pos, newPosition));
         saveToDisk(royaltyBoard);
 
     }
 
-    public static void set(int tribe, BoardState newState) {
+    public static void set(@NotNull Tribe tribe, @NotNull BoardState newState) {
         Map<Integer, BoardState> royaltyBoard = getBoard();
-        royaltyBoard.put(tribe, newState);
+        royaltyBoard.put(TribeUtil.indexOf(tribe), newState);
         saveToDisk(royaltyBoard);
     }
+
+    public static void setJoinedBoard(@NotNull Tribe tribe, int pos, @NotNull LocalDateTime dateTime) {
+        Map<Integer, BoardState> royaltyBoard = getBoard();
+        int tribeIndex = TribeUtil.indexOf(tribe);
+        royaltyBoard.put(tribeIndex, royaltyBoard.get(tribeIndex).setJoinedBoard(pos, dateTime));
+        saveToDisk(royaltyBoard);
+    }
+
+    public static void setJoinedPosition(@NotNull Tribe tribe, int pos, @NotNull LocalDateTime dateTime) {
+        Map<Integer, BoardState> royaltyBoard = getBoard();
+        int tribeIndex = TribeUtil.indexOf(tribe);
+        royaltyBoard.put(tribeIndex, royaltyBoard.get(tribeIndex).setJoinedPosition(pos, dateTime));
+        saveToDisk(royaltyBoard);
+    }
+
 }

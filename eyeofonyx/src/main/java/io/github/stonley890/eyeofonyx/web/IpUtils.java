@@ -18,7 +18,7 @@ import java.time.ZonedDateTime;
 import java.util.HashMap;
 
 public class IpUtils {
-    static HashMap<String, JSONObject> ipStorage = new HashMap<>();
+    static final HashMap<String, JSONObject> ipStorage = new HashMap<>();
 
     /**
      * Gets the ZonedDateTime of a given IP address.

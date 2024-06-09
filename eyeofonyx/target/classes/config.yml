@@ -1,9 +1,6 @@
 # The address to use for the challenge availability web interface.
-# "localhost" makes the page address "localhost:<port>/challenge"
-# "http://bogthemudwing.ddns.net" will NOT WORK because you must NOT prepend "http://"
-# "woftnw.duckdns.org" will work and redirect to "http://woftnw.duckdns.org:<port>/challenge"
-# Default: "woftnw.duckdns.org"
-address: "woftnw.duckdns.org"
+# Default: "https://eyeofonyx.woftnw.org"
+address: "https://eyeofonyx.woftnw.org"
 
 # The port to use for the challenge availability web interface.
 # You'll need to forward this on your network.
@@ -145,7 +142,7 @@ citizen: {
   sky: "skywing_citizen"
 }
 
-# Emojis for each of the tribes.
+# Images for each of the tribes.
 # Optionally available for Discord royalty board.
 tribe-emblems:
     - ":hivewing:"

@@ -3,7 +3,6 @@ package io.github.stonley890.eyeofonyx.files;
 import io.github.stonley890.dreamvisitor.Dreamvisitor;
 import io.github.stonley890.dreamvisitor.data.PlayerUtility;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
-import javassist.NotFoundException;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -30,7 +29,7 @@ public class Challenge {
     @NotNull
     public final UUID defender;
     @NotNull
-    public final List<LocalDateTime> time;
+    public List<LocalDateTime> time;
     @NotNull
     public State state;
     private boolean attackerCanceled = false;
@@ -64,7 +63,7 @@ public class Challenge {
     }
 
     @Nullable
-    public static Challenge getChallenge(UUID uuid) {
+    public static Challenge getChallenge(@NotNull UUID uuid) {
         Challenge playerChallenge = null;
 
         for (Challenge challenge : getChallenges()) {
@@ -108,10 +107,11 @@ public class Challenge {
         return fileConfig;
     }
 
-    public static void remove(Challenge challenge) {
+    public static void remove(@NotNull Challenge challenge) {
+        Dreamvisitor.debug("Removing challenge of " + challenge.attacker + " and  " + challenge.defender);
         List<Challenge> challenges = getChallenges();
 
-        challenges.removeIf(challenge1 -> challenge1.defender.equals(challenge.defender));
+        Dreamvisitor.debug("Challenge found? " + challenges.removeIf(challenge1 -> challenge1.defender.equals(challenge.defender)));
 
         saveFile(toYaml(challenges));
     }
@@ -124,10 +124,13 @@ public class Challenge {
      *               This will be sent in a notification to the other party.
      *               If this is {@code null}, no notification will be sent.
      */
-    public static void removeChallengesOfPlayer(UUID uuid, @Nullable String reason) {
+    public static void removeChallengesOfPlayer(@NotNull UUID uuid, @Nullable String reason) {
+        Dreamvisitor.debug("Removing challenges of " + uuid);
         List<Challenge> challenges = getChallenges();
         for (Challenge challenge : challenges) {
-            if (challenge.defender == uuid || challenge.attacker == uuid) {
+            Dreamvisitor.debug("Checking challenge of " + challenge.defender + " and " + challenge.attacker);
+            if (challenge.defender.equals(uuid) || challenge.attacker.equals(uuid)) {
+                Dreamvisitor.debug("Found match.");
                 if (reason != null) {
                     if (challenge.defender == uuid)
                         new Notification(challenge.attacker, "Your challenge was canceled.", reason, Notification.Type.GENERIC).create();
@@ -146,7 +149,7 @@ public class Challenge {
      * @param attacker the first player whose challenges to delete.
      * @param defender the second player whose challenges to delete.
      */
-    public static void removeChallengesOfPlayers(UUID attacker, UUID defender) {
+    public static void removeChallengesOfPlayers(@NotNull UUID attacker, @NotNull UUID defender) {
         List<Challenge> challenges = getChallenges();
         for (Challenge challenge : challenges) {
             if (challenge.attacker == attacker && challenge.defender == defender) {
@@ -243,7 +246,7 @@ public class Challenge {
      *
      * @param fileConfig The file configuration to save.
      */
-    private static void saveFile(FileConfiguration fileConfig) {
+    private static void saveFile(@NotNull FileConfiguration fileConfig) {
         try {
             fileConfig.save(file);
         } catch (Exception e) {
@@ -290,15 +293,6 @@ public class Challenge {
         Challenge.remove(this);
         new Notification(attacker, "Your challenge was canceled", "You and your opponent, " + defenderUsername + ", both agreed to cancel the challenge.", Notification.Type.GENERIC).create();
         new Notification(defender, "Your challenge was canceled", "You and your opponent, " + attackerUsername + ", both agreed to cancel the challenge.", Notification.Type.GENERIC).create();
-        try {
-            int tribe = PlayerTribe.getTribeOfPlayer(attacker);
-            int attackerPos = RoyaltyBoard.getPositionIndexOfUUID(attacker);
-            int defenderPos = RoyaltyBoard.getPositionIndexOfUUID(defender);
-            RoyaltyBoard.setAttacking(tribe, attackerPos, null);
-            RoyaltyBoard.setAttacker(tribe, defenderPos, null);
-        } catch (NotFoundException ignored) {
-            // should not happen
-        }
     }
 
     public boolean isAttackerCanceled() {
@@ -329,19 +323,16 @@ public class Challenge {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (obj == null) return false;
-        if (obj instanceof Challenge challenge) {
-            return (
-                    challenge.attacker.equals(attacker) &&
-                            challenge.defender.equals(defender) &&
-                            challenge.time.equals(time) &&
-                            challenge.state.equals(state) &&
-                            challenge.attackerCanceled == attackerCanceled &&
-                            challenge.defenderCanceled == defenderCanceled
-            );
-        } else return false;
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Challenge challenge = (Challenge) o;
+        return attackerCanceled == challenge.attackerCanceled && defenderCanceled == challenge.defenderCanceled && Objects.equals(attacker, challenge.attacker) && Objects.equals(defender, challenge.defender) && Objects.equals(time, challenge.time) && state == challenge.state;
+    }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(attacker, defender, time, state, attackerCanceled, defenderCanceled);
     }
 
     public enum State {

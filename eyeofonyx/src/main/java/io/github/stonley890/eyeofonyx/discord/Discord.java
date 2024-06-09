@@ -3,17 +3,20 @@ package io.github.stonley890.eyeofonyx.discord;
 import io.github.stonley890.dreamvisitor.Bot;
 import io.github.stonley890.dreamvisitor.data.AccountLink;
 import io.github.stonley890.dreamvisitor.data.PlayerUtility;
+import io.github.stonley890.dreamvisitor.data.PlayerTribe;
+import io.github.stonley890.dreamvisitor.data.Tribe;
 import io.github.stonley890.dreamvisitor.discord.DiscCommandsManager;
 import io.github.stonley890.dreamvisitor.discord.commands.DiscordCommand;
 import io.github.stonley890.eyeofonyx.discord.commands.DCmdEyeOfOnyx;
 import io.github.stonley890.eyeofonyx.discord.commands.DCmdRoyalinfo;
 import io.github.stonley890.eyeofonyx.discord.commands.DCmdRoyalty;
 import io.github.stonley890.eyeofonyx.files.*;
-import javassist.NotFoundException;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import org.jetbrains.annotations.NotNull;
 
@@ -22,13 +25,38 @@ import java.util.*;
 
 public class Discord extends ListenerAdapter {
 
+    public static final OptionData tribeOption = new OptionData(OptionType.STRING, "tribe", "The tribe to write to.")
+            .setAutoComplete(false)
+            .addChoice("Hive", "hive")
+            .addChoice("Ice", "ice")
+            .addChoice("Leaf", "leaf")
+            .addChoice("Mud", "mud")
+            .addChoice("Night", "night")
+            .addChoice("Rain", "rain")
+            .addChoice("Sand", "sand")
+            .addChoice("Sea", "sea")
+            .addChoice("Silk", "silk")
+            .addChoice("Sky", "sky");
+
+    public static final OptionData posOption = new OptionData(OptionType.STRING, "position", "The position to target.", true)
+            .setAutoComplete(false)
+            .addChoice("Ruler", "ruler")
+            .addChoice("Crown Heir", "crown_heir")
+            .addChoice("Apparent Heir", "apparent_heir")
+            .addChoice("Presumptive Heir", "presumptive_heir")
+            .addChoice("Crown Noble", "crown_noble")
+            .addChoice("Grand Noble", "grand_noble")
+            .addChoice("High Noble", "high_noble")
+            .addChoice("Apparent Noble", "apparent_noble")
+            .addChoice("Presumptive Noble", "presumptive_noble");
+
     @SuppressWarnings({"null"})
     public static void initCommands() {
         List<DiscordCommand> commands = new ArrayList<>();
 
         commands.add(new DCmdEyeOfOnyx());
-        commands.add(new DCmdRoyalty());
         commands.add(new DCmdRoyalinfo());
+        commands.add(new DCmdRoyalty());
 
         DiscCommandsManager.addCommands(commands);
 
@@ -71,8 +99,6 @@ public class Discord extends ListenerAdapter {
                         String lastChallenge = "N/A";
                         String joinedBoard = "N/A";
                         String joinedPos = "N/A";
-                        String challenger = "N/A";
-                        String challenging = "N/A";
 
                         // OLD
                         if (position.player != null) uuid = position.player.toString();
@@ -82,8 +108,6 @@ public class Discord extends ListenerAdapter {
                         if (position.lastChallenge != null) lastChallenge = position.lastChallenge.toString();
                         if (position.joinedBoard != null) joinedBoard = position.joinedBoard.toString();
                         if (position.joinedPosition != null) joinedPos = position.joinedPosition.toString();
-                        if (position.challenger != null) challenger = PlayerUtility.getUsernameOfUuid(position.challenger.toString());
-                        if (position.challenging != null) challenging = PlayerUtility.getUsernameOfUuid(position.challenging.toString());
 
                         String discordUser = "N/A";
 
@@ -96,8 +120,6 @@ public class Discord extends ListenerAdapter {
                         }
 
                         assert username != null;
-                        assert challenger != null;
-                        assert challenging != null;
                         values.append("\nPlayer: ").append(Bot.escapeMarkdownFormatting(username))
                                 .append("\nUUID: ").append(uuid)
                                 .append("\nUser: ").append(discordUser)
@@ -105,9 +127,7 @@ public class Discord extends ListenerAdapter {
                                 .append("\nLast Online: ").append(lastOnline)
                                 .append("\nLast Challenge: ").append(lastChallenge)
                                 .append("\nDate Joined Board: ").append(joinedBoard)
-                                .append("\nDate Joined Position: ").append(joinedPos)
-                                .append("\nChallenger: ").append(Bot.escapeMarkdownFormatting(challenger))
-                                .append("\nChallenging: ").append(Bot.escapeMarkdownFormatting(challenging));
+                                .append("\nDate Joined Position: ").append(joinedPos);
 
                         embed.addField(RoyaltyBoard.getValidPositions()[pos].replace("_", " ").toUpperCase(), values.toString(), false);
 
@@ -128,11 +148,7 @@ public class Discord extends ListenerAdapter {
 
                     RoyaltyBoard.set(royaltyAction.affectedTribe, royaltyAction.oldState);
                     RoyaltyBoard.updateBoard(royaltyAction.affectedTribe, false);
-                    try {
-                        RoyaltyBoard.updateDiscordBoard(royaltyAction.affectedTribe);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
+                    RoyaltyBoard.updateDiscordBoard(royaltyAction.affectedTribe);
                     event.reply("✅ Values reverted.").queue();
                     event.getInteraction().editButton(button.asDisabled()).queue();
                     break;
@@ -155,15 +171,8 @@ public class Discord extends ListenerAdapter {
                 return;
             }
             Challenge.remove(challenge);
-            try {
-                int tribe = PlayerTribe.getTribeOfPlayer(challenge.attacker);
-                int attackerPos = RoyaltyBoard.getPositionIndexOfUUID(challenge.attacker);
-                int defenderPos = RoyaltyBoard.getPositionIndexOfUUID(challenge.defender);
-                RoyaltyBoard.setAttacking(tribe, attackerPos, null);
-                RoyaltyBoard.setAttacker(tribe, defenderPos, null);
-
-            } catch (NotFoundException ignored) {}
-
+            Tribe tribe = PlayerTribe.getTribeOfPlayer(challenge.attacker);
+            assert tribe != null;
 
             event.reply("Challenged deleted by " + event.getMember().getAsMention()).queue();
             event.getInteraction().editButton(button.asDisabled()).queue();

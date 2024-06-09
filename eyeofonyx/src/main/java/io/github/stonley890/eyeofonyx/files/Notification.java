@@ -246,10 +246,8 @@ public class Notification {
 
     /**
      * Attempts to send the message to the player.
-     *
-     * @return Whether the message was sent.
      */
-    public boolean sendMessage() {
+    public void sendMessage() {
         Player onlinePlayer = Bukkit.getPlayer(player);
         if (onlinePlayer != null) {
 
@@ -314,7 +312,7 @@ public class Notification {
                     // Should not happen
                     onlinePlayer.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You had a challenge accepted, but it couldn't be found! Contact staff for help.");
                     removeNotification(this);
-                    return true;
+                    return;
                 }
 
                 List<LocalDateTime> dates = challenge.time;
@@ -396,9 +394,7 @@ public class Notification {
                 Notification.saveNotification(this);
             }
 
-            return true;
         } else {
-            return false;
         }
     }
 

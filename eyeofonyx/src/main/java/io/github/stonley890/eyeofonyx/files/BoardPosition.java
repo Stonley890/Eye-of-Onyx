@@ -23,12 +23,8 @@ public class BoardPosition {
     public LocalDateTime lastOnline;
     @Nullable
     public LocalDateTime lastChallenge;
-    @Nullable
-    public UUID challenger;
-    @Nullable
-    public UUID challenging;
 
-    public BoardPosition(@Nullable UUID uuid, @Nullable String name, @Nullable LocalDateTime joinedBoard, @Nullable LocalDateTime joinedPosition, @Nullable LocalDateTime lastOnline, @Nullable LocalDateTime lastChallenge, @Nullable UUID challenger, @Nullable UUID challenging) {
+    public BoardPosition(@Nullable UUID uuid, @Nullable String name, @Nullable LocalDateTime joinedBoard, @Nullable LocalDateTime joinedPosition, @Nullable LocalDateTime lastOnline, @Nullable LocalDateTime lastChallenge) {
 
         this.player = uuid;
         this.name = name;
@@ -36,9 +32,6 @@ public class BoardPosition {
         this.joinedPosition = joinedPosition;
         this.lastOnline = lastOnline;
         this.lastChallenge = lastChallenge;
-        this.challenger = challenger;
-        this.challenging = challenging;
-
     }
 
     public BoardPosition setPlayer(UUID uuid) {
@@ -65,14 +58,6 @@ public class BoardPosition {
         this.lastChallenge = lastChallenge;
         return this;
     }
-    public BoardPosition setChallenger(UUID challenger) {
-        this.challenger = challenger;
-        return this;
-    }
-    public BoardPosition setChallenging(UUID challenging) {
-        this.challenging = challenging;
-        return this;
-    }
 
     @Override
     public boolean equals(Object obj) {
@@ -83,9 +68,7 @@ public class BoardPosition {
             if (!Objects.equals(this.joinedBoard, that.joinedBoard)) return false;
             if (!Objects.equals(this.joinedPosition, that.joinedPosition)) return false;
             if (!Objects.equals(this.lastOnline, that.lastOnline)) return false;
-            if (!Objects.equals(this.lastChallenge, that.lastChallenge)) return false;
-            if (!Objects.equals(this.challenger, that.challenger)) return false;
-            return (Objects.equals(this.challenging, that.challenging));
+            return (Objects.equals(this.lastChallenge, that.lastChallenge));
         }
         return false;
 

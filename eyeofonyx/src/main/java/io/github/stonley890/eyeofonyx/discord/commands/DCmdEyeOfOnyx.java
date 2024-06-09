@@ -1,10 +1,12 @@
 package io.github.stonley890.eyeofonyx.discord.commands;
 
 import io.github.stonley890.dreamvisitor.data.AccountLink;
+import io.github.stonley890.dreamvisitor.data.PlayerTribe;
+import io.github.stonley890.dreamvisitor.data.PlayerUtility;
+import io.github.stonley890.dreamvisitor.data.Tribe;
 import io.github.stonley890.dreamvisitor.discord.commands.DiscordCommand;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import io.github.stonley890.eyeofonyx.files.*;
-import javassist.NotFoundException;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -16,7 +18,6 @@ import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.jetbrains.annotations.NotNull;
-import org.shanerx.mojang.Mojang;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -40,7 +41,6 @@ public class DCmdEyeOfOnyx implements DiscordCommand {
     public void onCommand(@NotNull SlashCommandInteractionEvent event) {
 
         String subCommand = event.getSubcommandName();
-        User user = event.getUser();
 
         if (subCommand == null) {
             event.reply("You must specify a subcommand!").setEphemeral(true).queue();
@@ -70,18 +70,9 @@ public class DCmdEyeOfOnyx implements DiscordCommand {
 
                         // Add player to ban list, remove them from the royalty board, and send them a notification.
                         Banned.addPlayer(uuid);
-                        int tribe = -1;
-                        try {
-                            tribe = PlayerTribe.getTribeOfPlayer(uuid);
-                        } catch (NotFoundException e) {
-                            // Player does not have a tribe.
-                        }
-                        int pos = 0;
-                        try {
-                            pos = RoyaltyBoard.getPositionIndexOfUUID(uuid);
-                        } catch (NotFoundException e) {
-                            // Player does not have a tribe.
-                        }
+                        Tribe tribe = PlayerTribe.getTribeOfPlayer(uuid);
+
+                        int pos = RoyaltyBoard.getPositionIndexOfUUID(uuid);
 
                         if (pos != -1 && pos != RoyaltyBoard.CIVILIAN) {
 
@@ -92,16 +83,15 @@ public class DCmdEyeOfOnyx implements DiscordCommand {
                             Notification.removeNotificationsOfPlayer(uuid, Notification.Type.CHALLENGE_REQUESTED);
                             Notification.removeNotificationsOfPlayer(uuid, Notification.Type.CHALLENGE_ACCEPTED);
 
-                            RoyaltyBoard.removePlayer(tribe, pos, true);
-                            RoyaltyBoard.updateBoard(tribe, false);
-                            try {
+                            if (tribe != null) {
+                                RoyaltyBoard.removePlayer(tribe, pos, true);
+                                RoyaltyBoard.updateBoard(tribe, false);
                                 RoyaltyBoard.updateDiscordBoard(tribe);
-                            } catch (IOException e) {
-                                Bukkit.getLogger().warning(EyeOfOnyx.EOO + ChatColor.RED + "An I/O error occurred while attempting to update Discord board.");
                             }
+
                         }
                         new Notification(uuid, "Royalty Ban", "You are no longer allowed to participate in royalty. Contact staff if you think this is a mistake.", Notification.Type.GENERIC).create();
-                        event.reply(user.getAsMention() + " has been banned.").queue();
+                        event.reply(targetUser.getAsMention() + " has been banned.").queue();
 
                     }
                 }
@@ -125,7 +115,7 @@ public class DCmdEyeOfOnyx implements DiscordCommand {
                 } else /* the username is valid */ {
                     if /* player is banned */ (Banned.isPlayerBanned(uuid)) {
                         Banned.removePlayer(uuid);
-                        event.reply(user.getAsMention() + " has been unbanned.").queue();
+                        event.reply(targetUser.getAsMention() + " has been unbanned.").queue();
                     } else /* player is not banned */ {
                         event.reply("That player is not banned.").queue();
                     }
@@ -138,8 +128,6 @@ public class DCmdEyeOfOnyx implements DiscordCommand {
 
                 Bukkit.getScheduler().runTaskAsynchronously(EyeOfOnyx.getPlugin(), () -> {
 
-                    Mojang mojang = new Mojang().connect();
-
                     EmbedBuilder message = new EmbedBuilder();
                     message.setTitle("Banned players:\n");
 
@@ -147,10 +135,17 @@ public class DCmdEyeOfOnyx implements DiscordCommand {
 
                     for (String bannedPlayer : Banned.getBannedPlayers()) {
 
-                        String username = mojang.getPlayerProfile(bannedPlayer).getUsername();
-                        long discordId = AccountLink.getDiscordId(UUID.fromString(bannedPlayer));
+                        String player;
 
-                        description.append("`").append(username).append("`: ").append("<@").append(discordId).append(">\n");
+                        String username = PlayerUtility.getUsernameOfUuid(bannedPlayer);
+                        Long discordId = null;
+                        try {
+                            discordId = AccountLink.getDiscordId(UUID.fromString(bannedPlayer));
+                        } catch (NullPointerException ignored) {}
+
+                        description.append("`").append(username).append("`");
+                        if (discordId != null) description.append("<@").append(discordId).append(">");
+                        description.append("\n");
                     }
                     message.setDescription(description);
                     event.getHook().editOriginalEmbeds(message.build()).queue();

@@ -1,13 +1,8 @@
 package io.github.stonley890.eyeofonyx;
 
-import io.github.stonley890.dreamvisitor.Dreamvisitor;
 import io.github.stonley890.eyeofonyx.files.RoyaltyBoard;
 import io.github.stonley890.eyeofonyx.web.IpUtils;
 import javassist.NotFoundException;
-import net.luckperms.api.model.group.Group;
-import net.luckperms.api.model.user.User;
-import net.luckperms.api.model.user.UserManager;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
@@ -15,8 +10,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Objects;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 
 public class Utils {
 
@@ -44,75 +37,6 @@ public class Utils {
         ZonedDateTime playerTime = IpUtils.ipToTime(Objects.requireNonNull(player.getAddress()).getAddress().getHostAddress());
         if (playerTime == null) throw new NotFoundException("Player time could not be determined.");
         return playerTime.getZone();
-    }
-
-    /**
-     * Removes all tribe-based permissions from the user and adds the one specified. This will run asynchronously, so
-     * keep in mind that results may not be immediately up-to-date.
-     * @param tribeIndex the tribe to set.
-     * @param posIndex the position to set.
-     */
-    public static void setPlayerPerms(UUID playerUuid, int tribeIndex, int posIndex) {
-        if (EyeOfOnyx.luckperms != null) {
-            Dreamvisitor.debug("[setPlayerPerms] Setting permissions for " + playerUuid + " of tribe " + tribeIndex + " pos " + posIndex);
-            // Get user manager
-            UserManager userManager = EyeOfOnyx.luckperms.getUserManager();
-
-            // Get user
-            CompletableFuture<User> userFuture = userManager.loadUser(playerUuid);
-
-            userFuture.thenAcceptAsync(user -> {
-                String[] tribes = RoyaltyBoard.getTribes();
-                String[] positions = RoyaltyBoard.getValidPositions();
-
-                // Remove all other groups
-                for (String tribe : tribes) {
-                    for (String position : positions) {
-                        // Get the lp group name from config
-                        String groupName = EyeOfOnyx.getPlugin().getConfig().getString(position + "." + tribe);
-
-                        if (groupName != null) {
-                            // Get the group from lp and remove it from the user.
-                            Group group = EyeOfOnyx.luckperms.getGroupManager().getGroup(groupName);
-                            user.getInheritedGroups(user.getQueryOptions()).remove(group);
-                            Dreamvisitor.debug("[setPlayerPerms] Removed " + groupName);
-
-                        } else
-                            Bukkit.getLogger().warning("Group " + position + "." + tribe + " is null in the config!");
-                    }
-                }
-
-                // Add the group
-                String groupName = EyeOfOnyx.getPlugin().getConfig().getString(positions[posIndex] + "." + tribes[tribeIndex]);
-
-                if (groupName != null) {
-                    // Get the group from lp and add it to the user.
-                    Group group = EyeOfOnyx.luckperms.getGroupManager().getGroup(groupName);
-                    user.getInheritedGroups(user.getQueryOptions()).add(group);
-                    Dreamvisitor.debug("[setPlayerPerms] Added " + groupName);
-                }
-
-            });
-        }
-    }
-
-    /**
-     * Get the integer index of a tribe's name.
-     * @param tribe a {@link String}.
-     * @return the index of the tribe identified or -1 if no match.
-     */
-    public static int tribeIndexFromString(String tribe) {
-        int tribeIndex = -1;
-
-        for (int i = 0; i < RoyaltyBoard.getTribes().length; i++) {
-            String vTribe = RoyaltyBoard.getTribes()[i];
-            if (vTribe.equals(tribe)) {
-                tribeIndex = i;
-                break;
-            }
-        }
-
-        return tribeIndex;
     }
 
     /**

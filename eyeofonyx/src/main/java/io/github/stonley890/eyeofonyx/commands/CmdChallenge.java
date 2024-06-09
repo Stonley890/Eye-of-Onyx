@@ -1,22 +1,20 @@
 package io.github.stonley890.eyeofonyx.commands;
 
+import dev.jorel.commandapi.CommandAPICommand;
+import dev.jorel.commandapi.arguments.StringArgument;
+import dev.jorel.commandapi.executors.CommandArguments;
 import io.github.stonley890.dreamvisitor.Bot;
 import io.github.stonley890.dreamvisitor.Dreamvisitor;
-import io.github.stonley890.dreamvisitor.data.AccountLink;
-import io.github.stonley890.dreamvisitor.data.AltFamily;
-import io.github.stonley890.dreamvisitor.data.PlayerUtility;
+import io.github.stonley890.dreamvisitor.data.*;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import io.github.stonley890.eyeofonyx.challenges.Competition;
 import io.github.stonley890.eyeofonyx.files.*;
-import javassist.NotFoundException;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.*;
 import net.md_5.bungee.api.chat.hover.content.Text;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Statistic;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -28,219 +26,16 @@ import java.util.*;
 
 import static io.github.stonley890.eyeofonyx.files.RoyaltyBoard.*;
 
-public class CmdChallenge implements CommandExecutor {
+public class CmdChallenge {
 
-    String[] teams = RoyaltyBoard.getTeamNames();
-    String[] positions = RoyaltyBoard.getValidPositions();
+    final String[] positions = RoyaltyBoard.getValidPositions();
 
-    public static List<Player> playersOnForm = new ArrayList<>();
-    public static List<String> codesOnForm = new ArrayList<>();
+    public static final List<Player> playersOnForm = new ArrayList<>();
+    public static final List<String> codesOnForm = new ArrayList<>();
 
-    public static Map<Player, Player> quickChallenges = new HashMap<>();
+    public static final Map<Player, Player> quickChallenges = new HashMap<>();
 
-    @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-
-        for (Player player : quickChallenges.keySet()) {
-            if (!player.isOnline()) {
-                quickChallenges.remove(player);
-            }
-        }
-
-        if (sender instanceof Player player) {
-
-            sender.sendMessage(EyeOfOnyx.EOO + "Please wait...");
-
-            // Check if board is frozen
-            if (RoyaltyBoard.isFrozen()) {
-                sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "The royalty board is currently frozen.");
-                return true;
-            }
-
-            // Check if at least 12 hours play time
-            if (player.getStatistic(Statistic.PLAY_ONE_MINUTE) / 20 / 60 / 60 < 12) {
-                sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You must have at least twelve hours of play time before you can participate in royalty.");
-                return true;
-            }
-
-            // Ensure player is part of a team
-            int playerTribe;
-            try {
-                playerTribe = PlayerTribe.getTribeOfPlayer(player.getUniqueId());
-            } catch (NotFoundException e) {
-                sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You are not part of a team!");
-                return true;
-            }
-
-            // Ensure player has a linked Discord account
-            long discordId;
-            try {
-                discordId = AccountLink.getDiscordId(player.getUniqueId());
-
-            } catch (NullPointerException e) {
-                sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You do not have a linked Discord account! Contact a staff member for help.");
-                return true;
-            }
-
-            Bot.getGameLogChannel().getGuild().retrieveMemberById(discordId).queue(member -> Bukkit.getScheduler().runTask(EyeOfOnyx.getPlugin(), () -> {
-                // Check if alt account
-                if (AltFamily.getParent(member.getIdLong()) != member.getIdLong()) {
-                    sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Your account is marked as an alt. Please contact staff if this is incorrect.");
-                    return;
-                }
-
-                int playerPosition = RoyaltyBoard.getPositionIndexOfUUID(playerTribe, player.getUniqueId());
-
-                if (Banned.isPlayerBanned(player.getUniqueId())) {
-                    // Player is banned from royalty board
-                    sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You are not allowed to initiate a challenge!");
-                    return;
-                }
-
-                Challenge challenge = Challenge.getChallenge(player.getUniqueId());
-                if (args.length == 0 && challenge != null) {
-                    sendChallengeDetails(player, challenge);
-                    return;
-                }
-
-                if (playerPosition != CIVILIAN && RoyaltyBoard.isOnCoolDown(playerTribe, playerPosition)) {
-
-                    // Player is on cooldown. They cannot challenge
-                    ComponentBuilder builder = new ComponentBuilder();
-                    LocalDateTime challengeDate = RoyaltyBoard.getLastChallengeDate(playerTribe, playerPosition);
-                    assert challengeDate != null;
-                    challengeDate = challengeDate.plusDays(EyeOfOnyx.getPlugin().getConfig().getInt("challenge-cool-down"));
-
-                    builder.append(EyeOfOnyx.EOO)
-                            .color(ChatColor.RED)
-                            .append("You are on movement cooldown until ")
-                            .append(challengeDate.format(DateTimeFormatter.ISO_DATE));
-
-                    sender.spigot().sendMessage(builder.create());
-
-                    return;
-
-                } else if (playerPosition != CIVILIAN && playerPosition != RULER && RoyaltyBoard.getAttacking(playerTribe, playerPosition) != null && (args.length == 0 || !args[0].equals("cancel"))) {
-
-                    if (args.length == 0 || (!args[0].equals("date") && !args[0].equals("start"))) {
-                        // Player has already initiated a challenge
-                        sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You have already initiated a challenge!");
-                        return;
-                    }
-                }
-                if (args.length == 0) {
-
-                    ComponentBuilder builder = new ComponentBuilder();
-
-                    /*
-
-                    CHALLENGE MENU
-                    You are currently $position$ of the $playerTeam$s.
-                    Select a position:
-
-                     */
-
-                    builder.append(EyeOfOnyx.EOO + "CHALLENGE MENU")
-                            .append("\nYou are currently ");
-                    String position = "CIVILIAN";
-                    if (playerPosition != CIVILIAN) position = positions[playerPosition];
-                    builder.append(position.replace('_', ' ')).color(ChatColor.YELLOW)
-                            .append(" of the ").color(ChatColor.WHITE)
-                            .append(teams[playerTribe]).color(ChatColor.YELLOW).append("s").color(ChatColor.YELLOW)
-                            .append(".\nSelect a position:\n").color(ChatColor.WHITE);
-
-                    if /* Player is a civilian */ (playerPosition == CIVILIAN) {
-
-                        // Check for any empty positions
-                        int nextEmptyPosition = CIVILIAN;
-
-                        // Iterate through positions (start at ruler)
-                        for (int i = 0; i < positions.length; i++) {
-                            nextEmptyPosition = i;
-                            // If position is empty, break
-                            if (RoyaltyBoard.isPositionEmpty(playerTribe, i)) {
-                                break;
-                            }
-                            nextEmptyPosition = CIVILIAN;
-                        }
-
-                        // If a position is available, offer
-                        if (nextEmptyPosition < CIVILIAN) {
-
-                            builder.append(positions[nextEmptyPosition].toUpperCase().replace('_', ' '))
-                                    .append("\nPosition Available\n \n");
-
-                            TextComponent button = new TextComponent("[ Assume Position ]");
-                            button.setUnderlined(true);
-                            button.setColor(ChatColor.GREEN);
-                            button.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/challenge position1"));
-
-                            builder.append(button);
-
-                        } else {
-                            builder.append(challengeEntry(playerTribe, NOBLE1, "position1"), ComponentBuilder.FormatRetention.NONE).reset()
-                                    .append(challengeEntry(playerTribe, NOBLE2, "position2"), ComponentBuilder.FormatRetention.NONE).reset()
-                                    .append(challengeEntry(playerTribe, NOBLE3, "position3"), ComponentBuilder.FormatRetention.NONE).reset()
-                                    .append(challengeEntry(playerTribe, NOBLE4, "position4"), ComponentBuilder.FormatRetention.NONE).reset()
-                                    .append(challengeEntry(playerTribe, NOBLE5, "position5"), ComponentBuilder.FormatRetention.NONE).reset();
-
-                        }
-                    } else if /* Player is a noble */ (playerPosition == NOBLE2 || playerPosition == NOBLE1) {
-
-                        builder.append(challengeEntry(playerTribe, HEIR1, "position1"), ComponentBuilder.FormatRetention.NONE).reset()
-                                .append(challengeEntry(playerTribe, HEIR2, "position2"), ComponentBuilder.FormatRetention.NONE).reset()
-                                .append(challengeEntry(playerTribe, HEIR3, "position3"), ComponentBuilder.FormatRetention.NONE).reset();
-
-                    } else if /* Player is an heir */ (playerPosition == HEIR2 || playerPosition == HEIR1) {
-
-                        builder.append(challengeEntry(playerTribe, RULER, "position1"), ComponentBuilder.FormatRetention.NONE).reset();
-
-                    } else if /* Player is ruler */ (playerPosition == RULER) {
-
-                        builder.color(ChatColor.RED).append("You are ruler! No one to challenge.");
-
-                    }
-
-                    sender.spigot().sendMessage(builder.create());
-
-                } else {
-
-                    switch (args[0]) {
-                        case "position1", "position2", "position3", "position4", "position5" -> initiate(sender, args, player, playerPosition, playerTribe);
-                        case "accept" -> accept(sender, player);
-                        case "deny" -> deny(sender);
-                        case "denyconfirm" -> denyconfirm(sender, player, playerTribe, playerPosition);
-                        case "start" -> start(sender, player);
-                        case "date" -> date(sender, args, player, challenge);
-                        case "cancel" -> {
-                            if (challenge != null) {
-                                if (challenge.attacker.equals(player.getUniqueId())) challenge.cancelAttacker();
-                                if (challenge.defender.equals(player.getUniqueId())) challenge.cancelDefender();
-                                sender.sendMessage(EyeOfOnyx.EOO + "Cancel request sent.");
-                            } else sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You do not have a challenge to cancel!");
-                        }
-                        case "quickaccept" -> {
-                            for (Player quickChallengePlayer : quickChallenges.keySet()) {
-                                if (Objects.equals(quickChallenges.get(quickChallengePlayer), player)) {
-                                    Competition.call(new Challenge(quickChallengePlayer.getUniqueId(), player.getUniqueId(), new ArrayList<>(), Challenge.State.SCHEDULED));
-                                    quickChallenges.remove(quickChallengePlayer);
-                                    return;
-                                }
-                            }
-                            sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "That quick challenge proposal either expired or does not exist.");
-                        }
-                        default -> sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Incorrect arguments! Use the text GUI with /challenge");
-                    }
-                }
-            }));
-        } else {
-            sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "That command is only available for players!");
-        }
-
-        return true;
-    }
-
-    private static void date(@NotNull CommandSender sender, @NotNull String[] args, Player player, Challenge challenge) {
+    private static void date(@NotNull CommandSender sender, @NotNull CommandArguments args, Player player, Challenge challenge) {
         if (challenge == null) {
             sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You are not in any scheduled challenges!");
             return;
@@ -251,15 +46,11 @@ public class CmdChallenge implements CommandExecutor {
             return;
         }
 
-        if (args.length < 2) {
-            sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Missing arguments!");
-            return;
-        }
-
         int selectedTimeIndex;
-
+        String arg = (String) args.get("arg2");
+        assert arg != null;
         try {
-            selectedTimeIndex = Integer.parseInt(args[1]);
+            selectedTimeIndex = Integer.parseInt(arg);
         } catch (NumberFormatException e) {
             sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Incorrect arguments!");
             return;
@@ -291,8 +82,8 @@ public class CmdChallenge implements CommandExecutor {
 
             List<Location> waitingRooms = (List<Location>) EyeOfOnyx.getPlugin().getConfig().getList("waiting-rooms");
             if (waitingRooms != null) {
-                if (waitingRooms.get(Competition.activeChallenge.tribe) != null) {
-                    player.teleport(waitingRooms.get(Competition.activeChallenge.tribe));
+                if (waitingRooms.get(TribeUtil.indexOf(Competition.activeChallenge.tribe)) != null) {
+                    player.teleport(waitingRooms.get(TribeUtil.indexOf(Competition.activeChallenge.tribe)));
                 } else
                     sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "No waiting room set! Contact an admin.");
             } else
@@ -300,7 +91,7 @@ public class CmdChallenge implements CommandExecutor {
         }
     }
 
-    private static void denyconfirm(@NotNull CommandSender sender, @NotNull Player player, int playerTribe, int playerPosition) {
+    private static void denyconfirm(@NotNull CommandSender sender, @NotNull Player player, Tribe playerTribe, int playerPosition) {
         // Remove notification
         List<Notification> notificationList = Notification.getNotificationsOfPlayer(player.getUniqueId());
         for (Notification notification : notificationList) {
@@ -316,11 +107,7 @@ public class CmdChallenge implements CommandExecutor {
         RoyaltyBoard.updateBoard(playerTribe, false);
         sender.sendMessage(EyeOfOnyx.EOO + "You have been removed from the royalty board.");
 
-        try {
-            RoyaltyBoard.updateDiscordBoard(playerTribe);
-        } catch (IOException e) {
-            Bukkit.getLogger().warning("Unable to update Discord board.");
-        }
+        RoyaltyBoard.updateDiscordBoard(playerTribe);
     }
 
     private static void deny(@NotNull CommandSender sender) {
@@ -353,7 +140,7 @@ public class CmdChallenge implements CommandExecutor {
         TextComponent link = new TextComponent("[Submit Availability]");
         link.setColor(ChatColor.YELLOW);
         link.setUnderlined(true);
-        link.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "http://" + EyeOfOnyx.getPlugin().getConfig().getString("address") + ":" + EyeOfOnyx.getPlugin().getConfig().getInt("port") + "/availability"));
+        link.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, EyeOfOnyx.getPlugin().getConfig().getString("address") + "/availability"));
         link.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("Click to open the web form.")));
 
         String id = String.format("%04d", new Random().nextInt(10000));
@@ -373,7 +160,7 @@ public class CmdChallenge implements CommandExecutor {
         sender.spigot().sendMessage(builder.create());
     }
 
-    private void initiate(@NotNull CommandSender sender, @NotNull String[] args, Player player, int playerPosition, int playerTribe) {
+    private void initiate(@NotNull CommandSender sender, @NotNull String action, boolean quick, @NotNull Player player, int playerPosition, Tribe playerTribe) {
         ComponentBuilder builder = new ComponentBuilder();
         builder.append(EyeOfOnyx.EOO);
 
@@ -402,24 +189,21 @@ public class CmdChallenge implements CommandExecutor {
             // If a position is available, do that
             if (nextEmptyPosition < CIVILIAN) {
                 BoardState oldBoard = getBoardOf(playerTribe).clone();
-                RoyaltyBoard.set(playerTribe, nextEmptyPosition, new BoardPosition(player.getUniqueId(), null, LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now(), null, null));
+                RoyaltyBoard.set(playerTribe, nextEmptyPosition, new BoardPosition(player.getUniqueId(), null, LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now()));
                 BoardState newBoard = getBoardOf(playerTribe).clone();
+                RoyaltyBoard.updatePermissions(player.getUniqueId(), playerTribe, nextEmptyPosition);
                 reportChange(new RoyaltyAction(player.getName(), playerTribe, oldBoard, newBoard));
                 updateBoard(playerTribe, true);
 
-                sender.sendMessage(EyeOfOnyx.EOO + "You are now " + getValidPositions()[nextEmptyPosition].toUpperCase().replace("_", " ") + " of the " + getTeamNames()[playerTribe].toUpperCase() + "s!");
-                try {
-                    RoyaltyBoard.updateDiscordBoard(playerTribe);
-                } catch (IOException e) {
-                    Bukkit.getLogger().warning("Unable to update Discord board. Message format file cannot be read.");
-                }
+                sender.sendMessage(EyeOfOnyx.EOO + "You are now " + getValidPositions()[nextEmptyPosition].toUpperCase().replace("_", " ") + " of the " + playerTribe.getTeamName() + "s!");
+                RoyaltyBoard.updateDiscordBoard(playerTribe);
                 return;
             }
 
             Dreamvisitor.debug("No extra positions available.");
 
             // Determine which position is being targeted
-            switch (args[0]) {
+            switch (action) {
                 case "position1" -> targetPosition = NOBLE1;
                 case "position2" -> targetPosition = NOBLE2;
                 case "position3" -> targetPosition = NOBLE3;
@@ -435,7 +219,7 @@ public class CmdChallenge implements CommandExecutor {
         } else if (playerPosition >= NOBLE1 && playerPosition <= NOBLE5) {
 
             // Determine which position is being targeted
-            switch (args[0]) {
+            switch (action) {
                 case "position1" -> targetPosition = HEIR1;
                 case "position2" -> targetPosition = HEIR2;
                 case "position3" -> targetPosition = HEIR3;
@@ -457,7 +241,7 @@ public class CmdChallenge implements CommandExecutor {
         }
 
         // Check that target is not being challenged
-        if (!(RoyaltyBoard.getAttacker(playerTribe, targetPosition) == null || (targetPosition != RULER && RoyaltyBoard.getAttacking(playerTribe, targetPosition) != null))) {
+        if (!(Challenge.getChallenge(player.getUniqueId()) == null || (targetPosition != RULER && Challenge.getChallenge(player.getUniqueId()) != null))) {
             builder.append("That player is already in a challenge!");
             sender.spigot().sendMessage(builder.create());
         } else {
@@ -476,7 +260,7 @@ public class CmdChallenge implements CommandExecutor {
             UUID targetUuid = RoyaltyBoard.getUuid(playerTribe, targetPosition);
             assert targetUuid != null;
 
-            if (args.length > 1 && args[1].equals("quick")) {
+            if (quick) {
                 Player targetPlayer = Bukkit.getPlayer(targetUuid);
                 if (targetPlayer == null) {
                     sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "That player is not currently online.");
@@ -498,15 +282,6 @@ public class CmdChallenge implements CommandExecutor {
 
 
             } else {
-                BoardState oldBoard = RoyaltyBoard.getBoardOf(playerTribe).clone();
-
-                // set values in board.yml
-                RoyaltyBoard.setAttacker(playerTribe, targetPosition, player.getUniqueId());
-                if (playerPosition != 5) RoyaltyBoard.setAttacking(playerTribe, playerPosition, targetUuid);
-
-                BoardState newBoard = RoyaltyBoard.getBoardOf(playerTribe).clone();
-                if (!oldBoard.equals(newBoard)) RoyaltyBoard.reportChange(new RoyaltyAction(sender.getName(), playerTribe, oldBoard, newBoard));
-
                 // create notification for target
                 String title = "You've been challenged!";
                 String content = player.getName() + " has challenged your position for " + positions[targetPosition].replace('_', ' ') + ".";
@@ -552,7 +327,7 @@ public class CmdChallenge implements CommandExecutor {
         player.spigot().sendMessage(builder.create());
     }
 
-    private static BaseComponent[] challengeEntry(int tribe, int pos, String command) {
+    private static BaseComponent[] challengeEntry(Tribe tribe, int pos, String command) {
         ComponentBuilder builder = new ComponentBuilder();
 
         TextComponent challengeButton = new TextComponent("[ Initiate Challenge ]");
@@ -586,4 +361,217 @@ public class CmdChallenge implements CommandExecutor {
         return builder.append("\n").reset().create();
     }
 
+    @NotNull
+    public CommandAPICommand getCommand() {
+        return new CommandAPICommand("challenge")
+                .withPermission("eyeofonyx.challenge")
+                .withHelp("Initiate a challenge.", "Initiate or manage a challenge.")
+                .withOptionalArguments(new StringArgument("arg"))
+                .withOptionalArguments(new StringArgument("arg2"))
+                .withOptionalArguments(new StringArgument("arg3"))
+                .executesNative((sender, args) -> {
+
+                    String arg1 = (String) args.get("arg");
+                    Dreamvisitor.debug("arg1: " + arg1);
+                    String arg2 = (String) args.get("arg2");
+                    Dreamvisitor.debug("arg2: " + arg2);
+
+                    for (Player player : quickChallenges.keySet()) {
+                        if (!player.isOnline()) {
+                            quickChallenges.remove(player);
+                        }
+                    }
+
+                    if (sender.getCallee() instanceof Player player) {
+
+                        sender.sendMessage(EyeOfOnyx.EOO + "Please wait...");
+
+                        // Check if board is frozen
+                        if (RoyaltyBoard.isFrozen()) {
+                            sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "The royalty board is currently frozen.");
+                            return;
+                        }
+
+                        // Check if at least 12 hours play time
+                        if (player.getStatistic(Statistic.PLAY_ONE_MINUTE) / 20 / 60 / 60 < 12) {
+                            sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You must have at least twelve hours of play time before you can participate in royalty.");
+                            return;
+                        }
+
+                        // Ensure player is part of a team
+                        Tribe playerTribe;
+                        playerTribe = PlayerTribe.getTribeOfPlayer(player.getUniqueId());
+                        if (playerTribe == null) {
+                            sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You are not part of a team!");
+                            return;
+                        }
+
+                        // Ensure player has a linked Discord account
+                        long discordId;
+                        try {
+                            discordId = AccountLink.getDiscordId(player.getUniqueId());
+
+                        } catch (NullPointerException e) {
+                            sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You do not have a linked Discord account! Contact a staff member for help.");
+                            return;
+                        }
+
+                        Bot.getGameLogChannel().getGuild().retrieveMemberById(discordId).queue(member -> Bukkit.getScheduler().runTask(EyeOfOnyx.getPlugin(), () -> {
+                            // Check if alt account
+                            if (AltFamily.getParent(member.getIdLong()) != member.getIdLong()) {
+                                sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Your account is marked as an alt. Please contact staff if this is incorrect.");
+                                return;
+                            }
+
+                            int playerPosition = RoyaltyBoard.getPositionIndexOfUUID(playerTribe, player.getUniqueId());
+
+                            if (Banned.isPlayerBanned(player.getUniqueId())) {
+                                // Player is banned from royalty board
+                                sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You are not allowed to initiate a challenge!");
+                                return;
+                            }
+
+                            Challenge challenge = Challenge.getChallenge(player.getUniqueId());
+                            if (arg1 == null && challenge != null) {
+                                sendChallengeDetails(player, challenge);
+                                return;
+                            }
+
+                            if (playerPosition != CIVILIAN && RoyaltyBoard.isOnCoolDown(playerTribe, playerPosition)) {
+
+                                // Player is on cooldown. They cannot challenge
+                                ComponentBuilder builder = new ComponentBuilder();
+                                LocalDateTime challengeDate = RoyaltyBoard.getLastChallengeDate(playerTribe, playerPosition);
+                                assert challengeDate != null;
+                                challengeDate = challengeDate.plusDays(EyeOfOnyx.getPlugin().getConfig().getInt("challenge-cool-down"));
+
+                                builder.append(EyeOfOnyx.EOO)
+                                        .color(ChatColor.RED)
+                                        .append("You are on movement cooldown until ")
+                                        .append(challengeDate.format(DateTimeFormatter.ISO_DATE));
+
+                                sender.spigot().sendMessage(builder.create());
+
+                                return;
+
+                            } else if (playerPosition != CIVILIAN && playerPosition != RULER && challenge != null && !arg1.equals("date") && !arg1.equals("start")) {
+
+                                // Player has already initiated a challenge
+                                sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You have already initiated a challenge!");
+                                return;
+
+                            }
+                            if (arg1 == null) {
+
+                                ComponentBuilder builder = new ComponentBuilder();
+
+                                /*
+
+                                CHALLENGE MENU
+                                You are currently $position$ of the $playerTeam$s.
+                                Select a position:
+
+                                 */
+
+                                builder.append(EyeOfOnyx.EOO + "CHALLENGE MENU")
+                                        .append("\nYou are currently ");
+                                String position = "CIVILIAN";
+                                if (playerPosition != CIVILIAN) position = positions[playerPosition];
+                                builder.append(position.replace('_', ' ')).color(ChatColor.YELLOW)
+                                        .append(" of the ").color(ChatColor.WHITE)
+                                        .append(playerTribe.getTeamName()).color(ChatColor.YELLOW).append("s").color(ChatColor.YELLOW)
+                                        .append(".\nSelect a position:\n").color(ChatColor.WHITE);
+
+                                if /* Player is a civilian */ (playerPosition == CIVILIAN) {
+
+                                    // Check for any empty positions
+                                    int nextEmptyPosition = CIVILIAN;
+
+                                    // Iterate through positions (start at ruler)
+                                    for (int i = 0; i < positions.length; i++) {
+                                        nextEmptyPosition = i;
+                                        // If position is empty, break
+                                        if (RoyaltyBoard.isPositionEmpty(playerTribe, i)) {
+                                            break;
+                                        }
+                                        nextEmptyPosition = CIVILIAN;
+                                    }
+
+                                    // If a position is available, offer
+                                    if (nextEmptyPosition < CIVILIAN) {
+
+                                        builder.append(positions[nextEmptyPosition].toUpperCase().replace('_', ' '))
+                                                .append("\nPosition Available\n \n");
+
+                                        TextComponent button = new TextComponent("[ Assume Position ]");
+                                        button.setUnderlined(true);
+                                        button.setColor(ChatColor.GREEN);
+                                        button.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/challenge position1"));
+
+                                        builder.append(button);
+
+                                    } else {
+                                        builder.append(challengeEntry(playerTribe, NOBLE1, "position1"), ComponentBuilder.FormatRetention.NONE).reset()
+                                                .append(challengeEntry(playerTribe, NOBLE2, "position2"), ComponentBuilder.FormatRetention.NONE).reset()
+                                                .append(challengeEntry(playerTribe, NOBLE3, "position3"), ComponentBuilder.FormatRetention.NONE).reset()
+                                                .append(challengeEntry(playerTribe, NOBLE4, "position4"), ComponentBuilder.FormatRetention.NONE).reset()
+                                                .append(challengeEntry(playerTribe, NOBLE5, "position5"), ComponentBuilder.FormatRetention.NONE).reset();
+
+                                    }
+                                } else if /* Player is a noble */ (playerPosition == NOBLE2 || playerPosition == NOBLE1) {
+
+                                    builder.append(challengeEntry(playerTribe, HEIR1, "position1"), ComponentBuilder.FormatRetention.NONE).reset()
+                                            .append(challengeEntry(playerTribe, HEIR2, "position2"), ComponentBuilder.FormatRetention.NONE).reset()
+                                            .append(challengeEntry(playerTribe, HEIR3, "position3"), ComponentBuilder.FormatRetention.NONE).reset();
+
+                                } else if /* Player is an heir */ (playerPosition == HEIR2 || playerPosition == HEIR1) {
+
+                                    builder.append(challengeEntry(playerTribe, RULER, "position1"), ComponentBuilder.FormatRetention.NONE).reset();
+
+                                } else if /* Player is ruler */ (playerPosition == RULER) {
+
+                                    builder.color(ChatColor.RED).append("You are ruler! No one to challenge.");
+
+                                }
+
+                                sender.spigot().sendMessage(builder.create());
+
+                            } else {
+
+                                switch (arg1) {
+                                    case "position1", "position2", "position3", "position4", "position5" -> {
+                                        boolean quick = arg2 != null && arg2.equals("quick");
+                                        initiate(sender, arg1, quick, player, playerPosition, playerTribe);
+                                    }
+                                    case "accept" -> accept(sender, player);
+                                    case "deny" -> deny(sender);
+                                    case "denyconfirm" -> denyconfirm(sender, player, playerTribe, playerPosition);
+                                    case "start" -> start(sender, player);
+                                    case "date" -> date(sender, args, player, challenge);
+                                    case "cancel" -> {
+                                        if (challenge != null) {
+                                            if (challenge.attacker.equals(player.getUniqueId())) challenge.cancelAttacker();
+                                            if (challenge.defender.equals(player.getUniqueId())) challenge.cancelDefender();
+                                            sender.sendMessage(EyeOfOnyx.EOO + "Cancel request sent.");
+                                        } else sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You do not have a challenge to cancel!");
+                                    }
+                                    case "quickaccept" -> {
+                                        for (Player quickChallengePlayer : quickChallenges.keySet()) {
+                                            if (Objects.equals(quickChallenges.get(quickChallengePlayer), player)) {
+                                                Competition.call(new Challenge(quickChallengePlayer.getUniqueId(), player.getUniqueId(), new ArrayList<>(), Challenge.State.SCHEDULED));
+                                                quickChallenges.remove(quickChallengePlayer);
+                                                return;
+                                            }
+                                        }
+                                        sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "That quick challenge proposal either expired or does not exist.");
+                                    }
+                                    default -> sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "Incorrect arguments! Use the text GUI with /challenge");
+                                }
+                            }
+                        }));
+                    } else {
+                        sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "That command is only available for players!");
+                    }
+                });
+    }
 }

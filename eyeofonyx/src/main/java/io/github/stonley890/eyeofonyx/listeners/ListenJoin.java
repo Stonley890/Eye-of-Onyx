@@ -1,13 +1,13 @@
 package io.github.stonley890.eyeofonyx.listeners;
 
+import io.github.stonley890.dreamvisitor.data.PlayerTribe;
+import io.github.stonley890.dreamvisitor.data.Tribe;
+import io.github.stonley890.dreamvisitor.data.TribeUtil;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import io.github.stonley890.eyeofonyx.challenges.Competition;
-import io.github.stonley890.eyeofonyx.files.BoardPosition;
 import io.github.stonley890.eyeofonyx.files.Notification;
-import io.github.stonley890.eyeofonyx.files.PlayerTribe;
 import io.github.stonley890.eyeofonyx.files.RoyaltyBoard;
 import io.github.stonley890.eyeofonyx.web.IpUtils;
-import javassist.NotFoundException;
 import net.luckperms.api.model.user.User;
 import net.luckperms.api.model.user.UserManager;
 import net.luckperms.api.node.Node;
@@ -23,7 +23,6 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 public class ListenJoin implements Listener {
-    private static final String[] tribes = RoyaltyBoard.getTribes();
 
     @EventHandler
     public void onPlayerJoin(@NotNull PlayerJoinEvent event) {
@@ -33,7 +32,7 @@ public class ListenJoin implements Listener {
         // Update tribe
         try {
             PlayerTribe.updateTribeOfPlayer(player.getUniqueId());
-        } catch (NotFoundException e) {
+        } catch (NullPointerException e) {
             // Player does not have a tribe.
         }
 
@@ -44,28 +43,26 @@ public class ListenJoin implements Listener {
 
         userFuture.thenAcceptAsync(user -> {
 
-            int tribeIndex;
+            Tribe tribe;
             int posIndex;
 
-            try {
-                tribeIndex = PlayerTribe.getTribeOfPlayer(player.getUniqueId());
-                posIndex = RoyaltyBoard.getPositionIndexOfUUID(player.getUniqueId());
-            } catch (NotFoundException e) {
-                return;
-            }
+            tribe = PlayerTribe.getTribeOfPlayer(player.getUniqueId());
+            posIndex = RoyaltyBoard.getPositionIndexOfUUID(player.getUniqueId());
+
+            if (tribe == null) return;
 
             if (posIndex == RoyaltyBoard.CIVILIAN) {
 
                 // remove other permissions
-                for (int tribe = 0; tribe < tribes.length; tribe++) {
-                    if (tribe != tribeIndex) {
-                        String groupName = EyeOfOnyx.getPlugin().getConfig().getString("citizen." + tribes[tribe]);
+                for (int t = 0; t < TribeUtil.tribes.length; t++) {
+                    if (t != TribeUtil.indexOf(tribe)) {
+                        String groupName = EyeOfOnyx.getPlugin().getConfig().getString("citizen." + TribeUtil.tribes[t].getName().toLowerCase());
                         user.data().remove(Node.builder("group." + groupName).build());
                     }
                 }
 
                 // add appropriate permission
-                String groupName = EyeOfOnyx.getPlugin().getConfig().getString("citizen." + tribes[tribeIndex]);
+                String groupName = EyeOfOnyx.getPlugin().getConfig().getString("citizen." + tribe.getName().toLowerCase());
 
                 user.data().add(Node.builder("group." + groupName).build());
                 userManager.saveUser(user);
@@ -91,16 +88,11 @@ public class ListenJoin implements Listener {
 
         // update last online
         UUID uuid = player.getUniqueId();
-        try {
-            int tribe = PlayerTribe.getTribeOfPlayer(uuid);
-            int pos = RoyaltyBoard.getPositionIndexOfUUID(tribe, uuid);
+        Tribe tribe = PlayerTribe.getTribeOfPlayer(uuid);
+        if (tribe == null) return;
+        int pos = RoyaltyBoard.getPositionIndexOfUUID(tribe, uuid);
 
-            // If the player is not a citizen
-            if (pos != RoyaltyBoard.CIVILIAN) {
-                BoardPosition updatedPos = RoyaltyBoard.getBoardOf(tribe).getPos(pos);
-                updatedPos.lastOnline = LocalDateTime.now();
-                RoyaltyBoard.set(tribe, pos, updatedPos);
-            }
-        } catch (NotFoundException ignored) {}
+        // If the player is not a citizen
+        if (pos != RoyaltyBoard.CIVILIAN) RoyaltyBoard.setLastOnline(tribe, pos, LocalDateTime.now());
     }
 }

@@ -1,6 +1,9 @@
 package io.github.stonley890.eyeofonyx.discord.commands;
 
+import io.github.stonley890.dreamvisitor.Bot;
 import io.github.stonley890.dreamvisitor.data.PlayerUtility;
+import io.github.stonley890.dreamvisitor.data.Tribe;
+import io.github.stonley890.dreamvisitor.data.TribeUtil;
 import io.github.stonley890.dreamvisitor.discord.commands.DiscordCommand;
 import io.github.stonley890.eyeofonyx.Utils;
 import io.github.stonley890.eyeofonyx.files.Challenge;
@@ -18,7 +21,6 @@ import net.md_5.bungee.api.ChatColor;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.UUID;
 
 public class DCmdRoyalinfo implements DiscordCommand {
@@ -64,8 +66,8 @@ public class DCmdRoyalinfo implements DiscordCommand {
             return;
         }
 
-        int tribe = Utils.tribeIndexFromString(tribeOption);
-        if (tribe == -1) {
+        Tribe tribe = TribeUtil.parse(tribeOption);
+        if (tribe == null) {
             event.reply("Tribe is invalid!").queue();
             return;
         }
@@ -90,7 +92,7 @@ public class DCmdRoyalinfo implements DiscordCommand {
         LocalDateTime cooldownEnd = RoyaltyBoard.getCooldownEnd(tribe, pos);
         String cooldownEndString;
 
-        embed.setTitle(RoyaltyBoard.getTeamNames()[tribe] + " " + RoyaltyBoard.getValidPositions()[pos].toUpperCase().replace('_', ' ') + " Info");
+        embed.setTitle(tribe + " " + RoyaltyBoard.getValidPositions()[pos].toUpperCase().replace('_', ' ') + " Info");
 
         if (uuid == null) {
             embed.setDescription("This position is currently not occupied.");
@@ -102,13 +104,13 @@ public class DCmdRoyalinfo implements DiscordCommand {
             if (displayName == null) displayName = "Not set";
 
             if (joinedBoardDate == null) joinedBoardDateString = "Unknown";
-            else joinedBoardDateString = TimeFormat.DATE_SHORT.format(joinedBoardDate.toEpochSecond(ZoneOffset.UTC));
+            else joinedBoardDateString = Bot.createTimestamp(joinedBoardDate, TimeFormat.DATE_SHORT).toString();
 
             if (joinedPosDate == null) joinedPosDateString = "Unknown";
-            else joinedPosDateString = TimeFormat.DATE_SHORT.format(joinedPosDate.toEpochSecond(ZoneOffset.UTC));
+            else joinedPosDateString = Bot.createTimestamp(joinedPosDate, TimeFormat.DATE_SHORT).toString();
 
             if (cooldownEnd == null) cooldownEndString = "Unknown";
-            else cooldownEndString = TimeFormat.DATE_SHORT.format(cooldownEnd.toEpochSecond(ZoneOffset.UTC));
+            else cooldownEndString = Bot.createTimestamp(cooldownEnd, TimeFormat.DATE_SHORT).toString();
 
             embed.addField("Username", username, true)
                     .addField("Character Name", ChatColor.stripColor(displayName), true)
