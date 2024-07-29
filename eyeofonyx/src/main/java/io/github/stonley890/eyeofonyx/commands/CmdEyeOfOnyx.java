@@ -27,7 +27,7 @@ public class CmdEyeOfOnyx {
     final EyeOfOnyx main = EyeOfOnyx.getPlugin();
 
     @NotNull
-    public ExecutableCommand<?, ?> getCommand() {
+    public CommandAPICommand getCommand() {
         return new CommandAPICommand("eyeofonxy")
                 .executes((sender, args) -> {
                     sender.sendMessage(ChatColor.YELLOW + "Eye of Onyx " + main.version + "\nStonley890 / iHeron\nOpen source at https://github.com/Stonley890/Eye-Of-Onyx");

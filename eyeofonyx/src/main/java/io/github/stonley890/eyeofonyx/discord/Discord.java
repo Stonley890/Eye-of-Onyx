@@ -170,7 +170,12 @@ public class Discord extends ListenerAdapter {
                 event.reply("That challenge does not exist!").queue();
                 return;
             }
+
             Challenge.remove(challenge);
+            // Remove any challenge notifications
+            Notification.removeNotificationsOfPlayer(uuid, Notification.Type.CHALLENGE_REQUESTED);
+            Notification.removeNotificationsOfPlayer(uuid, Notification.Type.CHALLENGE_ACCEPTED);
+
             Tribe tribe = PlayerTribe.getTribeOfPlayer(challenge.attacker);
             assert tribe != null;
 

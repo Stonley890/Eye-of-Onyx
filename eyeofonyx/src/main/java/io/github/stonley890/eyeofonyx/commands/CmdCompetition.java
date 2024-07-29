@@ -12,11 +12,9 @@ import io.github.stonley890.eyeofonyx.files.BoardState;
 import io.github.stonley890.eyeofonyx.files.RoyaltyAction;
 import io.github.stonley890.eyeofonyx.files.RoyaltyBoard;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
 import java.util.Objects;
 
 

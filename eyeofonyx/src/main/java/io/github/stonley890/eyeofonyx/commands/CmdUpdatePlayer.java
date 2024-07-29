@@ -4,6 +4,7 @@ import dev.jorel.commandapi.CommandAPICommand;
 import dev.jorel.commandapi.CommandPermission;
 import dev.jorel.commandapi.ExecutableCommand;
 import dev.jorel.commandapi.arguments.EntitySelectorArgument;
+import io.github.stonley890.dreamvisitor.Dreamvisitor;
 import io.github.stonley890.dreamvisitor.data.PlayerTribe;
 import io.github.stonley890.dreamvisitor.data.Tribe;
 import io.github.stonley890.dreamvisitor.data.TribeUtil;
@@ -19,45 +20,61 @@ public class CmdUpdatePlayer {
 
     private static void doUpdate(UUID uuid) throws IOException {
 
+        Dreamvisitor.debug("Doing player update.");
         // Success
         for (int t = 0; t < TribeUtil.tribes.length; t++) {
             Tribe tribe = TribeUtil.tribes[t];
+            Dreamvisitor.debug("Checking tribe " + tribe);
             for (int p = 0; p < RoyaltyBoard.getValidPositions().length; p++) {
+                Dreamvisitor.debug("Checking pos " + p);
 
-                if (Objects.equals(RoyaltyBoard.getUuid(tribe,p), uuid) && tribe != PlayerTribe.getTribeOfPlayer(uuid)) {
-                    Challenge challenge = Challenge.getChallenge(uuid);
+                if (Objects.equals(RoyaltyBoard.getUuid(tribe,p), uuid)) {
+                    Dreamvisitor.debug("Found board position " + p);
+                    if (tribe != PlayerTribe.getTribeOfPlayer(uuid)) {
 
-                    // Notify attacker if exists
-                    if (challenge != null) {
-                        UUID attacker = challenge.attacker;
-                        new Notification(attacker, "Your challenge was canceled.", "The player you were challenging was removed from the royalty board, so your challenge was canceled.", Notification.Type.GENERIC).create();
-                    }
+                        Dreamvisitor.debug("Tribe does not match.");
+                        Challenge challenge = Challenge.getChallenge(uuid);
 
-                    // Notify defender if exists
-                    if (p != RoyaltyBoard.RULER) {
+                        // Notify attacker if exists
                         if (challenge != null) {
-                            UUID defender = challenge.defender;
-                            new Notification(defender, "Your challenge was canceled.", "The player who was challenging you was removed from the royalty board, so your challenge was canceled.", Notification.Type.GENERIC).create();
+                            UUID attacker = challenge.attacker;
+                            new Notification(attacker, "Your challenge was canceled.", "The player you were challenging was removed from the royalty board, so your challenge was canceled.", Notification.Type.GENERIC).create();
+                            Dreamvisitor.debug("Notified attacker.");
                         }
+
+                        // Notify defender if exists
+                        if (p != RoyaltyBoard.RULER) {
+                            if (challenge != null) {
+                                UUID defender = challenge.defender;
+                                new Notification(defender, "Your challenge was canceled.", "The player who was challenging you was removed from the royalty board, so your challenge was canceled.", Notification.Type.GENERIC).create();
+                            }
+                            Dreamvisitor.debug("Notified defender.");
+                        }
+
+                        // Remove any challenges
+                        if (challenge != null) Challenge.remove(challenge);
+                        Dreamvisitor.debug("Removed challenges.");
+
+                        // Remove any challenge notifications
+                        for (Notification notification : Notification.getNotificationsOfPlayer(uuid)) {
+                            if (notification.type == Notification.Type.CHALLENGE_ACCEPTED || notification.type == Notification.Type.CHALLENGE_REQUESTED) Notification.removeNotification(notification);
+                            Dreamvisitor.debug("Removed challenge notifications.");
+                        }
+
+                        RoyaltyBoard.removePlayer(tribe, p, true);
+                        RoyaltyBoard.updateBoard(tribe, false);
+                        RoyaltyBoard.updateDiscordBoard(tribe);
+                        Dreamvisitor.debug("Board updated.");
+                        new Notification(uuid, "You have been removed from the royalty board.", "You were removed from the royalty board because you changed your tribe. Any pending challenges have been canceled.", Notification.Type.GENERIC).create();
                     }
 
-                    // Remove any challenges
-                    if (challenge != null) Challenge.remove(challenge);
-
-                    // Remove any challenge notifications
-                    for (Notification notification : Notification.getNotificationsOfPlayer(uuid)) {
-                        if (notification.type == Notification.Type.CHALLENGE_ACCEPTED || notification.type == Notification.Type.CHALLENGE_REQUESTED) Notification.removeNotification(notification);
-                    }
-
-                    RoyaltyBoard.removePlayer(tribe, p, true);
-                    RoyaltyBoard.updateBoard(tribe, false);
-                    RoyaltyBoard.updatePermissions(uuid);
-                    RoyaltyBoard.updateDiscordBoard(tribe);
-                    new Notification(uuid, "You have been removed from the royalty board.", "You were removed from the royalty board because you changed your tribe. Any pending challenges have been canceled.", Notification.Type.GENERIC).create();
                 }
 
             }
         }
+
+        Dreamvisitor.debug("Updating permissions...");
+        RoyaltyBoard.updatePermissions(uuid);
     }
 
     @NotNull

@@ -131,6 +131,8 @@ public class Challenge {
             Dreamvisitor.debug("Checking challenge of " + challenge.defender + " and " + challenge.attacker);
             if (challenge.defender.equals(uuid) || challenge.attacker.equals(uuid)) {
                 Dreamvisitor.debug("Found match.");
+                Notification.removeNotificationsOfPlayer(challenge.attacker, Notification.Type.CHALLENGE_REQUESTED);
+                Notification.removeNotificationsOfPlayer(challenge.defender, Notification.Type.CHALLENGE_ACCEPTED);
                 if (reason != null) {
                     if (challenge.defender == uuid)
                         new Notification(challenge.attacker, "Your challenge was canceled.", reason, Notification.Type.GENERIC).create();

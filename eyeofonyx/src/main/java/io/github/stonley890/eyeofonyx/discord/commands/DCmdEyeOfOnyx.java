@@ -79,10 +79,6 @@ public class DCmdEyeOfOnyx implements DiscordCommand {
                             // Remove any challenges
                             Challenge.removeChallengesOfPlayer(uuid, "The player who was challenging you was removed from the royalty board, so your challenge was canceled.");
 
-                            // Remove any challenge notifications
-                            Notification.removeNotificationsOfPlayer(uuid, Notification.Type.CHALLENGE_REQUESTED);
-                            Notification.removeNotificationsOfPlayer(uuid, Notification.Type.CHALLENGE_ACCEPTED);
-
                             if (tribe != null) {
                                 RoyaltyBoard.removePlayer(tribe, pos, true);
                                 RoyaltyBoard.updateBoard(tribe, false);

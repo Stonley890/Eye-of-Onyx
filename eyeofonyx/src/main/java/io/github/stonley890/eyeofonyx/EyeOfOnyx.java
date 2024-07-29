@@ -7,6 +7,7 @@ import dev.jorel.commandapi.ExecutableCommand;
 import io.github.stonley890.dreamvisitor.Bot;
 import io.github.stonley890.dreamvisitor.Dreamvisitor;
 import io.github.stonley890.dreamvisitor.data.PlayerTribe;
+import io.github.stonley890.dreamvisitor.data.PlayerUtility;
 import io.github.stonley890.dreamvisitor.data.Tribe;
 import io.github.stonley890.dreamvisitor.data.TribeUtil;
 import io.github.stonley890.eyeofonyx.challenges.Competition;
@@ -155,6 +156,12 @@ public class EyeOfOnyx extends JavaPlugin {
                     for (int pos = 0; pos < RoyaltyBoard.getValidPositions().length; pos++) {
                         UUID uuid = RoyaltyBoard.getUuid(tribe, pos);
                         if (uuid != null) {
+
+                            LocalDateTime lastOnline = RoyaltyBoard.getLastOnline(tribe, pos);
+                            if (lastOnline == null || lastOnline.isBefore(LocalDateTime.now().minusDays(getConfig().getInt("inactivity-timer")))) {
+                                RoyaltyBoard.updateBoard(tribe, true);
+                            }
+
                             List<Notification> notifications = Notification.getNotificationsOfPlayer(uuid);
 
                             for (Notification notification : notifications) {
@@ -183,6 +190,19 @@ public class EyeOfOnyx extends JavaPlugin {
 
                                     } else {
                                         // Kick from board if seen and ignored.
+                                        Challenge challenge = Challenge.getChallenge(uuid);
+                                        if (challenge != null) {
+                                            // Send notification to attacker
+                                            UUID attackerUuid = challenge.attacker;
+                                            String defenderUsername = new Mojang().connect().getPlayerProfile(uuid.toString()).getUsername();
+                                            new Notification(attackerUuid, "Your challenge to " + defenderUsername + " was ignored.", "Your challenge request was nullified because the user you challenged did not respond to the notification.", Notification.Type.GENERIC).create();
+
+                                            // Set data
+                                            Challenge.remove(challenge);
+                                        }
+
+                                        String username = PlayerUtility.getUsernameOfUuid(uuid);
+                                        RoyaltyBoard.report(username, username + " was kicked from " + tribe.getTeamName() + " " + RoyaltyBoard.getValidPositions()[pos].toUpperCase() + " because they saw but did not respond to their challenge request.");
 
                                         // Remove all notifications that are CHALLENGE_REQUESTED
                                         Notification.removeNotificationsOfPlayer(uuid, Notification.Type.CHALLENGE_REQUESTED);

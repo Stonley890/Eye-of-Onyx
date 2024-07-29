@@ -19,7 +19,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -92,6 +92,14 @@ public class CmdChallenge {
     }
 
     private static void denyconfirm(@NotNull CommandSender sender, @NotNull Player player, Tribe playerTribe, int playerPosition) {
+
+        Challenge challenge = Challenge.getChallenge(player.getUniqueId());
+        if (challenge == null) {
+            sender.sendMessage(EyeOfOnyx.EOO + "Your challenge could not be found! Contact a staff member.");
+            return;
+        }
+        int attackerPosition = getPositionIndexOfUUID(challenge.attacker);
+
         // Remove notification
         List<Notification> notificationList = Notification.getNotificationsOfPlayer(player.getUniqueId());
         for (Notification notification : notificationList) {
@@ -101,10 +109,15 @@ public class CmdChallenge {
 
         // Remove from royalty board
         BoardState oldBoard = RoyaltyBoard.getBoardOf(playerTribe).clone();
+
         RoyaltyBoard.removePlayer(playerTribe, playerPosition, true);
+        RoyaltyBoard.replace(playerTribe, playerPosition, attackerPosition);
+
         BoardState newBoard = RoyaltyBoard.getBoardOf(playerTribe).clone();
+
         reportChange(new RoyaltyAction(sender.getName(), playerTribe, oldBoard, newBoard));
         RoyaltyBoard.updateBoard(playerTribe, false);
+
         sender.sendMessage(EyeOfOnyx.EOO + "You have been removed from the royalty board.");
 
         RoyaltyBoard.updateDiscordBoard(playerTribe);
@@ -112,7 +125,7 @@ public class CmdChallenge {
 
     private static void deny(@NotNull CommandSender sender) {
         ComponentBuilder builder = new ComponentBuilder();
-        builder.append(EyeOfOnyx.EOO).append("Are you sure you want to forfeit your role and remove yourself from the royalty board? ")
+        builder.append(EyeOfOnyx.EOO).append("Are you sure you want to forfeit your role to your challenger and remove yourself from the royalty board? ")
                 .append("This action cannot be undone.").color(ChatColor.RED).append("\n");
 
         // Add accept and forfeit buttons
@@ -135,7 +148,7 @@ public class CmdChallenge {
 
     private static void accept(@NotNull CommandSender sender, Player player) {
         ComponentBuilder builder = new ComponentBuilder();
-        builder.append(EyeOfOnyx.EOO).append("One more thing! Use the link below to select times that you are available to attend the challenge. You'll need the code below too.").append("\n");
+        builder.append(EyeOfOnyx.EOO).append("There's one more step before you can accept! Use the link below to select times that you are available to attend the challenge. You'll need the code below for validation. If you need help, contact a staff member.").append("\n");
 
         TextComponent link = new TextComponent("[Submit Availability]");
         link.setColor(ChatColor.YELLOW);
@@ -284,7 +297,7 @@ public class CmdChallenge {
             } else {
                 // create notification for target
                 String title = "You've been challenged!";
-                String content = player.getName() + " has challenged your position for " + positions[targetPosition].replace('_', ' ') + ".";
+                String content = player.getName() + " has challenged your position for " + positions[targetPosition].replace('_', ' ') + ". If you ignore this message, you will be automatically removed from the royalty board on " + LocalDate.now().plusDays(EyeOfOnyx.getPlugin().getConfig().getInt("challenge-acknowledgement-time")).format(DateTimeFormatter.ISO_DATE) + ".";
                 new Notification(targetUuid, title, content, Notification.Type.CHALLENGE_REQUESTED).create();
 
                 // create challenge
@@ -454,7 +467,7 @@ public class CmdChallenge {
 
                                 return;
 
-                            } else if (playerPosition != CIVILIAN && playerPosition != RULER && challenge != null && !arg1.equals("date") && !arg1.equals("start")) {
+                            } else if (challenge != null && arg1.startsWith("position")) {
 
                                 // Player has already initiated a challenge
                                 sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "You have already initiated a challenge!");
@@ -518,13 +531,13 @@ public class CmdChallenge {
                                                 .append(challengeEntry(playerTribe, NOBLE5, "position5"), ComponentBuilder.FormatRetention.NONE).reset();
 
                                     }
-                                } else if /* Player is a noble */ (playerPosition == NOBLE2 || playerPosition == NOBLE1) {
+                                } else if /* Player is a noble */ (playerPosition == NOBLE1 || playerPosition == NOBLE2 || playerPosition == NOBLE3 || playerPosition == NOBLE4 || playerPosition == NOBLE5) {
 
                                     builder.append(challengeEntry(playerTribe, HEIR1, "position1"), ComponentBuilder.FormatRetention.NONE).reset()
                                             .append(challengeEntry(playerTribe, HEIR2, "position2"), ComponentBuilder.FormatRetention.NONE).reset()
                                             .append(challengeEntry(playerTribe, HEIR3, "position3"), ComponentBuilder.FormatRetention.NONE).reset();
 
-                                } else if /* Player is an heir */ (playerPosition == HEIR2 || playerPosition == HEIR1) {
+                                } else if /* Player is an heir */ (playerPosition == HEIR1 || playerPosition == HEIR2 || playerPosition == HEIR3) {
 
                                     builder.append(challengeEntry(playerTribe, RULER, "position1"), ComponentBuilder.FormatRetention.NONE).reset();
 

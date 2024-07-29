@@ -26,11 +26,10 @@ import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.awt.*;
 import java.io.File;
-import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -461,7 +460,7 @@ public class RoyaltyBoard {
 
                 String emblem;
                 if (j == RULER) emblem = rulerEmblem;
-                else if (j >= HEIR2) emblem = heirEmblem;
+                else if (j == HEIR1 || j == HEIR2 || j == HEIR3) emblem = heirEmblem;
                 else emblem = nobleEmblem;
 
                 String value = "*None*";
@@ -976,9 +975,10 @@ public class RoyaltyBoard {
         Map<Integer, BoardState> royaltyBoard = getBoard();
         Dreamvisitor.debug("[removePlayer] Removing player at tribe " + tribe + " pos " + pos + ". Complete? " + complete);
         java.util.UUID uuid = null;
-        if (complete) uuid = royaltyBoard.get(TribeUtil.indexOf(tribe)).getPos(pos).player;
+        int tribeIndex = TribeUtil.indexOf(tribe);
+        if (complete) uuid = royaltyBoard.get(tribeIndex).getPos(pos).player;
         Dreamvisitor.debug("[removePlayer] UUID: " + uuid);
-        royaltyBoard.put(TribeUtil.indexOf(tribe), royaltyBoard.get(TribeUtil.indexOf(tribe)).clear(pos));
+        royaltyBoard.put(tribeIndex, royaltyBoard.get(tribeIndex).clear(pos));
         saveToDisk(royaltyBoard);
 
         if (uuid != null) {

@@ -6,9 +6,7 @@ import dev.jorel.commandapi.ExecutableCommand;
 import io.github.stonley890.dreamvisitor.data.Tribe;
 import io.github.stonley890.dreamvisitor.data.PlayerTribe;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
-import io.github.stonley890.eyeofonyx.files.BoardState;
-import io.github.stonley890.eyeofonyx.files.RoyaltyAction;
-import io.github.stonley890.eyeofonyx.files.RoyaltyBoard;
+import io.github.stonley890.eyeofonyx.files.*;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -44,6 +42,10 @@ public class CmdForfeit {
                             BoardState oldBoard = RoyaltyBoard.getBoardOf(tribe).clone();
                             partingPlayers.remove(player);
                             RoyaltyBoard.removePlayer(tribe, posIndex, true);
+
+                            // Remove any challenges
+                            Challenge.removeChallengesOfPlayer(player.getUniqueId(), "The player who was challenging you was removed from the royalty board, so your challenge was canceled.");
+
                             RoyaltyBoard.reportChange(new RoyaltyAction(sender.getName(), tribe, oldBoard, RoyaltyBoard.getBoardOf(tribe)));
                             RoyaltyBoard.updateBoard(tribe, false);
                             sender.sendMessage(EyeOfOnyx.EOO + "You have been removed from the royalty board.");
