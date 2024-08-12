@@ -8,7 +8,7 @@ Eye of Onyx aims to make the royalty system on *Wings of Fire: The New World* as
 - Players should not have to understand the system to use it.
 - Staff intervention and/or management should not be required at any point.
 
-You can learn more about *Wings of Fire: The New World* through the [official YouTube channel](https://youtube.com/@WOFTNW).
+You can learn more about *Wings of Fire: The New World* on the [official webpage](https://www.woftnw.org).
 
 ---
 This plugin is developed specifically for WoF:TNW. No artifacts will be provided, but you are free to build it yourself with Maven.
