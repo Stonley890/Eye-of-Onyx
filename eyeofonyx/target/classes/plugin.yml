@@ -1,6 +1,6 @@
 main: io.github.stonley890.eyeofonyx.EyeOfOnyx
 name: EyeOfOnyx
-version: 1.3.2
+version: '1.4.0'
 api-version: 1.19
 description: A plugin that manages the royalty board on Wings of Fire The New World
 authors: [Stonley890, iHeron]

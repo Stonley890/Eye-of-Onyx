@@ -23,6 +23,7 @@ public class BoardPosition {
     public LocalDateTime lastOnline;
     @Nullable
     public LocalDateTime lastChallenge;
+    public boolean frozen = false;
 
     public BoardPosition(@Nullable UUID uuid, @Nullable String name, @Nullable LocalDateTime joinedBoard, @Nullable LocalDateTime joinedPosition, @Nullable LocalDateTime lastOnline, @Nullable LocalDateTime lastChallenge) {
 
@@ -32,6 +33,17 @@ public class BoardPosition {
         this.joinedPosition = joinedPosition;
         this.lastOnline = lastOnline;
         this.lastChallenge = lastChallenge;
+    }
+
+    public BoardPosition(@Nullable UUID uuid, @Nullable String name, @Nullable LocalDateTime joinedBoard, @Nullable LocalDateTime joinedPosition, @Nullable LocalDateTime lastOnline, @Nullable LocalDateTime lastChallenge, boolean frozen) {
+
+        this.player = uuid;
+        this.name = name;
+        this.joinedBoard = joinedBoard;
+        this.joinedPosition = joinedPosition;
+        this.lastOnline = lastOnline;
+        this.lastChallenge = lastChallenge;
+        this.frozen = frozen;
     }
 
     public BoardPosition setPlayer(UUID uuid) {
@@ -58,6 +70,10 @@ public class BoardPosition {
         this.lastChallenge = lastChallenge;
         return this;
     }
+    public BoardPosition setFrozen(boolean frozen) {
+        this.frozen = frozen;
+        return this;
+    }
 
     @Override
     public boolean equals(Object obj) {
@@ -68,7 +84,8 @@ public class BoardPosition {
             if (!Objects.equals(this.joinedBoard, that.joinedBoard)) return false;
             if (!Objects.equals(this.joinedPosition, that.joinedPosition)) return false;
             if (!Objects.equals(this.lastOnline, that.lastOnline)) return false;
-            return (Objects.equals(this.lastChallenge, that.lastChallenge));
+            if (!Objects.equals(this.lastChallenge, that.lastChallenge)) return false;
+            return (Objects.equals(this.frozen, that.frozen));
         }
         return false;
 

@@ -15,6 +15,8 @@ public class RoyaltyAction {
     @Nullable
     public String executor; // null if Eye of Onyx automated system
     @NotNull
+    public String reason;
+    @NotNull
     public final Tribe affectedTribe;
     @NotNull
     public final BoardState oldState;
@@ -23,8 +25,10 @@ public class RoyaltyAction {
 
     public final int id;
 
-    public RoyaltyAction(@Nullable String executor, @NotNull Tribe affectedTribe, @NotNull BoardState oldState, @NotNull BoardState newState) {
+    public RoyaltyAction(@Nullable String executor, @Nullable String reason, @NotNull Tribe affectedTribe, @NotNull BoardState oldState, @NotNull BoardState newState) {
         this.executor = executor;
+        if (reason == null) this.reason = "Error: No reason specified.";
+        else this.reason = reason;
         this.affectedTribe = affectedTribe;
         this.oldState = oldState;
         this.newState = newState;

@@ -72,7 +72,7 @@ public class RoyaltyBoard {
         return validPositions;
     }
 
-    public static boolean isFrozen() {
+    public static boolean isBoardFrozen() {
         return frozen;
     }
 
@@ -91,7 +91,9 @@ public class RoyaltyBoard {
 
         if (!file.exists()) {
             Bukkit.getLogger().info("board.yml does not exist. Creating one...");
-            file.getParentFile().mkdirs();
+            if (!file.getParentFile().mkdirs()) {
+                Bukkit.getLogger().info("The EoO config folder was not created. It may already exist.");
+            }
             plugin.saveResource("board.yml", false);
         }
 
@@ -157,10 +159,10 @@ public class RoyaltyBoard {
                 long discordID = Long.parseLong(action.executor);
 
                 net.dv8tion.jda.api.entities.User user = Bot.getJda().retrieveUserById(discordID).complete();
-                builder.setFooter("This action was performed by " + user.getName(), user.getAvatarUrl());
+                builder.setFooter("This action was performed by " + user.getName() + ". Reason: " + action.reason, user.getAvatarUrl());
 
             } catch (NumberFormatException e) {
-                builder.setFooter("This action was performed by " + action.executor);
+                builder.setFooter("This action was performed by " + action.executor + ". Reason: " + action.reason);
             }
 
             for (int i = 0; i < validPositions.length; i++) {
@@ -231,8 +233,6 @@ public class RoyaltyBoard {
         String lastChallenge = "N/A";
         String joinedBoard = "N/A";
         String joinedPos = "N/A";
-        String challenger = "N/A";
-        String challenging = "N/A";
 
         String discordUser = "N/A";
 
@@ -276,7 +276,7 @@ public class RoyaltyBoard {
      *                      if an action has occurred before this
      *                      to reduce the chance that Discord will be updated twice or not at all.
      */
-    public static void updateBoard(@NotNull Tribe tribe, boolean updateDiscord) {
+    public static void updateBoard(@NotNull Tribe tribe, boolean updateDiscord, boolean reportChanges) {
 
         Dreamvisitor.debug("[updateBoard] Updating royalty board.");
 
@@ -298,9 +298,10 @@ public class RoyaltyBoard {
 
             updateOCName(tribe, pos);
 
-            // If last_online is before inactivity period, clear position
+            // If not frozen and last_online is before inactivity period, clear position
             last_online = getLastOnline(tribe, pos);
-            if (last_online != null && last_online.isBefore(LocalDateTime.now().minusDays(plugin.getConfig().getInt("inactivity-timer")))) {
+            boolean frozen = isPosFrozen(tribe, pos);
+            if (!frozen && last_online != null && last_online.isBefore(LocalDateTime.now().minusDays(plugin.getConfig().getInt("inactivity-timer")))) {
                 RoyaltyBoard.set(tribe, pos, royaltyBoard.get(TribeUtil.indexOf(tribe)).getPos(positionsEmpty).setLastOnline(null));
                 royaltyBoard = getBoard();
             }
@@ -362,9 +363,9 @@ public class RoyaltyBoard {
             }
         }
 
-        if (updateDiscord && !oldPos.equals(royaltyBoard.get(TribeUtil.indexOf(tribe)))) {
-            updateDiscordBoard(tribe);
-            reportChange(new RoyaltyAction(null, tribe, oldPos, royaltyBoard.get(TribeUtil.indexOf(tribe))));
+        if (!oldPos.equals(royaltyBoard.get(TribeUtil.indexOf(tribe)))) {
+            if (updateDiscord) updateDiscordBoard(tribe);
+            if (reportChanges) reportChange(new RoyaltyAction(null, "An update was called, probably by another command or automatically.", tribe, oldPos, royaltyBoard.get(TribeUtil.indexOf(tribe))));
         }
 
         saveToDisk(royaltyBoard);
@@ -790,6 +791,9 @@ public class RoyaltyBoard {
 
         // Get player tribe
         Tribe playerTribe = PlayerTribe.getTribeOfPlayer(player);
+        if (playerTribe == null) {
+            throw new NullPointerException("Player tribe is null!");
+        }
 
         // Position is citizen by default
         int playerPosition = CIVILIAN;
@@ -928,6 +932,31 @@ public class RoyaltyBoard {
         Map<Integer, BoardState> royaltyBoard = getBoard();
         int tribeIndex = TribeUtil.indexOf(tribe);
         royaltyBoard.put(tribeIndex, royaltyBoard.get(tribeIndex).setLastChallenge(pos, time));
+        saveToDisk(royaltyBoard);
+    }
+
+    /**
+     * Get whether frozen of a spot on the board.
+     *
+     * @param tribe    The tribe to fetch from.
+     * @param pos The position to fetch from.
+     * @return Whether frozen at the given location.
+     */
+    public static boolean isPosFrozen(@NotNull Tribe tribe, int pos) {
+        return getBoard().get(TribeUtil.indexOf(tribe)).getPos(pos).frozen;
+    }
+
+    /**
+     * Set whether frozen of a spot on the board.
+     *
+     * @param tribe the tribe to fetch from.
+     * @param pos the position to fetch from.
+     * @param frozen the state to set.
+     */
+    public static void setFrozen(@NotNull Tribe tribe, int pos, boolean frozen) {
+        Map<Integer, BoardState> royaltyBoard = getBoard();
+        int tribeIndex = TribeUtil.indexOf(tribe);
+        royaltyBoard.put(tribeIndex, royaltyBoard.get(tribeIndex).setFrozen(pos, frozen));
         saveToDisk(royaltyBoard);
     }
 

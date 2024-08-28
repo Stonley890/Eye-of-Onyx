@@ -4,7 +4,6 @@ import io.github.stonley890.dreamvisitor.Bot;
 import io.github.stonley890.dreamvisitor.Dreamvisitor;
 import io.github.stonley890.dreamvisitor.data.*;
 import io.github.stonley890.dreamvisitor.discord.commands.DiscordCommand;
-import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import io.github.stonley890.eyeofonyx.Utils;
 import io.github.stonley890.eyeofonyx.discord.Discord;
 import io.github.stonley890.eyeofonyx.files.*;
@@ -19,12 +18,9 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.*;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.utils.TimeFormat;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.IOException;
 import java.time.DateTimeException;
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -67,6 +63,11 @@ public class DCmdRoyalty implements DiscordCommand {
                                                 .addChoice("High Noble", "high_noble")
                                                 .addChoice("Apparent Noble", "apparent_noble")
                                                 .addChoice("Presumptive Noble", "presumptive_noble")
+                                ),
+                        new SubcommandData("insert", "Insert a player to a position and move all lower positions down.")
+                                .addOption(OptionType.USER, "user", "The user to insert.", true, false)
+                                .addOptions(
+                                        Discord.posOption.setRequired(true)
                                 ),
                         new SubcommandData("clear", "Remove the player at the specified position.")
                                 .addOptions(
@@ -193,7 +194,7 @@ public class DCmdRoyalty implements DiscordCommand {
 
                         // Make sure player is not already on the board
                         if (RoyaltyBoard.getPositionIndexOfUUID(playerTribe, targetPlayerUUID) != RoyaltyBoard.CIVILIAN) {
-                            event.getHook().setEphemeral(false).editOriginal("That player is already on the royalty board. Use the swap command instead.").queue();
+                            event.getHook().setEphemeral(false).editOriginal("That player is already on the royalty board. Use the swap or insert command instead.").queue();
                             return;
                         }
 
@@ -215,14 +216,13 @@ public class DCmdRoyalty implements DiscordCommand {
 
                             // Set value in board.yml
                             RoyaltyBoard.set(playerTribe, targetPos, newPos);
+                            RoyaltyBoard.updateBoard(playerTribe, false, false);
 
                             // Log update
                             BoardState newBoard = RoyaltyBoard.getBoardOf(playerTribe).clone();
-                            RoyaltyBoard.reportChange(new RoyaltyAction(Objects.requireNonNull(event.getMember()).getId(), playerTribe, oldBoard, newBoard));
+                            RoyaltyBoard.reportChange(new RoyaltyAction(Objects.requireNonNull(event.getMember()).getId(), "A player was set onto the royalty board.", playerTribe, oldBoard, newBoard));
 
                             event.getHook().setEphemeral(false).editOriginal("✅ " + targetUser.getAsMention() + " is now " + position.toUpperCase().replace('_', ' ')).queue();
-
-                            RoyaltyBoard.updateBoard(playerTribe, false);
 
                             RoyaltyBoard.updateDiscordBoard(playerTribe);
 
@@ -262,6 +262,11 @@ public class DCmdRoyalty implements DiscordCommand {
                         return;
                     }
 
+                    if (RoyaltyBoard.isPosFrozen(tribe, posIndex)) {
+                        event.getHook().setEphemeral(false).editOriginal("That position is currently frozen. You must unfreeze it first.").queue();
+                        return;
+                    }
+
                     BoardState oldBoard = RoyaltyBoard.getBoardOf(tribe).clone();
 
                     Challenge.removeChallengesOfPlayer(uuid, "The other player in your challenge was removed from the royalty board.");
@@ -271,12 +276,12 @@ public class DCmdRoyalty implements DiscordCommand {
                     new Notification(uuid, "You have been removed from the royalty board.", "You were removed from the royalty board because you changed your tribe. All pending challenges have been canceled.", Notification.Type.GENERIC).create();
 
                     RoyaltyBoard.removePlayer(tribe, posIndex, true);
-
+                    RoyaltyBoard.updateBoard(tribe, false, false);
                     BoardState newBoard = RoyaltyBoard.getBoardOf(tribe).clone();
-                    RoyaltyBoard.reportChange(new RoyaltyAction(Objects.requireNonNull(event.getMember()).getId(), tribe, oldBoard, newBoard));
-                    RoyaltyBoard.updateBoard(tribe, false);
-                    RoyaltyBoard.updateDiscordBoard(tribe);
+                    RoyaltyBoard.reportChange(new RoyaltyAction(Objects.requireNonNull(event.getMember()).getId(), "A position on the royalty board was cleared.", tribe, oldBoard, newBoard));
+
                     event.getHook().setEphemeral(false).editOriginal("✅ " + tribe.getName() + " " + position.toUpperCase() + " position cleared.").queue();
+                    RoyaltyBoard.updateDiscordBoard(tribe);
 
                 }
                 case "swap" -> {
@@ -341,23 +346,122 @@ public class DCmdRoyalty implements DiscordCommand {
                     new Notification(pos1.player, "You've been moved!","You have been moved to a different spot on the royalty board. Any challenges you were in have been canceled.", Notification.Type.GENERIC).create();
                     new Notification(pos2.player, "You've been moved!","You have been moved to a different spot on the royalty board. Any challenges you were in have been canceled.", Notification.Type.GENERIC).create();
 
-                    // Send update
-                    BoardState newBoard = RoyaltyBoard.getBoardOf(tribe).clone();
-                    RoyaltyBoard.reportChange(new RoyaltyAction(event.getUser().getId(), tribe, oldBoard, newBoard));
-
                     assert position1 != null;
                     assert position2 != null;
+
+                    RoyaltyBoard.updateBoard(tribe, false, false);
+
+                    // Send update
+                    BoardState newBoard = RoyaltyBoard.getBoardOf(tribe).clone();
+                    RoyaltyBoard.reportChange(new RoyaltyAction(event.getUser().getId(), "Two positions on the board were swapped.", tribe, oldBoard, newBoard));
+
+                    RoyaltyBoard.updateDiscordBoard(tribe);
                     event.getHook().setEphemeral(false).editOriginal("Swapped " + position1.toUpperCase() + " and " + position2.toUpperCase() + " of " + tribe.getName()).queue();
 
-                    RoyaltyBoard.updateBoard(tribe, false);
-                    RoyaltyBoard.updateDiscordBoard(tribe);
+                }
+                case "insert" -> {
+                    User targetUser;
+                    String position;
 
+                    try {
+                        targetUser = Objects.requireNonNull(event.getOption("user")).getAsUser();
+                        position = Objects.requireNonNull(event.getOption("position")).getAsString();
+                    } catch (NullPointerException e) {
+                        event.getHook().setEphemeral(true).editOriginal("Missing arguments!").queue();
+                        return;
+                    }
+
+                    // Get UUID
+                    UUID targetPlayerUUID = AccountLink.getUuid(targetUser.getIdLong());
+
+                    if (targetPlayerUUID == null) {
+                        event.getHook().setEphemeral(false).editOriginal("That user is not associated with a Minecraft account.").queue();
+                        return;
+                    }
+
+                    // Check for ban
+                    if (Banned.isPlayerBanned(targetPlayerUUID)) {
+                        event.getHook().setEphemeral(false).editOriginal("This player must be unbanned first.").queue();
+                        return;
+                    }
+
+                    // Get tribe
+                    try {
+
+                        // Get team of player by iterating through list
+                        Tribe playerTribe = PlayerTribe.getTribeOfPlayer(targetPlayerUUID);
+
+                        if (playerTribe == null) {
+                            event.getHook().setEphemeral(false).editOriginal("That player is not associated with a tribe.").queue();
+                            return;
+                        }
+
+                        // Check if third argument contains a valid position
+                        if (Arrays.stream(RoyaltyBoard.getValidPositions()).anyMatch(position::contains)) {
+
+                            int targetPos = -1;
+
+                            for (int i = 0; i < RoyaltyBoard.getValidPositions().length; i++) {
+                                if (position.equals(RoyaltyBoard.getValidPositions()[i])) targetPos = i;
+                            }
+
+                            if (Objects.equals(RoyaltyBoard.getUuid(playerTribe, targetPos), targetPlayerUUID)) {
+                                event.getHook().setEphemeral(false).editOriginal("That player is already in that position.").queue();
+                                return;
+                            }
+
+                            BoardState oldBoard = RoyaltyBoard.getBoardOf(playerTribe).clone();
+                            BoardState newBoard = RoyaltyBoard.getBoardOf(playerTribe);
+
+                            BoardPosition newPos = new BoardPosition(targetPlayerUUID, null, LocalDateTime.now(), LocalDateTime.now(),LocalDateTime.now(), LocalDateTime.now());
+
+                            // If player is already on the board
+                            int positionIndexOfUUID = RoyaltyBoard.getPositionIndexOfUUID(playerTribe, targetPlayerUUID);
+                            if (positionIndexOfUUID != RoyaltyBoard.CIVILIAN) {
+                                // set pos from existing entry
+                                newPos = newBoard.getPos(positionIndexOfUUID);
+                                // clear old entry
+                                newBoard.clear(positionIndexOfUUID);
+                            }
+
+                            // move all lower positions down by one
+                            BoardPosition queuedPos = new BoardPosition(null, null, null, null, null, null);
+                            for (int i = targetPos; i < RoyaltyBoard.getValidPositions().length - 2; i++) {
+                                // save this position
+                                BoardPosition pos = newBoard.getPos(i);
+                                // replace with queued positions
+                                newBoard.updatePosition(i, queuedPos);
+                                // if empty, no more movement is needed
+                                if (pos.player == null) break;
+                                // queue previously saved position
+                                queuedPos = pos;
+                            }
+                            // insert target player into target position
+                            newBoard.updatePosition(targetPos, newPos);
+
+                            // apply changes
+                            RoyaltyBoard.set(playerTribe, newBoard);
+                            RoyaltyBoard.updateBoard(playerTribe, false, false);
+
+                            // Log update
+                            RoyaltyBoard.reportChange(new RoyaltyAction(Objects.requireNonNull(event.getMember()).getId(), "A player was inserted to a position.", playerTribe, oldBoard, newBoard));
+
+                            event.getHook().setEphemeral(false).editOriginal("✅ " + targetUser.getAsMention() + " is now " + position.toUpperCase().replace('_', ' ')).queue();
+                            RoyaltyBoard.updateDiscordBoard(playerTribe);
+
+                        } else
+                            event.getHook().setEphemeral(true).editOriginal("Invalid position. Valid positions: " + Arrays.toString(RoyaltyBoard.getValidPositions())).queue();
+
+                    } catch (IllegalArgumentException e) {
+                        // getTeam() throws IllegalArgumentException if teams do not exist
+                        event.getHook().setEphemeral(false).editOriginal("Required teams do not exist!").queue();
+                    }
                 }
                 case "update" -> {
 
                     for (int i = 0; i < TribeUtil.tribes.length; i++) {
                         Tribe tribe = TribeUtil.tribes[i];
-                        RoyaltyBoard.updateBoard(tribe, false);
+                        RoyaltyBoard.updateBoard(tribe, false, true);
                         RoyaltyBoard.updateDiscordBoard(tribe);
                     }
                     event.getHook().setEphemeral(false).editOriginal("✅ Board updated. It may take some time for changes to apply everywhere.").queue();
@@ -533,8 +637,8 @@ public class DCmdRoyalty implements DiscordCommand {
                 }
             }
 
-            new RoyaltyAction(event.getUser().getAsMention(), tribe, oldBoardState, RoyaltyBoard.getBoardOf(tribe));
-            RoyaltyBoard.updateBoard(tribe, true);
+            RoyaltyBoard.reportChange(new RoyaltyAction(event.getUser().getId(), "A data value was manually modified.", tribe, oldBoardState, RoyaltyBoard.getBoardOf(tribe)));
+            RoyaltyBoard.updateBoard(tribe, true, false);
         }
 
 

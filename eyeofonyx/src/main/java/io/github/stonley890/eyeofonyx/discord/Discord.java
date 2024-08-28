@@ -8,6 +8,7 @@ import io.github.stonley890.dreamvisitor.data.Tribe;
 import io.github.stonley890.dreamvisitor.discord.DiscCommandsManager;
 import io.github.stonley890.dreamvisitor.discord.commands.DiscordCommand;
 import io.github.stonley890.eyeofonyx.discord.commands.DCmdEyeOfOnyx;
+import io.github.stonley890.eyeofonyx.discord.commands.DCmdFreezePosition;
 import io.github.stonley890.eyeofonyx.discord.commands.DCmdRoyalinfo;
 import io.github.stonley890.eyeofonyx.discord.commands.DCmdRoyalty;
 import io.github.stonley890.eyeofonyx.files.*;
@@ -20,12 +21,11 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
 import java.util.*;
 
 public class Discord extends ListenerAdapter {
 
-    public static final OptionData tribeOption = new OptionData(OptionType.STRING, "tribe", "The tribe to write to.")
+    public static final OptionData tribeOption = new OptionData(OptionType.STRING, "tribe", "The tribe to write to.", true)
             .setAutoComplete(false)
             .addChoice("Hive", "hive")
             .addChoice("Ice", "ice")
@@ -55,6 +55,7 @@ public class Discord extends ListenerAdapter {
         List<DiscordCommand> commands = new ArrayList<>();
 
         commands.add(new DCmdEyeOfOnyx());
+        commands.add(new DCmdFreezePosition());
         commands.add(new DCmdRoyalinfo());
         commands.add(new DCmdRoyalty());
 
@@ -147,7 +148,7 @@ public class Discord extends ListenerAdapter {
                 if (targetId.equals(String.valueOf(royaltyAction.id))) {
 
                     RoyaltyBoard.set(royaltyAction.affectedTribe, royaltyAction.oldState);
-                    RoyaltyBoard.updateBoard(royaltyAction.affectedTribe, false);
+                    RoyaltyBoard.updateBoard(royaltyAction.affectedTribe, false, true);
                     RoyaltyBoard.updateDiscordBoard(royaltyAction.affectedTribe);
                     event.reply("✅ Values reverted.").queue();
                     event.getInteraction().editButton(button.asDisabled()).queue();

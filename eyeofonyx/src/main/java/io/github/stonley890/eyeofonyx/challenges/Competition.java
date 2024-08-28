@@ -5,7 +5,6 @@ import io.github.stonley890.dreamvisitor.data.Tribe;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import io.github.stonley890.eyeofonyx.files.Challenge;
 import io.github.stonley890.dreamvisitor.data.PlayerTribe;
-import javassist.NotFoundException;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
@@ -32,6 +31,10 @@ public class Competition {
         activeChallenge = new Competition(challenge);
         activeChallenge.callToJoin();
 
+        // schedule expire
+        Bukkit.getScheduler().runTaskLater(EyeOfOnyx.getPlugin(), () -> {
+            if (!activeChallenge.started) Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "competition cancel");
+        }, 20 * 60 * 5);
 
         // Remove from saved challenges
         Challenge.remove(challenge);

@@ -3,7 +3,6 @@ package io.github.stonley890.eyeofonyx.commands;
 import dev.jorel.commandapi.CommandAPI;
 import dev.jorel.commandapi.CommandAPICommand;
 import dev.jorel.commandapi.CommandPermission;
-import dev.jorel.commandapi.ExecutableCommand;
 import dev.jorel.commandapi.arguments.*;
 import dev.jorel.commandapi.executors.CommandArguments;
 import dev.jorel.commandapi.wrappers.Rotation;
@@ -27,6 +26,7 @@ public class CmdEyeOfOnyx {
     final EyeOfOnyx main = EyeOfOnyx.getPlugin();
 
     @NotNull
+    @SuppressWarnings("unchecked")
     public CommandAPICommand getCommand() {
         return new CommandAPICommand("eyeofonxy")
                 .executes((sender, args) -> {

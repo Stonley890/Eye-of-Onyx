@@ -16,10 +16,8 @@ import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -80,8 +78,10 @@ public class DCmdEyeOfOnyx implements DiscordCommand {
                             Challenge.removeChallengesOfPlayer(uuid, "The player who was challenging you was removed from the royalty board, so your challenge was canceled.");
 
                             if (tribe != null) {
+                                BoardState oldBoard = RoyaltyBoard.getBoardOf(tribe);
                                 RoyaltyBoard.removePlayer(tribe, pos, true);
-                                RoyaltyBoard.updateBoard(tribe, false);
+                                RoyaltyBoard.updateBoard(tribe, false, false);
+                                RoyaltyBoard.reportChange(new RoyaltyAction(event.getUser().getId(), "Player was banned.", tribe, oldBoard, RoyaltyBoard.getBoardOf(tribe)));
                                 RoyaltyBoard.updateDiscordBoard(tribe);
                             }
 
@@ -150,7 +150,7 @@ public class DCmdEyeOfOnyx implements DiscordCommand {
             }
             case "freeze" -> {
 
-                if (RoyaltyBoard.isFrozen()) {
+                if (RoyaltyBoard.isBoardFrozen()) {
                     RoyaltyBoard.setFrozen(false);
                     event.reply("The royalty board is now unfrozen.").queue();
                 } else {

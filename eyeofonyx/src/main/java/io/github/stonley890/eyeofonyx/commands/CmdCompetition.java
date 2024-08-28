@@ -5,6 +5,7 @@ import dev.jorel.commandapi.CommandAPICommand;
 import dev.jorel.commandapi.ExecutableCommand;
 import dev.jorel.commandapi.arguments.ArgumentSuggestions;
 import dev.jorel.commandapi.arguments.StringArgument;
+import io.github.stonley890.dreamvisitor.data.PlayerUtility;
 import io.github.stonley890.dreamvisitor.data.Tribe;
 import io.github.stonley890.eyeofonyx.EyeOfOnyx;
 import io.github.stonley890.eyeofonyx.challenges.Competition;
@@ -13,6 +14,8 @@ import io.github.stonley890.eyeofonyx.files.RoyaltyAction;
 import io.github.stonley890.eyeofonyx.files.RoyaltyBoard;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.scoreboard.Scoreboard;
+import org.bukkit.scoreboard.Team;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
@@ -60,10 +63,31 @@ public class CmdCompetition {
                                     else {
                                         // delete competition
                                         Tribe tribe = Competition.activeChallenge.tribe;
+                                        assert tribe != null;
 
                                         // Set teams back
-                                        Objects.requireNonNull(Objects.requireNonNull(Bukkit.getScoreboardManager()).getMainScoreboard().getTeam(tribe.getTeamName())).addEntry(Objects.requireNonNull(Bukkit.getPlayer(Competition.activeChallenge.attacker)).getName());
-                                        Objects.requireNonNull(Bukkit.getScoreboardManager().getMainScoreboard().getTeam(tribe.getTeamName())).addEntry(Objects.requireNonNull(Bukkit.getPlayer(Competition.activeChallenge.defender)).getName());
+                                        String attackerName = PlayerUtility.getUsernameOfUuid(Competition.activeChallenge.attacker);
+                                        String defenderName = PlayerUtility.getUsernameOfUuid(Competition.activeChallenge.defender);
+
+                                        Scoreboard scoreboard;
+                                        try {
+                                            scoreboard = Objects.requireNonNull(Bukkit.getScoreboardManager()).getMainScoreboard();
+
+                                            Team team;
+                                            team = scoreboard.getTeam(tribe.getTeamName());
+                                            if (team == null) team = scoreboard.registerNewTeam(tribe.getTeamName());
+
+                                            if (attackerName == null) {
+                                                Bukkit.getLogger().warning("Eye of Onyx was unable to set the attacker's team back to their tribe: " + Competition.activeChallenge.attacker);
+                                            } else team.addEntry(attackerName);
+
+                                            if (defenderName == null) {
+                                                Bukkit.getLogger().warning("Eye of Onyx was unable to set the defender's team back to their tribe: " + Competition.activeChallenge.defender);
+                                            } else team.addEntry(defenderName);
+
+                                        } catch (Exception e) {
+                                            Bukkit.getLogger().severe("Eye of Onyx could not get the main scoreboard!");
+                                        }
 
                                         Competition.activeChallenge = null;
 
@@ -86,6 +110,7 @@ public class CmdCompetition {
                                         defenderPos = RoyaltyBoard.getPositionIndexOfUUID(Competition.activeChallenge.defender);
 
                                         Tribe tribe = Competition.activeChallenge.tribe;
+                                        assert tribe != null;
                                         BoardState oldBoard = RoyaltyBoard.getBoardOf(tribe).clone();
 
                                         String winner = (String) args.get("winner");
@@ -97,26 +122,46 @@ public class CmdCompetition {
                                             RoyaltyBoard.removePlayer(tribe, attackerPos, true);
                                             RoyaltyBoard.updatePermissions(Competition.activeChallenge.attacker);
                                             RoyaltyBoard.updatePermissions(Competition.activeChallenge.defender);
-                                            RoyaltyBoard.updateBoard(tribe, false);
+                                            RoyaltyBoard.updateBoard(tribe, false, false);
                                             RoyaltyBoard.updateDiscordBoard(tribe);
 
                                         } else if (winner.equals("defender")) {
 
                                             // Defender win; remove attacker
                                             RoyaltyBoard.removePlayer(Competition.activeChallenge.tribe, attackerPos, true);
-                                            RoyaltyBoard.updateBoard(tribe, false);
+                                            RoyaltyBoard.updateBoard(tribe, false, false);
                                             RoyaltyBoard.updateDiscordBoard(tribe);
 
                                         } else throw CommandAPI.failWithString("Incorrect arguments! /competition end <attacker|defender>");
 
                                         // Set teams back
-                                        Objects.requireNonNull(Objects.requireNonNull(Bukkit.getScoreboardManager()).getMainScoreboard().getTeam(tribe.getTeamName())).addEntry(Objects.requireNonNull(Bukkit.getPlayer(Competition.activeChallenge.attacker)).getName());
-                                        Objects.requireNonNull(Bukkit.getScoreboardManager().getMainScoreboard().getTeam(tribe.getTeamName())).addEntry(Objects.requireNonNull(Bukkit.getPlayer(Competition.activeChallenge.defender)).getName());
+                                        String attackerName = PlayerUtility.getUsernameOfUuid(Competition.activeChallenge.attacker);
+                                        String defenderName = PlayerUtility.getUsernameOfUuid(Competition.activeChallenge.defender);
+
+                                        Scoreboard scoreboard;
+                                        try {
+                                            scoreboard = Objects.requireNonNull(Bukkit.getScoreboardManager()).getMainScoreboard();
+
+                                            Team team;
+                                            team = scoreboard.getTeam(tribe.getTeamName());
+                                            if (team == null) team = scoreboard.registerNewTeam(tribe.getTeamName());
+
+                                            if (attackerName == null) {
+                                                Bukkit.getLogger().warning("Eye of Onyx was unable to set the attacker's team back to their tribe: " + Competition.activeChallenge.attacker);
+                                            } else team.addEntry(attackerName);
+
+                                            if (defenderName == null) {
+                                                Bukkit.getLogger().warning("Eye of Onyx was unable to set the defender's team back to their tribe: " + Competition.activeChallenge.defender);
+                                            } else team.addEntry(defenderName);
+
+                                        } catch (Exception e) {
+                                            Bukkit.getLogger().severe("Eye of Onyx could not get the main scoreboard!");
+                                        }
 
                                         Competition.activeChallenge = null;
 
                                         BoardState newBoard = RoyaltyBoard.getBoardOf(tribe);
-                                        RoyaltyBoard.reportChange(new RoyaltyAction(sender.getName(), tribe, oldBoard.clone(), newBoard));
+                                        RoyaltyBoard.reportChange(new RoyaltyAction(sender.getName(), "A challenge ended.", tribe, oldBoard.clone(), newBoard));
 
                                         RoyaltyBoard.updateDiscordBoard(tribe);
 

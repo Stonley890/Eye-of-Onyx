@@ -27,7 +27,9 @@ public class Banned {
 
         if (!file.exists()) {
             Bukkit.getLogger().info("banned.yml does not exist. Creating one...");
-            file.createNewFile();
+            if (!file.createNewFile()) {
+                Bukkit.getLogger().warning("banned.yml could not be created!");
+            }
         }
     }
 

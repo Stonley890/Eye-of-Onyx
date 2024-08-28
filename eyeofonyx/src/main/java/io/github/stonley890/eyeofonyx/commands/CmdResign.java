@@ -11,17 +11,16 @@ import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CmdForfeit {
+public class CmdResign {
 
     final List<Player> partingPlayers = new ArrayList<>();
 
     @NotNull
     public ExecutableCommand<?, ?> getCommand() {
-        return new CommandAPICommand("forfeit")
+        return new CommandAPICommand("resign")
                 .withHelp("Leave the royalty board.", "Remove yourself from the royalty board.")
                 .executesNative((sender, args) -> {
                     if (sender.getCallee() instanceof Player player) {
@@ -46,8 +45,8 @@ public class CmdForfeit {
                             // Remove any challenges
                             Challenge.removeChallengesOfPlayer(player.getUniqueId(), "The player who was challenging you was removed from the royalty board, so your challenge was canceled.");
 
-                            RoyaltyBoard.reportChange(new RoyaltyAction(sender.getName(), tribe, oldBoard, RoyaltyBoard.getBoardOf(tribe)));
-                            RoyaltyBoard.updateBoard(tribe, false);
+                            RoyaltyBoard.updateBoard(tribe, false, false);
+                            RoyaltyBoard.reportChange(new RoyaltyAction(sender.getName(), "Player chose to resign.", tribe, oldBoard, RoyaltyBoard.getBoardOf(tribe)));
                             sender.sendMessage(EyeOfOnyx.EOO + "You have been removed from the royalty board.");
                             RoyaltyBoard.updateDiscordBoard(tribe);
                         } else {

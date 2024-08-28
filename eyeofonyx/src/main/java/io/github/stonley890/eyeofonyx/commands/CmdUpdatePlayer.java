@@ -61,9 +61,11 @@ public class CmdUpdatePlayer {
                             Dreamvisitor.debug("Removed challenge notifications.");
                         }
 
+                        BoardState oldBoard = RoyaltyBoard.getBoardOf(tribe);
                         RoyaltyBoard.removePlayer(tribe, p, true);
-                        RoyaltyBoard.updateBoard(tribe, false);
+                        RoyaltyBoard.updateBoard(tribe, false, false);
                         RoyaltyBoard.updateDiscordBoard(tribe);
+                        RoyaltyBoard.reportChange(new RoyaltyAction("Command Executor", null, tribe, oldBoard, RoyaltyBoard.getBoardOf(tribe)));
                         Dreamvisitor.debug("Board updated.");
                         new Notification(uuid, "You have been removed from the royalty board.", "You were removed from the royalty board because you changed your tribe. Any pending challenges have been canceled.", Notification.Type.GENERIC).create();
                     }

@@ -77,6 +77,7 @@ public class CmdChallenge {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private static void start(@NotNull CommandSender sender, @NotNull Player player) {
         if ((Competition.activeChallenge.defender.equals(player.getUniqueId()) || Competition.activeChallenge.attacker.equals(player.getUniqueId())) && !Competition.activeChallenge.started) {
 
@@ -109,14 +110,11 @@ public class CmdChallenge {
 
         // Remove from royalty board
         BoardState oldBoard = RoyaltyBoard.getBoardOf(playerTribe).clone();
-
         RoyaltyBoard.removePlayer(playerTribe, playerPosition, true);
         RoyaltyBoard.replace(playerTribe, playerPosition, attackerPosition);
-
+        RoyaltyBoard.updateBoard(playerTribe, false, false);
         BoardState newBoard = RoyaltyBoard.getBoardOf(playerTribe).clone();
-
-        reportChange(new RoyaltyAction(sender.getName(), playerTribe, oldBoard, newBoard));
-        RoyaltyBoard.updateBoard(playerTribe, false);
+        reportChange(new RoyaltyAction(sender.getName(), "The player denied a challenge.", playerTribe, oldBoard, newBoard));
 
         sender.sendMessage(EyeOfOnyx.EOO + "You have been removed from the royalty board.");
 
@@ -203,10 +201,10 @@ public class CmdChallenge {
             if (nextEmptyPosition < CIVILIAN) {
                 BoardState oldBoard = getBoardOf(playerTribe).clone();
                 RoyaltyBoard.set(playerTribe, nextEmptyPosition, new BoardPosition(player.getUniqueId(), null, LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now()));
-                BoardState newBoard = getBoardOf(playerTribe).clone();
                 RoyaltyBoard.updatePermissions(player.getUniqueId(), playerTribe, nextEmptyPosition);
-                reportChange(new RoyaltyAction(player.getName(), playerTribe, oldBoard, newBoard));
-                updateBoard(playerTribe, true);
+                updateBoard(playerTribe, true, false);
+                BoardState newBoard = getBoardOf(playerTribe).clone();
+                reportChange(new RoyaltyAction(player.getName(), "Player assumed an empty position.", playerTribe, oldBoard, newBoard));
 
                 sender.sendMessage(EyeOfOnyx.EOO + "You are now " + getValidPositions()[nextEmptyPosition].toUpperCase().replace("_", " ") + " of the " + playerTribe.getTeamName() + "s!");
                 RoyaltyBoard.updateDiscordBoard(playerTribe);
@@ -258,6 +256,11 @@ public class CmdChallenge {
             builder.append("That player is already in a challenge!");
             sender.spigot().sendMessage(builder.create());
         } else {
+            if (RoyaltyBoard.isPosFrozen(playerTribe, targetPosition)) {
+                builder.append("That position is frozen and cannot be challenged.");
+                sender.spigot().sendMessage(builder.create());
+                return;
+            }
 
             // Unless position is empty...
             if (!RoyaltyBoard.isPositionEmpty(playerTribe, targetPosition)) {
@@ -400,7 +403,7 @@ public class CmdChallenge {
                         sender.sendMessage(EyeOfOnyx.EOO + "Please wait...");
 
                         // Check if board is frozen
-                        if (RoyaltyBoard.isFrozen()) {
+                        if (RoyaltyBoard.isBoardFrozen()) {
                             sender.sendMessage(EyeOfOnyx.EOO + ChatColor.RED + "The royalty board is currently frozen.");
                             return;
                         }

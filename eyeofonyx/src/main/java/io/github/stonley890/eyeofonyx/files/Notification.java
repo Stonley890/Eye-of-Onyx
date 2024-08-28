@@ -63,7 +63,9 @@ public class Notification {
 
         if (!file.exists()) {
             Bukkit.getLogger().info("notifications.yml does not exist. Creating one...");
-            file.createNewFile();
+            if (!file.createNewFile()) {
+                Bukkit.getLogger().warning("notifications.yml could not be created!");
+            }
         }
     }
 
@@ -394,7 +396,6 @@ public class Notification {
                 Notification.saveNotification(this);
             }
 
-        } else {
         }
     }
 

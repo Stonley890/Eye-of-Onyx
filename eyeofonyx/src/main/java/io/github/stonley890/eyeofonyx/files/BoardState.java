@@ -68,6 +68,8 @@ public class BoardState {
                 if (lastChallengeTime != null)
                     lastChallenge = lastChallengeTime.toString();
 
+                boolean frozen = boardStates.get(i).positions.get(p).frozen;
+
                 String tribeKey = TribeUtil.tribes[i].getName().toLowerCase();
                 String posKey = RoyaltyBoard.getValidPositions()[p];
                 config.set(tribeKey + "." + posKey + ".uuid", uuid);
@@ -76,6 +78,7 @@ public class BoardState {
                 config.set(tribeKey + "." + posKey + ".joined_time", joinedTime);
                 config.set(tribeKey + "." + posKey + ".last_online", lastOnline);
                 config.set(tribeKey + "." + posKey + ".last_challenge_time", lastChallenge);
+                config.set(tribeKey + "." + posKey + ".frozen", frozen);
             }
         }
 
@@ -154,6 +157,8 @@ public class BoardState {
                     lastChallenge = null;
                 }
 
+                boolean frozen = Boolean.parseBoolean(config.getString(tribe + "." + position + ".frozen"));
+
                 // Set new position of BoardState we created earlier
                 boardState.positions.put(pos, new BoardPosition(
                         uuid,
@@ -161,7 +166,8 @@ public class BoardState {
                         joinedBoard,
                         joinedTime,
                         lastOnline,
-                        lastChallenge
+                        lastChallenge,
+                        frozen
                 ));
             }
 
@@ -207,6 +213,12 @@ public class BoardState {
     public BoardState setLastChallenge(int pos, LocalDateTime lastChallenge) {
         BoardPosition affectedPosition = this.positions.get(pos);
         affectedPosition.lastChallenge = lastChallenge;
+        this.positions.put(pos, affectedPosition);
+        return this;
+    }
+    public BoardState setFrozen(int pos, boolean frozen) {
+        BoardPosition affectedPosition = this.positions.get(pos);
+        affectedPosition.frozen = frozen;
         this.positions.put(pos, affectedPosition);
         return this;
     }

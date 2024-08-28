@@ -92,7 +92,7 @@ public class EyeOfOnyx extends JavaPlugin {
         commands.add(new CmdChallenge().getCommand());
         commands.add(new CmdCompetition().getCommand());
         commands.add(new CmdUpdatePlayer().getCommand());
-        commands.add(new CmdForfeit().getCommand());
+        commands.add(new CmdResign().getCommand());
 
         for (ExecutableCommand<?, ?> command : commands) {
             if (command instanceof CommandAPICommand apiCommand) {
@@ -159,7 +159,7 @@ public class EyeOfOnyx extends JavaPlugin {
 
                             LocalDateTime lastOnline = RoyaltyBoard.getLastOnline(tribe, pos);
                             if (lastOnline == null || lastOnline.isBefore(LocalDateTime.now().minusDays(getConfig().getInt("inactivity-timer")))) {
-                                RoyaltyBoard.updateBoard(tribe, true);
+                                RoyaltyBoard.updateBoard(tribe, true, true);
                             }
 
                             List<Notification> notifications = Notification.getNotificationsOfPlayer(uuid);
@@ -169,10 +169,10 @@ public class EyeOfOnyx extends JavaPlugin {
                                 if (notification.type == Notification.Type.CHALLENGE_REQUESTED && notification.time.isBefore(LocalDateTime.now().minusDays(getConfig().getInt("challenge-acknowledgement-time")))) {
 
                                     // Check if it was seen or not
+                                    Challenge challenge = Challenge.getChallenge(uuid);
                                     if (!notification.seen) {
 
-                                        // If seen, cancel the challenge.
-                                        Challenge challenge = Challenge.getChallenge(uuid);
+                                        // If not seen, cancel the challenge.
 
                                         // Send expired notification to defender
                                         Notification.removeNotification(notification);
@@ -190,7 +190,6 @@ public class EyeOfOnyx extends JavaPlugin {
 
                                     } else {
                                         // Kick from board if seen and ignored.
-                                        Challenge challenge = Challenge.getChallenge(uuid);
                                         if (challenge != null) {
                                             // Send notification to attacker
                                             UUID attackerUuid = challenge.attacker;
@@ -210,7 +209,7 @@ public class EyeOfOnyx extends JavaPlugin {
                                         new Notification(uuid, "You were removed from the royalty board!", "You did not acknowledge a challenge request within the allowed time.", Notification.Type.GENERIC).create();
 
                                         RoyaltyBoard.removePlayer(tribe, pos, true);
-                                        RoyaltyBoard.updateBoard(tribe, false);
+                                        RoyaltyBoard.updateBoard(tribe, false, true);
                                         RoyaltyBoard.updateDiscordBoard(tribe);
 
                                         break;
